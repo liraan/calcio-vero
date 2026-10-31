@@ -95,6 +95,19 @@ The rules that make this possible are non-negotiable:
 
 **Where we are:** L0 is **complete, ratified, implemented, and tested**. The framework compiles, the health check is green, the determinism contract is enforced, and the test harness (`pcfm-testkit`) is in place. L1 (the season) is the next specification milestone. **No playable build exists yet** — the docs have to be solid before the engine is.
 
+**Maturity (what is settled, what is not):**
+
+| Axis | Status | Meaning |
+|------|--------|---------|
+| **Doctrine** | 🟢 Settled | `specs/00-foundations.md` v2.0, ratified. The Three Planes and the bans are not under discussion. |
+| **L0 specification** | 🟢 Ratified | 11 cells, ratified. The contract is stable; the implementation evolves under it. |
+| **L0 implementation** | 🟡 Prototype | It compiles, it is deterministic, it is tested — but it is a *prototype model*: no positions, 4 event types out of 27, formulas marked as placeholders. |
+| **ADRs** | 🟡 Evolving | 21 ADRs: 19 accepted, 1 proposed (017), 1 superseded (023 → 024). The set changes as the project learns. |
+| **Tests** | 🟢 Green | 102 tests, 6 test scenarios, `cargo fmt`/`clippy`/`test` clean. Green means "the contract holds", not "the game is finished". |
+| **L1–L3** | ⚪ Not started | Specifications only. No code. |
+
+**What "L0 complete" does not mean:** it does not mean the match engine is realistic. It means the L0 *contract* is ratified and implemented. Realism (positions, physics, all event types) is step 18: tracked, not started (D3: L2 does not exist yet).
+
 **Roadmap (indicative, not commitments):**
 
 | Phase | Target |
