@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (E4: S1 applies to every commit that touches `SESSION-STATE.md`, not only the closing; the `commit-msg` hook now blocks a staged bookmark whose `Last commit verified` does not match HEAD. Earlier: A2 exact exit words; OI-16 granularity; Decisions trailer; closing 2a unexpected observations; B1-bis double commit; IDEA-006 TUI scope; gates startup|closing; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
+**Last updated:** 2026-10-31 (startup step 2: "Three reads" corrected to "Five reads" — the text was stale after AGENT-POLICY and DECISION-PATTERNS were added. OI-18 extended to 6 redundancies (R6: step 4 duplicates A1). Earlier: E4 S1 on every bookmark update + hook; A2 exact exit words; OI-16/17/18; Decisions trailer; gates startup|closing; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
 
 ---
 
@@ -181,7 +181,7 @@ Check: working tree clean (or only known untracked files), HEAD matches `Last co
 
 ### 2. Read context (bookmark, reports, backlog)
 
-Three reads, in this order, all required.
+Five reads, in this order, all required.
 
 **Bookmark.**
 
