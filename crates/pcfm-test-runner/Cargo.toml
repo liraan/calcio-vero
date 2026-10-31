@@ -7,7 +7,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "CLI test runner for PCFM: run and inspect test scenarios"
-documentation = "https://github.com/liraan/pcfootballmanager/tree/main/docs/MODULE_DEVELOPER_GUIDE.md"
+documentation = "https://github.com/liraan/pcfootballmanager/tree/main/docs/PLUGIN_DEVELOPER_GUIDE.md"
 
 [[bin]]
 name = "pcfm-test-runner"

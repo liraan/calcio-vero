@@ -110,7 +110,7 @@ specs/
 ├── _index.md
 └── L0-match/         (11 files, 00 → 10)
 docs/
-├── adr/              (21 files, 000, 001–008, 012–023)
+├── adr/              (22 files, 000, 001–008, 012–024)
 ├── calibration/      (.gitkeep)
 ├── context/          (briefing material: not normative)
 ├── legal/            (.gitkeep)

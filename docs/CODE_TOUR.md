@@ -125,7 +125,7 @@ the UI?
 | # | File | Why |
 |---|------|-----|
 | 1 | `crates/pcfm-match/src/lib.rs` | The module map and the architecture note at the top. |
-| 2 | `crates/pcfm-match/src/context.rs` | `MatchConfig` (3 fields) and `MatchContext` (5 references). |
+| 2 | `crates/pcfm-match/src/context.rs` | `MatchConfig` (3 fields) and `MatchContext` (4 references + by-value `MatchConfig`). |
 | 3 | `crates/pcfm-match/src/orchestrator.rs` | `simulate_match`: the tick loop in 10 lines. Read it slowly. |
 | 4 | `crates/pcfm-match/src/state.rs` | `MatchState::tick`. The **prototype** model: `action_probability = 0.0005`, 4 action kinds. This is the file to improve first if you want a realistic engine. |
 | 5 | `crates/pcfm-match/src/result.rs` | `MatchResult`, `Score`, `MatchStatistics`. All data. |
