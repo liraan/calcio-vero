@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (B1-bis: `block=$(printf ...)` with nested quotes is unreliable; use a quoted heredoc on a file + `awk -v b="$(cat /tmp/f)"`. Earlier: chiudi in A2/E2; gates `scripts/gates.sh` + pre-push; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
+**Last updated:** 2026-10-31 (gates: `scripts/gates.sh [startup|closing]` — startup runs A1, A3, B1, B3, B6, B7 and reports A2/B2 as manual, no cargo; closing keeps A2 and B4/B5. Startup step 2-bis runs the fast gate. Closing step 5 no longer runs the script twice: `pre-push` does it. Earlier: chiudi in A2/E2; B1-bis heredoc; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
 
 ---
 
@@ -206,6 +206,13 @@ Read the matched lines. If the file structure changes, update this grep in the s
 
 Read the IDs and the two-line rule. A DP applies only to an identical case; a variant requires asking. Max 10 active, archivable after two consecutive closings with `DPs-Applied: none` (visible via `git log`).
 
+### 2-bis. Bookmark coherence (fast gate)
+
+    scripts/gates.sh startup
+
+Runs the fast subset of the gates: A1, A3, B1, B3, B6, B7 (and reports B2 as manual; A2 is skipped because step 4 runs the tests). It reads the bookmark you just read, so run it **after** step 2 and **before** step 3: if it is red, the bookmark is internally inconsistent and the session starts on a false base.
+
+If red: report it to the maintainer **before** proceeding. Do not fix it silently: a broken bookmark is worse than an incomplete one, and the maintainer must decide whether to reopen the previous session (E3a) or proceed with a declared caveat.
 ### 3. Read foundations (doctrine, rules)
 
 Two reads, in this order, both required.
@@ -350,10 +357,10 @@ The checkpoint commit is **one logical commit**:
 
     git add docs/context/SESSION-STATE.md
     git commit -t .gitmessage
-    scripts/gates.sh && git push
+    git push
     git status -sb
 
-`scripts/gates.sh` re-runs the mechanical checks of Gate A and Gate B. The `pre-push` hook (`.githooks/pre-push`) calls it automatically and blocks the push if red. Running it explicitly first means a red gate is fixed before the commit is made, not after.
+The `pre-push` hook (`.githooks/pre-push`) runs `scripts/gates.sh` (closing mode) and blocks the push if red. The gate runs at the moment it matters (the push), not twice.
 
 The commit message uses `.gitmessage` as template. Compile subject, optional body, and the **required trailers** (validated by `.githooks/commit-msg`):
 
