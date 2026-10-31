@@ -3,7 +3,7 @@
 **Purpose:** prompt to paste as the first message of a new chat with a **read-only audit agent** (GitHub Copilot, Hermes Agent, or any AI agent with analysis capabilities). The agent produces one comprehensive Markdown report and does not modify code.
 
 **Last updated:** 2026-10-30 (commit `55a932a`)
-**Last updated:** 2026-10-31 (added: pure/gap classification per D4 exit clause, with `maintainer_override` column — a later audit must not re-classify a maintainer override)
+**Last updated:** 2026-10-31 (added: dimension 7 "Gate integrity" — audit `scripts/gates.sh` as code: checks that lie, format-dependent checks, declared vs undeclared holes. Not run as part of C2: A2 duplicates cargo test. Earlier: pure/gap classification with `maintainer_override` column)
 ---
 
 ## How to use
@@ -100,6 +100,17 @@ For every claim in `specs/L0-match/*`, `STRUCTURE.md`, `docs/ARCHITECTURE.md`, `
 ### 6. Correctness observations
 
 Design notes that are not bugs but that the maintainer should know about. Example: the `pick_players` correlation in `pcfm-match/src/state.rs:222-226` (single RNG roll for attacker and defender). Each observation with file:line and one paragraph of context.
+
+### 7. Gate integrity
+
+`scripts/gates.sh` is the project's mechanical gate. It is read, not run as part of C2 (its A2 check duplicates `cargo test`). Audit it as code:
+
+- Does each check verify what its label says, or does it report `ok` without a real assertion?
+- Does any check depend on a format that can change — the bookmark's tables, the README badge, the ADR status line at `docs/adr/*.md:3`? If a format changes, the check must fail loudly, not silently.
+- Are there known holes? `Files touched` is not enforced mechanically (E4 declares it). `B2`, `B4`, `B5` are `manual` on purpose. A hole that is declared is acceptable; a hole that is not, is a finding.
+- A gate that lies is worse than no gate: it makes an agent believe it is compliant when it is not.
+
+Each finding with `file:line` in `scripts/gates.sh` or in the ritual step that invokes it.
 
 ## Output format
 

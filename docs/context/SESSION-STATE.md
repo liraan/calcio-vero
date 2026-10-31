@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `44c4cc3` — "docs(session-state): OI-18 — five real redundancies in the rituals, not to optimize before the OI-16 data"
+**Last commit verified:** `9e6d0a4` — "docs(rules): startup step 2 Five reads (stale text); OI-18 R6"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -208,3 +208,5 @@ OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); 
 **Files touched this session (2026-10-31, OI-18 ritual redundancies — E3c/E5):** `docs/context/SESSION-STATE.md` (OI-18: 5 real redundancies R1-R5 in the rituals, not to optimize before the OI-16 measurement; Last commit verified aligned to `1059751`; this entry).
 
 **Files touched this session (2026-10-31, R6/R7 — E3c/E5):** `docs/context/NEW-SESSION-PROMPT.md` (R7: "Three reads" → "Five reads", the text was stale; `Last updated`); `docs/context/SESSION-STATE.md` (OI-18 extended to 6 redundancies with R6: startup step 4 duplicates A1 and compares with a prompt that has no hardcoded numbers; `Last commit verified` aligned to `44c4cc3`; this entry).
+
+**Files touched this session (2026-10-31, Gate integrity — E3c):** `docs/context/GITHUB-SESSION-PROMPT.md` (dimension 7 "Gate integrity": audit `scripts/gates.sh` as code; read, not run as part of C2; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `9e6d0a4`).
