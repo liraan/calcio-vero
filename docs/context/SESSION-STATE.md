@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `1a946f6` — "docs: step 16 — remove stale PROJECT-STATUS, fix 5 live refs, keep hives"
+**Last commit verified:** `1e7fbad` — "feat(gates): startup mode — fast gate in startup step 2-bis; no double run in closing"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -185,3 +185,5 @@ OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); 
 **Files touched this session (2026-10-31, step 16 census):** `PROJECT-STATUS.md` (deleted); `README.md` (link → SESSION-STATE); `CONTRIBUTING.md` (2 refs → SESSION-STATE); `docs/context/README.md` (PROJECT-STATUS "planned" → README + STRUCTURE); `docs/context/SESSION-STATE.md` (step 16 closed).
 
 **Files touched this session (2026-10-31, gates startup mode — E3c):** `scripts/gates.sh` (flag `startup|closing`; startup: A1, A3, B1, B3, B6, B7 + B2 manual, A2 skipped because step 4 runs the tests; closing: unchanged + B4/B5 manual; invalid mode exits 2); `docs/context/NEW-SESSION-PROMPT.md` (startup step 2-bis runs `scripts/gates.sh startup`; closing step 5 no longer runs the script twice — `pre-push` does it; `Last updated`); `docs/context/SESSION-STATE.md` (this Files touched). Tested: closing green, startup green, startup red on an injected ADR mismatch (exit 1), restore (exit 0), invalid mode (exit 2).
+
+**Files touched this session (2026-10-31, gates text coherence — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (closing Gate A rewritten: A1 count comparison, A2 badge, A3 no hardcoded — the "commands below are the source of truth" line removed, D5 leak; startup step 2-bis gains "Why these checks run twice"; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `1e7fbad`).

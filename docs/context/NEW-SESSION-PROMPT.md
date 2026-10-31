@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (gates: `scripts/gates.sh [startup|closing]` — startup runs A1, A3, B1, B3, B6, B7 and reports A2/B2 as manual, no cargo; closing keeps A2 and B4/B5. Startup step 2-bis runs the fast gate. Closing step 5 no longer runs the script twice: `pre-push` does it. Earlier: chiudi in A2/E2; B1-bis heredoc; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
+**Last updated:** 2026-10-31 (gates: closing Gate A text now describes what `scripts/gates.sh` actually checks (A1 count comparison, A2 badge, A3 no hardcoded); "source of truth" removed. Startup step 2-bis explains why the fast checks run twice. Earlier: gates startup|closing; chiudi in A2/E2; B1-bis heredoc; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
 
 ---
 
@@ -213,6 +213,8 @@ Read the IDs and the two-line rule. A DP applies only to an identical case; a va
 Runs the fast subset of the gates: A1, A3, B1, B3, B6, B7 (and reports B2 as manual; A2 is skipped because step 4 runs the tests). It reads the bookmark you just read, so run it **after** step 2 and **before** step 3: if it is red, the bookmark is internally inconsistent and the session starts on a false base.
 
 If red: report it to the maintainer **before** proceeding. Do not fix it silently: a broken bookmark is worse than an incomplete one, and the maintainer must decide whether to reopen the previous session (E3a) or proceed with a declared caveat.
+
+**Why these checks run twice.** A1, A3, B1, B3, B6, B7 run here and again at closing step 3, on purpose: here they catch a stale bookmark *before it is used*; at closing they confirm the bookmark is still true *after the session's edits*. The two runs cost under 0.1 s together and catch different failures. A2 is skipped here because step 4 runs the tests.
 ### 3. Read foundations (doctrine, rules)
 
 Two reads, in this order, both required.
@@ -307,18 +309,16 @@ Run `scripts/gates.sh` first: it performs the mechanical subset of Gate A and Ga
 
 Two gates, run in order. If either fails, fix and re-run it before step 4. Do not note a failure for later; the bookmark must be true when the closing commit is made.
 
-The commands below are the source of truth for `scripts/gates.sh`; keep them in sync.
 
 **Gate A — documentation coherence.**
 
-Compare the numbers across the files that claim them:
+`scripts/gates.sh` implements three checks:
 
-    grep -n 'tests\|crates\|ADR' docs/context/SESSION-STATE.md | head -10
-    grep -n '^| 0' STRUCTURE.md | tail -25
-    grep -n '^| \[0' specs/_index.md | tail -25
-    grep -nE '[0-9]+ (tests?|crates?|ADRs?)\b|(tests?|crates?|ADRs?) [0-9]+' docs/context/NEW-SESSION-PROMPT.md | head -15
+- **A1** — ADR count: the rows in `STRUCTURE.md` §5 (`| 0NN |`), the rows in `specs/_index.md` (`| [0NN]`), and the files in `docs/adr/` (excluding `000-template.md`) must be the same number.
+- **A2** (closing only) — the README badge `tests-N_passing` must equal the real test count from `cargo test --workspace`.
+- **A3** — no hardcoded counts (`N tests`, `N crates`, `N ADRs`) in `NEW-SESSION-PROMPT.md`.
 
-All must agree. If they diverge, one is stale: fix it, and commit the fix in the same session.
+If any is red, the stale file is fixed and the fix is committed in the same session. The script is the source of truth; this text describes what it checks.
 
 If you touched a file X (renamed it, changed its path, changed its content), verify that references to X are updated everywhere:
 
