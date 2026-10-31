@@ -91,6 +91,35 @@ match), say so and give the distribution delta.
 
 ## History
 
+## [SIM_VERSION 3] — 2026-10-31
+
+### Why the bump
+
+`NarrativeEntry` lost `template_key` and `params`. Both were produced by `narrate()` and serialised in the save, but had no consumer: `render.rs` reads only `minute` and `text`, and `locales/` does not exist. The payload is smaller; the save shape changed, so the bump is mandatory.
+
+### What changes for the same seed
+
+The `chain_hash` is unchanged (narrative is not part of the chain). The save JSON differs: `result.narrative[*]` has four fields instead of six. Score, stats, events and `state_hash` are identical. Old saves written at SIM_VERSION 2 load (serde ignores unknown fields) but cannot be replayed under SIM_VERSION 3.
+
+### Saves affected
+
+- Load: yes, unknown fields are ignored.
+- Replay: no — the sim version differs, `can_replay()` returns false.
+- Migration: none.
+
+### Golden hash
+
+- Not recorded. The 10-season golden test does not exist yet (OI-14).
+- Verified by: C2, locally, 2026-10-31.
+
+### Related changes
+
+- `crates/pcfm-match/src/narrative.rs`: `NarrativeEntry` reduced to `{minute, event_id, text, importance}`. `template_for` → `importance_for`; `render_text` takes `EventType`.
+- `crates/pcfm-demo/src/render.rs`: test fixture updated.
+- IDEAS: IDEA-INFRA-011 (narrative localisation at L1/L3).
+
+---
+
 ## [SIM_VERSION 2] — 2026-10-31
 
 ### Why the bump

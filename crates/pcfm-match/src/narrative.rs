@@ -3,20 +3,19 @@
 //! # Purpose
 //!
 //! Convert a `MatchResult`'s events into a list of `NarrativeEntry`.
-//! Each entry is a **data** struct, not a rendered string:
-//!
-//! - `minute`, `event_id`, `template_key`, `params`, `importance` are
-//!   structured data.
-//! - `text` is a **default-language rendering** (English), ready for
-//!   display. Localised renderings are produced by looking up
-//!   `template_key` in a locale file and substituting `params`.
+//! Each entry is a **data** struct: `minute`, `event_id`, `importance` are
+//! structured; `text` is a **default-language rendering** (English), ready
+//! for display.
 //!
 //! This makes the narrative usable by any renderer:
 //!
 //! - `TextMatchEngine` uses `text` directly (radio commentary).
-//! - A `ThreeDEngine` can use `text` as subtitles, or use
-//!   `template_key + params` to render its own localised text.
-//! - A debug tool can display `template_key + params` directly.
+//! - A `ThreeDEngine` can use `text` as subtitles.
+//! - A debug tool can display the structured fields directly.
+//!
+//! Localisation (`template_key` + `params`) was removed on 2026-10-31
+//! (ADR-024 follow-up): it had no consumer and `locales/` does not exist.
+//! It is tracked as IDEA-INFRA-011.
 //!
 //! The narrative is **deterministic**: the same events produce the same
 //! entries. No randomness, no time, no external state.
@@ -51,10 +50,6 @@ pub struct NarrativeEntry {
     pub minute: u8,
     /// The ID of the event this entry narrates.
     pub event_id: EventId,
-    /// The template key (e.g. `"narrative.goal"`). Ready for i18n.
-    pub template_key: String,
-    /// The parameters for the template (e.g. `player`, `minute`).
-    pub params: BTreeMap<String, String>,
     /// The rendered text, in English (the default language).
     pub text: String,
     /// The importance of the entry.
@@ -83,95 +78,85 @@ pub fn narrate(match_: &Match, chain: &EventChain) -> Vec<NarrativeEntry> {
 }
 
 fn narrate_event(ev: &MatchEvent, names: &BTreeMap<PlayerId, &str>) -> NarrativeEntry {
-    let (template_key, importance) = template_for(ev.event_type);
+    let importance = importance_for(ev.event_type);
     let player = names.get(&ev.player_id).copied().unwrap_or("<unknown>");
     let minute = ev.timestamp_minute;
 
-    let mut params = BTreeMap::new();
-    params.insert("player".to_string(), player.to_string());
-    params.insert("minute".to_string(), minute.to_string());
-
-    let text = render_text(template_key, player, minute);
+    let text = render_text(ev.event_type, player, minute);
 
     NarrativeEntry {
         minute,
         event_id: ev.event_id,
-        template_key: template_key.to_string(),
-        params,
         text,
         importance,
     }
 }
 
-/// Returns the template key and importance for an event type.
-const fn template_for(event_type: EventType) -> (&'static str, Importance) {
+/// Returns the importance for an event type.
+const fn importance_for(event_type: EventType) -> Importance {
     match event_type {
-        EventType::Shot => ("narrative.shot", Importance::Medium),
-        EventType::Pass => ("narrative.pass", Importance::Low),
-        EventType::Cross => ("narrative.cross", Importance::Low),
-        EventType::Dribble => ("narrative.dribble", Importance::Medium),
-        EventType::KeyPass => ("narrative.key_pass", Importance::High),
-        EventType::Tackle => ("narrative.tackle", Importance::Medium),
-        EventType::Interception => ("narrative.interception", Importance::Medium),
-        EventType::Clearance => ("narrative.clearance", Importance::Low),
-        EventType::Block => ("narrative.block", Importance::Medium),
-        EventType::Save => ("narrative.save", Importance::High),
-        EventType::Duel => ("narrative.duel", Importance::Low),
-        EventType::Foul => ("narrative.foul", Importance::Medium),
-        EventType::Card => ("narrative.card", Importance::High),
-        EventType::Corner => ("narrative.corner", Importance::Low),
-        EventType::FreeKick => ("narrative.free_kick", Importance::Medium),
-        EventType::Penalty => ("narrative.penalty", Importance::Critical),
-        EventType::Substitution => ("narrative.substitution", Importance::High),
-        EventType::Injury => ("narrative.injury", Importance::High),
-        EventType::Goal => ("narrative.goal", Importance::Critical),
-        EventType::Assist => ("narrative.assist", Importance::High),
-        EventType::ProgressiveCarry => ("narrative.progressive_carry", Importance::Medium),
-        EventType::ProgressivePass => ("narrative.progressive_pass", Importance::Medium),
-        EventType::Pressure => ("narrative.pressure", Importance::Low),
-        EventType::RandomEvent => ("narrative.random_event", Importance::Medium),
-        EventType::HalfTime => ("narrative.half_time", Importance::High),
-        EventType::FullTime => ("narrative.full_time", Importance::High),
-        EventType::MatchAbandoned => ("narrative.match_abandoned", Importance::Critical),
+        EventType::Shot
+        | EventType::Dribble
+        | EventType::Tackle
+        | EventType::Interception
+        | EventType::Block
+        | EventType::Foul
+        | EventType::FreeKick
+        | EventType::ProgressiveCarry
+        | EventType::ProgressivePass
+        | EventType::RandomEvent => Importance::Medium,
+        EventType::Pass
+        | EventType::Cross
+        | EventType::Clearance
+        | EventType::Duel
+        | EventType::Corner
+        | EventType::Pressure => Importance::Low,
+        EventType::KeyPass
+        | EventType::Save
+        | EventType::Card
+        | EventType::Substitution
+        | EventType::Injury
+        | EventType::Assist
+        | EventType::HalfTime
+        | EventType::FullTime => Importance::High,
+        EventType::Penalty | EventType::Goal | EventType::MatchAbandoned => Importance::Critical,
     }
 }
 
 /// Renders the text in English (the default language).
 ///
-/// TODO: when `locales/` exists, replace this with a lookup of
-/// `template_key` in the locale file and a substitution of `params`.
-fn render_text(template_key: &str, player: &str, minute: u8) -> String {
-    match template_key {
-        "narrative.shot" => format!("{player} shoots in the {minute}'"),
-        "narrative.pass" => format!("{player} passes in the {minute}'"),
-        "narrative.cross" => format!("{player} crosses in the {minute}'"),
-        "narrative.dribble" => format!("{player} dribbles in the {minute}'"),
-        "narrative.key_pass" => format!("{player} plays a key pass in the {minute}'"),
-        "narrative.tackle" => format!("{player} tackles in the {minute}'"),
-        "narrative.interception" => format!("{player} intercepts in the {minute}'"),
-        "narrative.clearance" => format!("{player} clears in the {minute}'"),
-        "narrative.block" => format!("{player} blocks in the {minute}'"),
-        "narrative.save" => format!("Save by {player} in the {minute}'"),
-        "narrative.duel" => format!("{player} wins a duel in the {minute}'"),
-        "narrative.foul" => format!("Foul by {player} in the {minute}'"),
-        "narrative.card" => format!("Card for {player} in the {minute}'"),
-        "narrative.corner" => format!("Corner for {player} in the {minute}'"),
-        "narrative.free_kick" => format!("Free kick for {player} in the {minute}'"),
-        "narrative.penalty" => format!("PENALTY! {player} in the {minute}'"),
-        "narrative.substitution" => format!("Substitution: {player} in the {minute}'"),
-        "narrative.injury" => format!("{player} is injured in the {minute}'"),
-        "narrative.goal" => format!("GOAL! {player} scores in the {minute}'"),
-        "narrative.assist" => format!("Assist by {player} in the {minute}'"),
-        "narrative.progressive_carry" => format!("{player} carries forward in the {minute}'"),
-        "narrative.progressive_pass" => {
+/// The text is derived from the event type, the player name and the minute.
+fn render_text(event_type: EventType, player: &str, minute: u8) -> String {
+    match event_type {
+        EventType::Shot => format!("{player} shoots in the {minute}'"),
+        EventType::Pass => format!("{player} passes in the {minute}'"),
+        EventType::Cross => format!("{player} crosses in the {minute}'"),
+        EventType::Dribble => format!("{player} dribbles in the {minute}'"),
+        EventType::KeyPass => format!("{player} plays a key pass in the {minute}'"),
+        EventType::Tackle => format!("{player} tackles in the {minute}'"),
+        EventType::Interception => format!("{player} intercepts in the {minute}'"),
+        EventType::Clearance => format!("{player} clears in the {minute}'"),
+        EventType::Block => format!("{player} blocks in the {minute}'"),
+        EventType::Save => format!("Save by {player} in the {minute}'"),
+        EventType::Duel => format!("{player} wins a duel in the {minute}'"),
+        EventType::Foul => format!("Foul by {player} in the {minute}'"),
+        EventType::Card => format!("Card for {player} in the {minute}'"),
+        EventType::Corner => format!("Corner for {player} in the {minute}'"),
+        EventType::FreeKick => format!("Free kick for {player} in the {minute}'"),
+        EventType::Penalty => format!("PENALTY! {player} in the {minute}'"),
+        EventType::Substitution => format!("Substitution: {player} in the {minute}'"),
+        EventType::Injury => format!("{player} is injured in the {minute}'"),
+        EventType::Goal => format!("GOAL! {player} scores in the {minute}'"),
+        EventType::Assist => format!("Assist by {player} in the {minute}'"),
+        EventType::ProgressiveCarry => format!("{player} carries forward in the {minute}'"),
+        EventType::ProgressivePass => {
             format!("{player} plays a progressive pass in the {minute}'")
         }
-        "narrative.pressure" => format!("{player} presses in the {minute}'"),
-        "narrative.random_event" => format!("Random event: {player} in the {minute}'"),
-        "narrative.half_time" => "Half-time".to_string(),
-        "narrative.full_time" => "Full-time".to_string(),
-        "narrative.match_abandoned" => "Match abandoned".to_string(),
-        _ => format!("Event by {player} in the {minute}'"),
+        EventType::Pressure => format!("{player} presses in the {minute}'"),
+        EventType::RandomEvent => format!("Random event: {player} in the {minute}'"),
+        EventType::HalfTime => "Half-time".to_string(),
+        EventType::FullTime => "Full-time".to_string(),
+        EventType::MatchAbandoned => "Match abandoned".to_string(),
     }
 }
 
@@ -288,7 +273,6 @@ mod tests {
         let narrative = narrate(&m, &chain);
         for entry in &narrative {
             assert_ne!(entry.text, "");
-            assert_ne!(entry.template_key, "");
             assert!(entry.minute <= 120);
         }
     }
@@ -302,7 +286,6 @@ mod tests {
             .unwrap();
         let narrative = narrate(&m, &chain);
         assert_eq!(narrative[0].importance, Importance::Critical);
-        assert_eq!(narrative[0].template_key, "narrative.goal");
         assert!(narrative[0].text.contains("GOAL"));
     }
 
@@ -315,7 +298,6 @@ mod tests {
             .unwrap();
         let narrative = narrate(&m, &chain);
         assert_eq!(narrative[0].importance, Importance::Low);
-        assert_eq!(narrative[0].template_key, "narrative.pass");
     }
 
     #[test]
@@ -324,6 +306,18 @@ mod tests {
         let chain = EventChain::new();
         let narrative = narrate(&m, &chain);
         assert_eq!(narrative.len(), 0);
+    }
+
+    #[test]
+    fn text_contains_player_and_minute() {
+        let m = make_match();
+        let mut chain = EventChain::new();
+        chain
+            .try_append(make_event(1, 45, EventType::Goal, PlayerId::new(0, 0)))
+            .unwrap();
+        let narrative = narrate(&m, &chain);
+        assert!(narrative[0].text.contains("Player0_0"));
+        assert!(narrative[0].text.contains("45"));
     }
 
     #[test]
@@ -339,17 +333,5 @@ mod tests {
         let a = narrate(&m, &chain);
         let b = narrate(&m, &chain);
         assert_eq!(a, b);
-    }
-
-    #[test]
-    fn params_contain_player_and_minute() {
-        let m = make_match();
-        let mut chain = EventChain::new();
-        chain
-            .try_append(make_event(1, 45, EventType::Goal, PlayerId::new(0, 0)))
-            .unwrap();
-        let narrative = narrate(&m, &chain);
-        assert_eq!(narrative[0].params.get("player").unwrap(), "Player0_0");
-        assert_eq!(narrative[0].params.get("minute").unwrap(), "45");
     }
 }

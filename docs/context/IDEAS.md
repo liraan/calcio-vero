@@ -416,6 +416,16 @@
 - **Prerequisite:** phase 2 start, a second reviewer (or a bot with a write token), and the ruleset activated per `AGENT-POLICY` §1.
 - **Anti-pattern:** do not create an inactive workflow file now (D3). It is created when it can run.
 
+### IDEA-INFRA-011 — Narrative localisation (template_key + params)
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31, removal of `template_key` + `params` from `NarrativeEntry` (ADR-024 follow-up, SIM_VERSION 2→3).
+- **Why:** the two fields were produced by `narrate()` and serialised in the save, but had no consumer: `render.rs` reads only `minute` and `text`, and `locales/` does not exist. They were removed as gusci (D3).
+- **When:** when localisation becomes real. Prerequisite: `locales/` exists, with at least English + Italian template files, and a renderer that reads `template_key` instead of `text`.
+- **What:** `NarrativeEntry` gets back `template_key` and `params` (or a typed equivalent). `render_text` becomes a lookup. The default `text` stays as a fallback for renderers that do not localise.
+- **Anti-pattern:** do not reintroduce the fields before the locale files exist. A field with no reader is a guscio (the reason it was removed).
+
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch

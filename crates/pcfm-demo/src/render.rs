@@ -181,8 +181,6 @@ mod tests {
         let entry = NarrativeEntry {
             minute: 7,
             event_id: pcfm_core::ids::EventId::new(1, 0),
-            template_key: "narrative.goal".to_string(),
-            params: std::collections::BTreeMap::new(),
             text: "GOAL!".to_string(),
             importance: pcfm_match::Importance::Critical,
         };
