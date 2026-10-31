@@ -1,6 +1,6 @@
 # Context directory — agent workspace
 
-This directory is an **agent workspace**, not human documentation. The documentation for collaborators is `PROJECT-STATUS.md` at the repo root (planned).
+This directory is an **agent workspace**, not human documentation. The documentation for collaborators is `README.md` at the repo root and `STRUCTURE.md` (the normative source).
 
 ## Rule
 

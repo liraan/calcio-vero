@@ -279,8 +279,7 @@ When L0 and L1 are stable and a minimal kernel runs. Indicatively **Q1 2027**. N
 
 **Which decisions are actually settled?**
 Settled: the doctrine, the Three Planes, Plane A enforcement (ADR-003), FFI panic strategy (ADR-004), TUI-first presentation (ADR-022), Qt binding for the future GUI (ADR-005), license (ADR-006), canonical language (ADR-007), provider integration policy (ADR-008).
-For a human-readable summary of the current state, see [`PROJECT-STATUS.md`](PROJECT-STATUS.md).
-See [`docs/context/REPO-SNAPSHOT.md`](docs/context/REPO-SNAPSHOT.md) §1 for the live state and [`STRUCTURE.md`](STRUCTURE.md) §5 for ADR status.
+For a human-readable summary of the current state, see [`docs/context/SESSION-STATE.md`](docs/context/SESSION-STATE.md) (the bookmark) and [`STRUCTURE.md`](STRUCTURE.md) §5 for ADR status.
 
 **What is `pcfm-testkit`?**
 A small crate that defines the `Scenario` trait and the `TestRegistry`. It has **no dependency on any other `pcfm-*` crate**, so core modules, plugins, and tools can all contribute test scenarios without coupling. `pcfm-test-runner --check` runs them; `--list` and `--coverage` inspect them.
