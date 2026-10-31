@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `0847fb7` — "docs(session-state): checkpoint after rules canonicalization (E3c)"
+**Last commit verified:** `d4304f9` — "docs(rules): D4/D5 hardening — pure-vs-gap exit clause, Filter agent, audit classification"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
