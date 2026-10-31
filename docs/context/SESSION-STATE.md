@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `9e6d0a4` — "docs(rules): startup step 2 Five reads (stale text); OI-18 R6"
+**Last commit verified:** `4f3aa94` — "docs(audit): dimension 7 Gate integrity — audit gates.sh as code"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -88,7 +88,7 @@ the rest of the bookmark in the same commit.
 
 **Dettagli (solo dove servono):**
 
-**12. TUI demo (IDEA-INFRA-006)** — short ADR required (second renderer touches `simulation_is_shared_and_renderer_agnostic`), then code in `pcfm-demo`. **First step: read `crates/pcfm-demo/src/` and `MatchResult` (~200-300 lines) to know what the engine actually exposes; only then estimate.** The ADR says: validation prototype, not L3-ui, no engine change.
+**12. TUI demo (IDEA-INFRA-006)** — **scope (2026-10-31): board + events, not pitch.** Validate the split renderer/engine (ADR-022): a second renderer reads `MatchResult` without touching the engine. Board content: score, possession, shots, event list (today 4 types), narrative, state hash. The pitch with 22 players requires L0 positional (step 18), which requires L2 (D3). **First step: read the L0 census (`analysis/2026-10-31-22-28-review.md`, 4 events out of 27, no positions) and `crates/pcfm-demo/src/`; then decide the board content.** A short ADR is required (second renderer touches `simulation_is_shared_and_renderer_agnostic`). The ADR says: validation prototype, not L3-ui, no engine change.
 
 **2. Fix ADR-003** — ADR-003 still names `pcfm-debug` and `demo.rs`; `pcfm-demo` reads Plane A without authorization. ADR-023 exists (2026-10-31, observed cause traces) and does not cover ADR-003. Options: amend ADR-003, or extend ADR-020. Requires explicit confirmation to touch `docs/adr/`.
 
@@ -132,6 +132,8 @@ the rest of the bookmark in the same commit.
 **Done (storico):** 1, 2, 6, 10bis, 10ter, 10quater, 0ter, 15; OI-1 (R-01 decision: causa osservata, ADR-023); OI-3 (C: PROJECT-IDEA-LOG archived) — commit hash in `git log --oneline`.
 Step 14 (R-01 + xg + CauseTrace): closed in `f4506d7`. ADR-024 supersedes ADR-023. OI-5, OI-9, OI-10, OI-11, OI-15, OI-16, OI-17 closed. SIM_VERSION 1→2. Tests 103→102.
 Sessione 2026-10-31 (multi-tornata): A2/E2 con "chiudi" e "riprendi" esatti (no equivalente); `Decisions:` trailer (hook + template + §G + closing step 4 con conversation sweep); closing 2a esteso alle osservazioni inattese; B1-bis: transient M e doppio commit; gates.sh `startup|closing` + startup step 2-bis; narrativa: template_key/params rimossi (SIM 2→3); 4 gusci rimossi (SIM 3→4); step 4 (sanitize --html), 6a (F1/R-07/R-04), 6b (maturity), 16 (PROJECT-STATUS rimosso); OI-12 chiuso, OI-15 e OI-16 aggiunti; IDEA-INFRA-014/015/016/017 + splash in 006; step 18 riscritto (posizionale deciso). 105 test, SIM 4.
+Sessione 2026-10-31 (tornate E3c/E5): E4 S1 enforceata su ogni bookmark update (hook `commit-msg`); OI-18 (6 ridondanze R1-R6, non toccare prima di OI-16); R7 corretto ("Five reads"); GITHUB-SESSION-PROMPT dimensione 7 "Gate integrity"; TUI scope (board, non campo) in IDEA-006 + step 12; B2 fixato (Detail 12 allineato a Plan/Prime azioni). 105 test, SIM 4.
+Sessione 2026-10-31 (tornate E3c/E5): E4 S1 enforceata su ogni bookmark update (hook `commit-msg`); OI-18 (6 ridondanze R1-R6, non toccare prima di OI-16); R7 corretto ("Five reads"); GITHUB-SESSION-PROMPT dimensione 7 "Gate integrity"; TUI scope (board, non campo) in IDEA-006 + step 12; B2 fixato (Detail 12 allineato a Plan/Prime azioni). 105 test, SIM 4.
 Step 6a (doc consistency meccanica): closed in `cc5294b`. F1 (`Cargo.toml:10` → `PLUGIN_DEVELOPER_GUIDE.md`), R-07 (`CODE_TOUR:128` 5→4 refs), R-04 (`STRUCTURE` ADR inventory 21→22, 000–024). R-05 no-op.
 OI-12 (Gate A check A4 rumoroso): closed 2026-10-31. The broad pattern on NEW-SESSION-PROMPT.md was replaced by the narrow `[0-9]+ (tests?|crates?|ADRs?)` in both the ritual and `scripts/gates.sh` A3. Verified: the old pattern no longer exists.
 Step 6b (F6 maturity statement): closed 2026-10-31. README has a "Maturity" table: doctrine (settled), L0 spec (ratified), L0 implementation (prototype), ADRs (evolving), tests (green), L1-L3 (not started). Explicit: "L0 complete" means the contract is ratified, not that the engine is realistic.
@@ -210,3 +212,7 @@ OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); 
 **Files touched this session (2026-10-31, R6/R7 — E3c/E5):** `docs/context/NEW-SESSION-PROMPT.md` (R7: "Three reads" → "Five reads", the text was stale; `Last updated`); `docs/context/SESSION-STATE.md` (OI-18 extended to 6 redundancies with R6: startup step 4 duplicates A1 and compares with a prompt that has no hardcoded numbers; `Last commit verified` aligned to `44c4cc3`; this entry).
 
 **Files touched this session (2026-10-31, Gate integrity — E3c):** `docs/context/GITHUB-SESSION-PROMPT.md` (dimension 7 "Gate integrity": audit `scripts/gates.sh` as code; read, not run as part of C2; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `9e6d0a4`).
+
+**Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Detail 12 allineato a Plan/Prime azioni — B2 fix; Done storico; Last commit verified 4f3aa94; this entry). Nessun altro file in questa tornata: i commit `eaa0eaf`..`4f3aa94` sono già su disco.
+
+**Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Detail 12 allineato a Plan/Prime azioni — B2 fix; Done storico; Last commit verified 4f3aa94; this entry). Nessun altro file in questa tornata: i commit `eaa0eaf`..`4f3aa94` sono già su disco.
