@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `eaa0eaf` — "docs(context): TUI scope — board and events now, pitch after L0 positional"
+**Last commit verified:** `d734215` — "docs(session-state): align Last commit verified to eaa0eaf; Files touched for the TUI scope"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that

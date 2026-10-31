@@ -9,6 +9,21 @@ if ! git diff --cached --name-only | grep -qx 'docs/context/SESSION-STATE.md'; t
   exit 0
 fi
 
+
+# S1 on every bookmark update: the staged SESSION-STATE.md must point
+# `Last commit verified` to the commit before this one, i.e. current HEAD.
+# A commit that touches the bookmark without updating the field leaves it
+# partially inconsistent (E4).
+staged_lcv=$(git show :docs/context/SESSION-STATE.md 2>/dev/null | grep -oE 'Last commit verified:\*\* `[0-9a-f]{7,40}`' | grep -oE '[0-9a-f]{7,40}')
+head_short=$(git rev-parse --short HEAD)
+if [ -z "$staged_lcv" ]; then
+  echo "commit-msg: SESSION-STATE.md staged but 'Last commit verified' not found" >&2
+  exit 1
+fi
+case "$staged_lcv" in
+  "$head_short"*) : ;;
+  *) echo "commit-msg: 'Last commit verified' ($staged_lcv) does not match HEAD ($head_short); S1 applies to every bookmark update (E4)" >&2; exit 1 ;;
+esac
 trailers=$(git interpret-trailers --parse < "$MSG")
 
 # Rule changes require an explicit, non-skipped Rules-Audit trailer.
