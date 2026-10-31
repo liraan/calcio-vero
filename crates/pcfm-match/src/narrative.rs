@@ -181,8 +181,8 @@ mod tests {
     use pcfm_core::ids::{EventId, MatchId, PlayerId, RefereeId, SquadId};
     use pcfm_core::time::GameInstant;
     use pcfm_model::{
-        CauseTrace, Foot, FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch,
-        Player, PsychologicalStateMinimal, Referee, RoleId, Squad,
+        Foot, FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
+        PsychologicalStateMinimal, Referee, RoleId, Squad,
     };
     use pcfm_stats::{EventChain, EventType, MatchEvent};
 
@@ -235,11 +235,6 @@ mod tests {
             event_type,
             fields: serde_json::json!({}),
             observed_attrs_snapshot_hash: None,
-            cause_trace: CauseTrace {
-                primary_cause: format!("{event_type:?}"),
-                contributing_factors: vec![],
-                explanation_template: "explanation".into(),
-            },
             created_at: GameInstant::from_raw(u64::from(minute)),
         }
     }

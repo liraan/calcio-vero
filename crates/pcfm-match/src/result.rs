@@ -22,8 +22,6 @@ pub struct MatchStatistics {
     pub possession: (f32, f32),
     /// Shots, as `(home, away)`.
     pub shots: (u16, u16),
-    /// Expected goals, as `(home, away)`.
-    pub xg: (f32, f32),
     /// Goals, as `(home, away)`.
     pub goals: (u8, u8),
 }

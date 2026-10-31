@@ -6,7 +6,7 @@
 *Transparent by design. Deterministic by construction. Yours by default.*
 
 [![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/pcfootballmanager)
-[![Tests](https://img.shields.io/badge/tests-103_passing-brightgreen)](https://github.com/liraan/pcfootballmanager)
+[![Tests](https://img.shields.io/badge/tests-102_passing-brightgreen)](https://github.com/liraan/pcfootballmanager)
 [![License](https://img.shields.io/badge/license-MIT_OR_Apache--2.0-blue)](LICENSE-MIT)
 [![Built with](https://img.shields.io/badge/docs-AI--assisted-purple)](#-ai-disclosure)
 
@@ -86,7 +86,7 @@ The rules that make this possible are non-negotiable:
 
 | Level | Specification | Code |
 |:-----:|:-------------:|:----:|
-| **L0** — Match   | 🟢 11 cells, ratified | 🟢 6 crates, 103 tests, 6 test scenarios |
+| **L0** — Match   | 🟢 11 cells, ratified | 🟢 6 crates, 102 tests, 6 test scenarios |
 | **L1** — Season  | ⚪ 12 cells planned   | ⚪ not started |
 | **L2** — Career  | ⚪ 9 cells planned    | ⚪ not started |
 | **L3** — Meta    | ⚪ 8 cells planned    | ⚪ not started |

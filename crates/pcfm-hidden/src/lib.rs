@@ -33,9 +33,6 @@ pub use outcome::{
     DuelOutcome, InjuryOutcome, PassOutcome, PressureOutcome, SaveOutcome, SetPieceOutcome,
     ShotOutcome,
 };
-// `CauseTrace` and `Factor` live in `pcfm-model` (shared between Plane A and
-// Plane B). Re-exported here for convenience.
-pub use pcfm_model::{CauseTrace, Factor};
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -105,8 +102,8 @@ impl GroundTruth {
     ///   aerial duels the stronger player wins).
     /// - `attacker_score` and `defender_score` are **latent** values
     ///   (Plane A). They are read here, inside `pcfm-hidden`, and never
-    ///   leave. The outcome is a `DuelOutcome` (Plane B) with a
-    ///   `CauseTrace` that describes the outcome in observed terms.
+    ///   leave. The outcome is a `DuelOutcome` (Plane B) with only
+    ///   observed fields; the engine builds the cause trace.
     ///
     /// See `docs/CODE_TOUR.md` "A note on the current simulation".
     pub fn resolve_duel(&mut self, ctx: &DuelContext) -> DuelOutcome {
@@ -132,30 +129,10 @@ impl GroundTruth {
             ctx.defender
         };
 
-        let cause = CauseTrace {
-            primary_cause: format!("duel:{:?}", ctx.duel_type),
-            contributing_factors: vec![
-                Factor {
-                    name: "attacker_score".into(),
-                    value: attacker_score,
-                    weight: 0.5,
-                },
-                Factor {
-                    name: "defender_score".into(),
-                    value: defender_score,
-                    weight: 0.5,
-                },
-            ],
-            explanation_template: "explanation.duel".into(),
-        };
-
         let outcome = DuelOutcome {
             winner,
             ball_retained: attacker_wins,
             foul_committed: None,
-            injury_risk_modifier: 1.0,
-            temperament_modifier: 1.0,
-            cause,
         };
 
         self.observations.push(ObservationEvent::Duel {
@@ -175,21 +152,9 @@ impl GroundTruth {
         let goal_probability = noise.mul_add(0.3, shooter.finishing).clamp(0.0, 1.0);
         let goal = goal_probability > 0.6;
 
-        let cause = CauseTrace {
-            primary_cause: "shot".into(),
-            contributing_factors: vec![Factor {
-                name: "finishing".into(),
-                value: shooter.finishing,
-                weight: 1.0,
-            }],
-            explanation_template: "explanation.shot".into(),
-        };
-
         let outcome = ShotOutcome {
             goal,
             on_target: goal || noise > 0.3,
-            xg_value: goal_probability,
-            cause,
         };
 
         self.observations.push(ObservationEvent::Shot {
@@ -206,17 +171,7 @@ impl GroundTruth {
         let noise = next_unit(&mut self.rng);
         let complete = noise.mul_add(0.3, passer.passing) > 0.5;
 
-        let cause = CauseTrace {
-            primary_cause: "pass".into(),
-            contributing_factors: vec![Factor {
-                name: "passing".into(),
-                value: passer.passing,
-                weight: 1.0,
-            }],
-            explanation_template: "explanation.pass".into(),
-        };
-
-        let outcome = PassOutcome { complete, cause };
+        let outcome = PassOutcome { complete };
 
         self.observations.push(ObservationEvent::Pass {
             passer: ctx.passer,
@@ -232,13 +187,7 @@ impl GroundTruth {
         let noise = next_unit(&mut self.rng);
         let success = noise > 0.5;
 
-        let cause = CauseTrace {
-            primary_cause: "pressure".into(),
-            contributing_factors: vec![],
-            explanation_template: "explanation.pressure".into(),
-        };
-
-        let outcome = PressureOutcome { success, cause };
+        let outcome = PressureOutcome { success };
 
         self.observations.push(ObservationEvent::Pressure {
             player: ctx.player,
@@ -253,23 +202,8 @@ impl GroundTruth {
         let player = self.latents_for(ctx.player);
         let noise = next_unit(&mut self.rng);
         let injured = noise.mul_add(0.3, player.injury_proneness) > 0.8;
-        let risk_modifier = player.injury_proneness.mul_add(1.5, 0.5);
 
-        let cause = CauseTrace {
-            primary_cause: "injury".into(),
-            contributing_factors: vec![Factor {
-                name: "injury_proneness".into(),
-                value: player.injury_proneness,
-                weight: 1.0,
-            }],
-            explanation_template: "explanation.injury".into(),
-        };
-
-        let outcome = InjuryOutcome {
-            injured,
-            risk_modifier,
-            cause,
-        };
+        let outcome = InjuryOutcome { injured };
 
         self.observations.push(ObservationEvent::Injury {
             player: ctx.player,
@@ -285,17 +219,7 @@ impl GroundTruth {
         let noise = next_unit(&mut self.rng);
         let saved = noise.mul_add(0.3, keeper.goalkeeping) > 0.5;
 
-        let cause = CauseTrace {
-            primary_cause: "save".into(),
-            contributing_factors: vec![Factor {
-                name: "goalkeeping".into(),
-                value: keeper.goalkeeping,
-                weight: 1.0,
-            }],
-            explanation_template: "explanation.save".into(),
-        };
-
-        let outcome = SaveOutcome { saved, cause };
+        let outcome = SaveOutcome { saved };
 
         self.observations.push(ObservationEvent::Save {
             goalkeeper: ctx.goalkeeper,
@@ -311,17 +235,7 @@ impl GroundTruth {
         let noise = next_unit(&mut self.rng);
         let success = noise.mul_add(0.3, taker.set_pieces) > 0.5;
 
-        let cause = CauseTrace {
-            primary_cause: "set_piece".into(),
-            contributing_factors: vec![Factor {
-                name: "set_pieces".into(),
-                value: taker.set_pieces,
-                weight: 1.0,
-            }],
-            explanation_template: "explanation.set_piece".into(),
-        };
-
-        let outcome = SetPieceOutcome { success, cause };
+        let outcome = SetPieceOutcome { success };
 
         self.observations.push(ObservationEvent::SetPiece {
             taker: ctx.taker,

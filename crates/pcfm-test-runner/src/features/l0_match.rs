@@ -237,10 +237,6 @@ impl Scenario for EventChainScenario {
         let r1 = simulate(&match_, ctx.seed);
         let mut chain_err: Option<String> = None;
         for ev in r1.events.events() {
-            if ev.cause_trace.primary_cause.is_empty() {
-                chain_err = Some("event with empty cause".to_string());
-                break;
-            }
             if ev.timestamp_minute > 120 {
                 chain_err = Some("event with minute > 120".to_string());
                 break;
@@ -281,10 +277,7 @@ impl Scenario for StatsSanityScenario {
         };
         let r1 = simulate(&match_, ctx.seed);
         let (h, a) = r1.stats.possession;
-        let stats_ok = (h + a - 1.0).abs() < 0.01
-            && r1.stats.xg.0 >= 0.0
-            && r1.stats.xg.1 >= 0.0
-            && !r1.events.is_empty();
+        let stats_ok = (h + a - 1.0).abs() < 0.01 && !r1.events.is_empty();
         if stats_ok {
             result.pass("statistics are sane");
         } else {

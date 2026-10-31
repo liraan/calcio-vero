@@ -35,7 +35,7 @@ Transform `MatchEvent` (Plane B) into the things a human reads: score, ratings, 
 - Reads `MatchEvent` from `L0.05`
 - **Never** reads `pcfm-hidden`
 - Produces `MatchResult` for `L0.04` and `L0.07`
-- Does not compute xG/PPDA from latents: those are computed from events (minimal versions at L0, full versions in `L3-statistics` *(planned)*)
+- Does not compute xG/PPDA from latents. **Amended 2026-10-31:** xG is removed from L0 (L0 has no observable features to compute it; a latent-derived value would be a Plane A leak). Full xG belongs to `L3-statistics` / Plane C.
 
 ## 2. Specification
 
@@ -76,7 +76,6 @@ pub struct MatchStatistics {
     pub possession: (f32, f32),
     pub shots: (u16, u16),
     pub shots_on_target: (u16, u16),
-    pub xg: (f32, f32),
     pub ppda: (f32, f32),
     pub passes: (u16, u16),
     pub pass_completion: (f32, f32),
@@ -88,7 +87,7 @@ pub struct MatchStatistics {
 }
 ```
 
-All computed from events. At L0, xG and PPDA use the formulas in `balance/metrics.toml` *(planned)* (minimal versions). `L3-statistics` *(planned)* replaces them with the full versions. The interface is identical; the formula is versioned.
+All computed from events. **Amended 2026-10-31:** xG is not computed at L0 — no observable features exist and `balance/metrics.toml` does not exist. PPDA remains event-based. xG moves to `L3-statistics` / Plane C.
 
 **Possession** is computed from time-of-possession events (a `Pass`, `Dribble`, `ProgressiveCarry` by team A counts as possession for team A until an `Interception`, `Tackle`, `Clearance`, or `Pass` by team B).
 
@@ -148,7 +147,7 @@ forward = { goal = 1.5, assist = 1.2 }
 - **Player with 0 events**: baseline rating
 - **Player substituted at minute 1**: rating computed on the events they had
 - **Goalkeeper with 0 saves**: baseline rating, not a penalty
-- **Match with 0 shots**: xG = 0, not an error
+- **Match with 0 shots**: no xG field at L0 (removed 2026-10-31); nothing to compute, not an error
 - **Heatmap with 0 events in a zone**: zero, not missing
 - **Narrative template missing**: fallback to a generic template, log a warning
 - **`RatingConfig` malformed**: load fails, defaults are not silently used
@@ -170,7 +169,7 @@ forward = { goal = 1.5, assist = 1.2 }
 |---|---|---|
 | Ratings leak latents | Critical | Type system: `compute_rating` takes `&[MatchEvent]` and `&RatingConfig`, never `&Player` |
 | Narrative becomes generic | Medium | Templates by event type + importance; fallback chain |
-| xG formula diverges from L3 | Medium | Shared `balance/metrics.toml`; L3 replaces at L3 |
+| xG reintroduced from latents at L0 | Critical | xG is not computed at L0 (removed 2026-10-31); any future xG is Plane C with declared uncertainty |
 | Config missing at runtime | High | Load fails, no silent defaults |
 | Localisation missing | Low | Fallback to English, log a warning |
 

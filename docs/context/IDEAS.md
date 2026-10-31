@@ -391,7 +391,17 @@
   3. Localisation: the plugin ships localised templates. How does that interact with ADR-007 (English canonical) and the future `locales/it/`?
   4. Determinism: the plugin's output must not affect the simulation (Plane C → Plane A forbidden). Is the explanation purely presentational, or can it feed back into decisions (e.g. the assistant manager reading the narrative)? If it feeds back, it becomes Plane B and must be deterministic.
   5. Performance: reading the full event stream per match is cheap at L0; at L1/L2 with seasons, it must be scoped.
-- **Critical note:** this is a **sketch**, not a decision. It depends on ADR-012 (plugin contract) and ADR-019 (positional engine), neither of which is implemented. Do not implement before those exist. ADR-023 (option 2) is the L0 decision and is not blocked by this sketch.
+- **Critical note:** this is a **sketch**, not a decision. It depends on ADR-012 (plugin contract) and ADR-019 (positional engine), neither of which is implemented. Do not implement before those exist. ADR-024 (remove CauseTrace at L0, supersedes ADR-023) is the current L0 decision and is not blocked by this sketch.
+
+### IDEA-INFRA-009 — CauseTrace at L1 (reintroduction with content)
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** ADR-024 (2026-10-31), which removed `CauseTrace` from L0.
+- **Why:** at L0 the resolver has no observable features (no distance, no pressure, no body part), so any cause trace would be empty. ADR-023 kept an empty type; ADR-024 removed it as ceremony.
+- **When:** at L1, when the engine has observable features from which a cause can be *derived* (not read from a latent). Prerequisite: L1 positional model.
+- **What:** a `CauseTrace` with a non-empty `contributing_factors`, each factor an observed metric with a declared source. Reintroduced via a new ADR, not by reviving the old one.
+- **Anti-pattern to avoid:** do not reintroduce `CauseTrace` as a placeholder field. It comes back only when it can hold content (D3).
 
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 

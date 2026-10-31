@@ -1,9 +1,9 @@
 # ADR-023 — Observed cause traces, not latent-derived causes
 
-- **Status:** proposed
+- **Status:** superseded by ADR-024
 - **Date:** 2026-10-31
 - **Supersedes:** none
-- **Superseded by:** none
+- **Superseded by:** ADR-024 (Remove `CauseTrace` at L0, 2026-10-31)
 - **Blocks:** L0 match engine (event emission), `pcfm-hidden` outcome types, `pcfm-stats` event validation, `pcfm-model::cause`, the R-01 fix and its anti-leak test
 
 ## Context
@@ -48,7 +48,7 @@ Why the `Outcome` and not `ObservationEvent`: the engine already receives the ou
 Ten clauses, decided with the maintainer on 2026-10-31:
 
 1. The resolver loses `cause`; the engine builds the cause trace from the `Outcome`.
-2. Neither `Outcome` nor `ObservationEvent` exposes a continuous value derived directly from a latent (e.g. `xg_value`, `goal_probability`) **to the cause**. `xg_value` stays in `ShotOutcome` for statistics but does not enter `Factor`. If a continuous observed value is needed in a cause in future, it is a Plane C estimate (with declared uncertainty), not an exact function of the latent.
+2. Neither `Outcome` nor `ObservationEvent` exposes a continuous value derived directly from a latent (e.g. `xg_value`, `goal_probability`) **to the cause**. `xg_value` is **removed from `ShotOutcome`** (amended 2026-10-31: it was a function of `finishing`, and L0 has no observable features to recompute it from; xG becomes a Plane C / `L3-statistics` concern, see `06-match-output.md` after the amendment). If a continuous observed value is needed in a cause in future, it is a Plane C estimate (with declared uncertainty), not an exact function of the latent.
 3. The cause includes only factors whose metric is active; absent factors are omitted, not represented.
 4. A measured zero (`Some(0.0)`) is included; a zero from absence (`None`) is omitted.
 5. `Factor` has private fields and a single constructor `observed_factor(name, Option<f32>, weight) -> Option<Factor>`. `contributing_factors: Vec<Factor>` is unchanged and may be empty. No placeholder values.
@@ -62,7 +62,7 @@ Additional decisions:
 
 - `SIM_VERSION` is bumped (the event payload enters `chain_hash`). `SCHEMA_VERSION` is not bumped (serde ignores unknown fields).
 - Old saves remain contaminated: the fix does not retroactively clean JSON written before the bump. Declared, not hidden.
-- `xg_value` in `ShotOutcome` is a potentially separate leak (it is a function of `finishing`). Tracked as OI-9, out of scope here.
+- `xg_value` in `ShotOutcome` **is removed** (amended 2026-10-31). It was a function of `finishing` (latent) and L0 has no observable features to recompute it. Tracked originally as OI-9 "out of scope"; the maintainer decided to bring it **in scope** (choice C, 2026-10-31): `xg_value` removed from `ShotOutcome`, `xg` removed from `MatchStatistics`, `06-match-output.md` amended (xG becomes `L3-statistics` / Plane C).
 - The false doc comments `outcome.rs:4` and `cause.rs:14` are corrected as part of the fix.
 
 ## Consequences

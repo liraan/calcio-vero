@@ -36,8 +36,8 @@ pub fn print_text(result: &MatchResult) -> std::fmt::Result {
     )?;
     writeln!(
         out,
-        "Shots: {} - {} | xG: {:.2} - {:.2}",
-        result.stats.shots.0, result.stats.shots.1, result.stats.xg.0, result.stats.xg.1
+        "Shots: {} - {}",
+        result.stats.shots.0, result.stats.shots.1
     )?;
     writeln!(out, "Events: {}", result.events.len())?;
     writeln!(out, "State hash: {}", hex(result.state_hash.as_bytes()))?;
@@ -120,11 +120,6 @@ pub fn write_html(result: &MatchResult, path: &str) -> std::io::Result<()> {
         html,
         "<tr><td>Shots</td><td>{}</td><td>{}</td></tr>",
         result.stats.shots.0, result.stats.shots.1
-    );
-    let _ = write!(
-        html,
-        "<tr><td>xG</td><td>{:.2}</td><td>{:.2}</td></tr>",
-        result.stats.xg.0, result.stats.xg.1
     );
     let _ = write!(
         html,

@@ -356,9 +356,10 @@ If an ADR is `proposed` and touches an area, **no code may be written in that ar
 | 020 | Split the test runner from the demo tool | ✅ accepted | Split `pcfm-debug` into `pcfm-test-runner` (tests) and `pcfm-demo` (demo) |
 | 021 | Referee is a non-physical perceptual agent | ✅ accepted | Supersedes ADR-019 D9: referee visible but not physical, perception drives decisions |
 | 022 | Presentation strategy: TUI-first, GUI later | ✅ accepted | Amends ADR-005 (presentation primacy only); TUI is v1 primary, view model separation normative |
-| 023 | Observed cause traces, not latent-derived causes | 🟡 proposed | Blocks L0 match engine event emission, `pcfm-hidden` outcome types, `pcfm-stats` event validation, `pcfm-model::cause`, the R-01 fix and its anti-leak test |
+| 023 | Observed cause traces, not latent-derived causes | ⬜ superseded by ADR-024 | — |
+| 024 | Remove `CauseTrace` at L0 | ✅ accepted | Supersedes ADR-023; removes the empty cause trace; R-01 fix |
 
-**Open ADRs:** 017 (proposed), 023 (proposed). **Accepted:** 001, 002, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 018, 019, 020, 021, 022 (18).
+**Open ADRs:** 017 (proposed). **Accepted:** 001, 002, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 018, 019, 020, 021, 022, 024 (19). **Superseded:** 023 (by ADR-024).
 
 **ADR-012 and ADR-013 are two halves of one decision.** Read them together, in order: [`PLUGINS-WORLDS-READING-GUIDE.md`](docs/PLUGINS-WORLDS-READING-GUIDE.md). ADR-013 depends on ADR-012.
 

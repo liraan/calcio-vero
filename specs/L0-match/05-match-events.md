@@ -66,7 +66,6 @@ pub struct MatchEvent {
 
     // Audit — never contains a latent value
     pub observed_attrs_snapshot_hash: Option<Hash>,
-    pub cause_trace: CauseTrace,            // why this event happened
     pub created_at: GameInstant,
 }
 ```
@@ -103,25 +102,11 @@ The set is closed at L0. `L3-registry` allows pack-provided event kinds later.
 
 ### 2.3 Cause trace
 
-Every event carries a `CauseTrace`: the minimal, structured explanation of **why** the event happened.
+**Amended 2026-10-31 (ADR-024, supersedes ADR-023).** At L0, an event **does not** carry a cause trace. The cause of an event is the event itself: `event_type` says what happened, `fields` says the observable result. Removing latent-derived factors left the outcomes with only boolean results (`goal`, `on_target`, `complete`, `success`, `saved`, `injured`, `winner`), none of which is a cause. A `CauseTrace` that could only ever be empty would be ceremony, not transparency.
 
-```rust
-pub struct CauseTrace {
-    pub primary_cause: String,              // e.g. "dribble_failed_under_pressure"
-    pub contributing_factors: Vec<Factor>,  // e.g. fatigue, morale, defensive pressure
-    pub explanation_template: String,       // localisable, for the UI
-}
+**Rule:** at L0, no `CauseTrace`, no `Factor`. The `event_type` is the primary cause; `fields` carries the observed result. No latent value may appear in either.
 
-pub struct Factor {
-    pub name: String,                       // e.g. "fatigue"
-    pub value: f32,                         // current value (observed, not latent)
-    pub weight: f32,                        // contribution to the outcome
-}
-```
-
-**Rule:** every event must have a cause trace. An event without a cause trace is a bug. This is how pillar #5 (transparency) is enforced at the event level.
-
-**Rule:** `Factor.value` is an **observed** value (Plane B/C), never a latent. If the engine used `finishing_close = 17` to resolve a shot, the cause trace says `finishing_observed = 15` (the current observed estimate), not `finishing_close = 17`.
+**Rule (L1+):** when the engine has observable features (distance, pressure, body part), a cause trace is reintroduced **with content**, via a new ADR. It is not implemented now: see IDEA-INFRA-009.
 
 ### 2.4 Append-only
 
@@ -163,7 +148,7 @@ in v1.0: a future `VARReview` event may delay the decision when uncertain
 
 ## 3. Data model
 
-`MatchEvent`, `EventType`, `CauseTrace`, `Factor`, `EventChain`, `EventId`, `PositionSnapshot`.
+`MatchEvent`, `EventType`, `EventChain`, `EventId`, `PositionSnapshot`.
 
 All fields are `Serialize`/`Deserialize` for the save (see `L0.07`). None of them is a latent value.
 
@@ -171,8 +156,7 @@ All fields are `Serialize`/`Deserialize` for the save (see `L0.07`). None of the
 
 - **Event at minute 0, second 0**: allowed (kickoff-related)
 - **Event at minute > 120**: clamped to 120, logged
-- **Event with empty `fields`**: rejected at construction for event types that require fields (e.g. `Shot` requires `xg_value`)
-- **Event with cause trace missing**: rejected at construction
+- **Event with empty `fields`**: allowed; `fields` may be `{}` when the event carries no variant data
 - **Event chain broken**: load fails, save is quarantined
 - **Duplicate `event_id`**: rejected, this is a generational ID collision (bug)
 - **`observed_attrs_snapshot_hash` is `None`**: allowed (the observed attributes were not snapshotted at this event; used for low-importance events)
@@ -183,11 +167,10 @@ All fields are `Serialize`/`Deserialize` for the save (see `L0.07`). None of the
 
 - [ ] `MatchEvent` defined, `Serialize`/`Deserialize`
 - [ ] `EventType` enum complete for L0
-- [ ] `CauseTrace` mandatory
+- [x] No `CauseTrace` at L0 (ADR-024); cause is the event itself
 - [ ] `EventChain` with hash chain
 - [ ] Append-only enforced by type (no `&mut` accessor to events)
 - [ ] Test: chain hash verified on reload
-- [ ] Test: event without cause trace → error
 - [ ] Test: no `MatchEvent` field contains a latent value (compile-time check on types)
 - [ ] Test: `observed_attrs_snapshot_hash` is a hash of Plane C data, not Plane A
 - [ ] Test: `PassAttempted` carries a `position_snapshot`; the resulting `Pass` or `Offside` references it via `attempt_event_id`
@@ -197,8 +180,7 @@ All fields are `Serialize`/`Deserialize` for the save (see `L0.07`). None of the
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| Event without cause | High | Constructor requires it |
-| Cause trace leaks a latent | Critical | `Factor.value` is observed; type system prevents latent access |
+| Latent leaks through `fields` | Critical | `fields` is observed only; the anti-leak test (`crates/pcfm-match/tests/anti_leak.rs`) fails if a latent name appears in a serialised save |
 | Chain tampering | High | Hash chain + verification on load |
 | Position snapshot size | Medium | Snapshot bounded to the agents relevant to the event; sized once per event, not per tick |
 | Event explosion (too many) | Medium | Tick budget; low-impact events aggregated at L2, not at L0 |

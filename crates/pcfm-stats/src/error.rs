@@ -6,10 +6,6 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum StatsError {
-    /// The event has an empty `cause_trace.primary_cause`.
-    #[error("event cause trace must have a non-empty primary_cause")]
-    EmptyCauseTrace,
-
     /// The event's `timestamp_minute` is greater than 120.
     #[error("event timestamp_minute must be <= 120, got {0}")]
     InvalidMinute(u8),

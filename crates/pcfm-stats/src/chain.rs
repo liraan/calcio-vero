@@ -107,7 +107,6 @@ mod tests {
     use crate::event::{EventType, MatchEvent};
     use pcfm_core::ids::{EventId, MatchId, PlayerId};
     use pcfm_core::time::GameInstant;
-    use pcfm_model::{CauseTrace, Factor};
 
     fn make_event(slot: u32, minute: u8) -> MatchEvent {
         MatchEvent {
@@ -122,15 +121,6 @@ mod tests {
             event_type: EventType::Pass,
             fields: serde_json::json!({}),
             observed_attrs_snapshot_hash: None,
-            cause_trace: CauseTrace {
-                primary_cause: "pass".into(),
-                contributing_factors: vec![Factor {
-                    name: "passing".into(),
-                    value: 0.5,
-                    weight: 1.0,
-                }],
-                explanation_template: "explanation.pass".into(),
-            },
             created_at: GameInstant::from_raw(u64::from(minute)),
         }
     }
@@ -185,7 +175,7 @@ mod tests {
     fn invalid_event_does_not_modify_chain() {
         let mut c = EventChain::new();
         let mut ev = make_event(1, 10);
-        ev.cause_trace.primary_cause = String::new();
+        ev.timestamp_minute = 130;
         let before = c.chain_hash();
         assert!(c.try_append(ev).is_err());
         assert_eq!(c.chain_hash(), before);

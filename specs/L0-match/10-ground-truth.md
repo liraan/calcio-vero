@@ -91,15 +91,12 @@ pub struct DuelOutcome {
     pub winner: PlayerId,
     pub ball_retained: bool,
     pub foul_committed: Option<PlayerId>,
-    pub injury_risk_modifier: f32,      // observed scalar, not a latent
-    pub temperament_modifier: f32,      // observed scalar, not a latent
-    pub cause: CauseTrace,              // observed explanation
 }
 ```
 
-The same shape applies to the other resolution types: `ShotContext` / `ShotOutcome`, `PassContext` / `PassOutcome`, and so on. Each context carries **observed** state and `PlayerId`s. Each outcome carries **observed** results and a `CauseTrace`.
+- The same shape applies to the other resolution types: `ShotContext` / `ShotOutcome`, `PassContext` / `PassOutcome`, and so on. Each context carries **observed** state and `PlayerId`s. Each outcome carries **only observable results**, never latents, never a cause trace (ADR-024).
 
-**Rule:** the `CauseTrace` in an outcome references **observed** values (e.g. `fatigue = 0.72`), never latent values. If the latent `finishing_close` was used to resolve a shot, the cause trace says `finishing_observed = 15`, not `finishing_close = 17`. This is the same rule as `L0.05` §2.3.
+- **Rule:** no latent value appears in an outcome. If the engine needs to know why, it looks at the event: `event_type` plus the observed `fields`. A future Plane C estimate (with declared uncertainty) is the only place for a continuous derived value.
 
 ### 2.3 The contract
 
@@ -124,7 +121,7 @@ The following rules are enforced by the type system (no public fields, no `Seria
 
 This is the whole point of ADR-003, option B. If `pcfm-hidden` exposed `player.latent.finishing`, the engine would read the latent and decide the outcome itself. That is the **circularity trap**: the outcome would be a deterministic function of the latent, and the gap between "how good the player is" and "what the player did" would collapse.
 
-By exposing only `resolve_shot`, the crate keeps the gap: the engine asks "does this shot go in?", receives "yes/no" plus a cause trace, and cannot reverse-engineer the latent from the answer (the answer has noise). The engine is an orchestrator, not a calculator. The latent lives only in `pcfm-hidden`, and the engine cannot see it.
+By exposing only `resolve_shot`, the crate keeps the gap: the engine asks "does this shot go in?", receives "yes/no" plus the observed result (`goal`, `on_target`), and cannot reverse-engineer the latent from the answer (the answer has noise). The engine is an orchestrator, not a calculator. The latent lives only in `pcfm-hidden`, and the engine cannot see it.
 
 The cost is verbosity: one call per resolution type. The benefit is that the Three Planes doctrine is enforced by the compiler, not by review. See ADR-003 for the full trade-off.
 

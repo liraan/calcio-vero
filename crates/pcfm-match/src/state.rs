@@ -6,7 +6,6 @@
 use pcfm_core::ids::{EventId, PlayerId};
 use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
-use pcfm_model::CauseTrace;
 use pcfm_stats::{EventChain, EventType, MatchEvent};
 
 use crate::context::MatchContext;
@@ -26,7 +25,6 @@ pub struct MatchState {
     home_possession_ticks: u64,
     away_possession_ticks: u64,
     shots: (u16, u16),
-    xg: (f32, f32),
     next_event_slot: u32,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
@@ -52,7 +50,6 @@ impl MatchState {
             home_possession_ticks: 0,
             away_possession_ticks: 0,
             shots: (0, 0),
-            xg: (0.0, 0.0),
             next_event_slot: 0,
             actions_stream: StreamName::new("match:actions")
                 .expect("literal stream name is non-empty"),
@@ -116,17 +113,14 @@ impl MatchState {
                 tick,
                 attacker,
                 EventType::Shot,
-                serde_json::json!({ "xg_value": outcome.xg_value, "goal": outcome.goal }),
-                outcome.cause.clone(),
+                serde_json::json!({ "goal": outcome.goal }),
             );
             match self.possession {
                 Possession::Home => {
                     self.shots.0 += 1;
-                    self.xg.0 += outcome.xg_value;
                 }
                 Possession::Away => {
                     self.shots.1 += 1;
-                    self.xg.1 += outcome.xg_value;
                 }
             }
             if outcome.goal {
@@ -134,14 +128,7 @@ impl MatchState {
                     Possession::Home => self.score.home += 1,
                     Possession::Away => self.score.away += 1,
                 }
-                self.emit_event(
-                    ctx,
-                    tick,
-                    attacker,
-                    EventType::Goal,
-                    serde_json::json!({ "xg_value": outcome.xg_value }),
-                    outcome.cause,
-                );
+                self.emit_event(ctx, tick, attacker, EventType::Goal, serde_json::json!({}));
             }
             self.flip_possession();
         } else if action_kind_roll < 0.97 {
@@ -157,7 +144,6 @@ impl MatchState {
                 attacker,
                 EventType::Duel,
                 serde_json::json!({ "winner_slot": outcome.winner.slot() }),
-                outcome.cause,
             );
             if outcome.winner == defender {
                 self.flip_possession();
@@ -168,15 +154,8 @@ impl MatchState {
                 defender,
                 duel_type: pcfm_hidden::DuelType::Ground,
             };
-            let outcome = ctx.hidden.resolve_duel(&ctx_duel);
-            self.emit_event(
-                ctx,
-                tick,
-                defender,
-                EventType::Foul,
-                serde_json::json!({}),
-                outcome.cause,
-            );
+            let _outcome = ctx.hidden.resolve_duel(&ctx_duel);
+            self.emit_event(ctx, tick, defender, EventType::Foul, serde_json::json!({}));
             self.flip_possession();
         }
     }
@@ -201,7 +180,6 @@ impl MatchState {
             stats: MatchStatistics {
                 possession,
                 shots: self.shots,
-                xg: self.xg,
                 goals: (self.score.home, self.score.away),
             },
             state_hash,
@@ -244,18 +222,7 @@ impl MatchState {
         player_id: PlayerId,
         event_type: EventType,
         fields: serde_json::Value,
-        cause: CauseTrace,
     ) {
-        let cause = if cause.primary_cause.is_empty() {
-            CauseTrace {
-                primary_cause: format!("{event_type:?}"),
-                contributing_factors: cause.contributing_factors,
-                explanation_template: cause.explanation_template,
-            }
-        } else {
-            cause
-        };
-
         let ticks_per_sec = u64::from(ctx.config.ticks_per_second).max(1);
         let total_secs = tick / ticks_per_sec;
         let minute = clamp_u8(total_secs / 60, 120);
@@ -274,7 +241,6 @@ impl MatchState {
             event_type,
             fields,
             observed_attrs_snapshot_hash: None,
-            cause_trace: cause,
             created_at: GameInstant::from_raw(tick),
         };
         self.next_event_slot += 1;

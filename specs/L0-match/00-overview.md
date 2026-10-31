@@ -42,7 +42,7 @@ A single match between two squads, simulated tick by tick, producing:
 
 - A **result** (score, events, ratings)
 - An **event log** (append-only, `MatchEvent`)
-- A **statistics bundle** (xG, PPDA, possession, heatmap)
+- A **statistics bundle** (PPDA, possession, heatmap) — xG removed from L0 on 2026-10-31, see `06-match-output.md` §2.3
 - A **narrative log** (radio commentary, localisable)
 
 L0 does **not** require:

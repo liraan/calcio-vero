@@ -154,14 +154,6 @@ mod tests {
     }
 
     #[test]
-    fn all_events_have_a_cause() {
-        let r = simulate_once(42);
-        for ev in r.events.events() {
-            assert_ne!(ev.cause_trace.primary_cause, "");
-        }
-    }
-
-    #[test]
     fn all_events_are_within_120_minutes() {
         let r = simulate_once(42);
         for ev in r.events.events() {

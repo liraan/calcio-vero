@@ -1,11 +1,10 @@
 //! Outcome types for `resolve_*` calls.
 //!
 //! Outcomes are Plane B data: observed results that the engine interprets.
-//! They carry no latent value. The `CauseTrace` describes the outcome using
-//! observed factors, never raw latents.
+//! They carry no latent value and no cause trace: since ADR-023
+//! (accepted 2026-10-31) the engine builds the cause from the observed fields.
 
 use pcfm_core::ids::PlayerId;
-use pcfm_model::CauseTrace;
 
 /// The outcome of a duel.
 #[derive(Debug, Clone)]
@@ -16,12 +15,6 @@ pub struct DuelOutcome {
     pub ball_retained: bool,
     /// Whether a foul was committed, and by whom.
     pub foul_committed: Option<PlayerId>,
-    /// Observed injury risk modifier (not a latent).
-    pub injury_risk_modifier: f32,
-    /// Observed temperament modifier (not a latent).
-    pub temperament_modifier: f32,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }
 
 /// The outcome of a shot.
@@ -31,10 +24,6 @@ pub struct ShotOutcome {
     pub goal: bool,
     /// Whether the shot was on target.
     pub on_target: bool,
-    /// The expected goals value.
-    pub xg_value: f32,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }
 
 /// The outcome of a pass.
@@ -42,8 +31,6 @@ pub struct ShotOutcome {
 pub struct PassOutcome {
     /// Whether the pass was completed.
     pub complete: bool,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }
 
 /// The outcome of a pressure event.
@@ -51,8 +38,6 @@ pub struct PassOutcome {
 pub struct PressureOutcome {
     /// Whether the pressure succeeded.
     pub success: bool,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }
 
 /// The outcome of an injury risk resolution.
@@ -60,10 +45,6 @@ pub struct PressureOutcome {
 pub struct InjuryOutcome {
     /// Whether the player was injured.
     pub injured: bool,
-    /// The observed risk modifier (not a latent).
-    pub risk_modifier: f32,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }
 
 /// The outcome of a save.
@@ -71,8 +52,6 @@ pub struct InjuryOutcome {
 pub struct SaveOutcome {
     /// Whether the save succeeded.
     pub saved: bool,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }
 
 /// The outcome of a set piece.
@@ -80,6 +59,4 @@ pub struct SaveOutcome {
 pub struct SetPieceOutcome {
     /// Whether the set piece succeeded.
     pub success: bool,
-    /// The cause trace.
-    pub cause: CauseTrace,
 }

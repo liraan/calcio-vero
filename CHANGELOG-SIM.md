@@ -11,12 +11,14 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 1
+SIM_VERSION = 2
 ```
 
-This is the **initial baseline**. No code exists yet, so no bump has occurred. When the first line of simulation code is merged, this value becomes the reference against which all future bumps are measured.
+This is the **second baseline**. `SIM_VERSION = 1` was the initial baseline; `SIM_VERSION = 2` is the first real bump (ADR-024, 2026-10-31). The reference against which all future bumps are measured is the current value.
 
-`SIM_VERSION` is defined in `pcfm-match` (planned) and embedded in every save (see `L0.07` §2.1).
+**Known gap (OI-14):** no golden hash exists yet — the 10-season golden test is not implemented. The bump procedure below notes this explicitly.
+
+`SIM_VERSION` is defined in `pcfm-match` (`crates/pcfm-match/src/save.rs`) and embedded in every save (see `L0.07` §2.1).
 
 ---
 
@@ -36,13 +38,13 @@ If none of the above is true, `SIM_VERSION` is **not** bumped. A refactor that p
 
 ## Bump procedure
 
-A `SIM_VERSION` bump requires **all five steps**, in order. The CI will not merge a bump that skips any of them.
+A `SIM_VERSION` bump requires **all five steps**, in order. In phase 1 (ruleset disabled, no CI, single maintainer) the local C2 verification replaces the CI merge gate; see `AGENT-POLICY.md` §1 and §9.
 
-1. **Bump the value** in `pcfm-match` (planned). The value is a monotonic integer. It never goes down.
-2. **Regenerate the golden hash** — the expected state hash for the 10-season golden test (see `00-foundations` §4). The new hash is committed alongside the bump.
+1. **Bump the value** in `pcfm-match` (`crates/pcfm-match/src/save.rs`). The value is a monotonic integer. It never goes down.
+2. **Regenerate the golden hash** — the expected state hash for the 10-season golden test (see `00-foundations` §4). **Status 2026-10-31:** the test does not exist yet (OI-14). Until it does, this step is a no-op and the entry records that explicitly.
 3. **Write the entry** in the "History" section below, using the template.
 4. **Verify save compatibility** — every existing save fixture must still load. If a save cannot be reconstructed under the new `SIM_VERSION`, the entry must say so explicitly and a migration must be provided (see `L0.07` §2.3).
-5. **Review by a second pair of eyes** — a `SIM_VERSION` bump is never merged by the author alone. The reviewer confirms that the golden hash change is expected and that the entry is honest.
+5. **Review by a second pair of eyes.** In phase 1 there is one maintainer: the post-push review (`AGENT-POLICY.md` §9) replaces the second reviewer. In phase 2 (ruleset active, branch + PR), the reviewer confirms that the golden hash change is expected and that the entry is honest.
 
 The full migration procedure for **saves** lives in [`docs/MIGRATION-01-04.md`](docs/MIGRATION-01-04.md). That document points back to this changelog for the bump side and forward to the save side.
 
@@ -89,7 +91,36 @@ match), say so and give the distribution delta.
 
 ## History
 
-*(no bumps yet — the project is at `SIM_VERSION = 1`, the initial baseline)*
+## [SIM_VERSION 2] — 2026-10-31
+
+### Why the bump
+
+ADR-024 removed `CauseTrace` and `Factor` from L0 (supersedes ADR-023). The event payload changed: `MatchEvent.cause_trace` is gone, `ShotOutcome.xg_value` is gone, the latent-derived modifiers (`injury_risk_modifier`, `temperament_modifier`, `risk_modifier`) are gone. Because the event payload enters `chain_hash`, the same seed now produces a different chain hash. A bump was mandatory.
+
+### What changes for the same seed
+
+Every match: the `chain_hash` differs from SIM_VERSION 1 for the same seed, because the serialised `MatchEvent` has fewer fields. The score, possession and shots are **not** expected to change (the resolution logic is identical; only the serialised payload is smaller). Verified by the test suite and the test-runner (seed 42): no match result changed, only the hash.
+
+### Saves affected
+
+- Can existing saves still be loaded? **Yes** — `serde_json` ignores unknown fields, and the removed fields simply do not deserialise.
+- Can existing saves be replayed? **No.** Replay re-simulates under the new rules; the chain hash will not match the saved one. Old saves are therefore **read-only**. The contamination is declared, not hidden.
+- Migration: none. The fix does not retroactively clean JSON written before the bump.
+
+### Golden hash
+
+- Previous: not recorded (no golden test existed at SIM_VERSION 1 either).
+- New: not recorded. OI-14 tracks the missing golden test.
+- Verified by: C2 (build, clippy, 102/102 tests, fmt, test-runner 6/6), locally, 2026-10-31.
+
+### Related changes
+
+- ADR-024 (Remove `CauseTrace` at L0) — accepted, supersedes ADR-023.
+- `specs/L0-match/05-match-events.md` §2.3 amended.
+- `specs/L0-match/10-ground-truth.md` §2.2 amended.
+- `specs/L0-match/06-match-output.md` §2.3 amended (xG removed).
+- Anti-leak test: `crates/pcfm-match/tests/anti_leak.rs` (fails pre-fix, passes post-fix).
+- IDEAS: IDEA-INFRA-009 (CauseTrace at L1).
 
 ---
 

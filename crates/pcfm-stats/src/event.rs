@@ -10,7 +10,6 @@
 use pcfm_core::hash::Hash;
 use pcfm_core::ids::{EventId, MatchId, PlayerId};
 use pcfm_core::time::GameInstant;
-use pcfm_model::CauseTrace;
 use serde::{Deserialize, Serialize};
 
 use crate::error::StatsError;
@@ -81,7 +80,7 @@ pub enum EventType {
 ///
 /// The event is **append-only**: once created, it is never modified or
 /// deleted. See `specs/L0-match/05-match-events.md` §2.4.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MatchEvent {
     /// The unique identifier of the event (generational).
     pub event_id: EventId,
@@ -105,8 +104,6 @@ pub struct MatchEvent {
     pub fields: serde_json::Value,
     /// The hash of the observed attributes snapshot at the time of the event.
     pub observed_attrs_snapshot_hash: Option<Hash>,
-    /// The structured explanation of why the event happened.
-    pub cause_trace: CauseTrace,
     /// When the event was created (simulation time).
     pub created_at: GameInstant,
 }
@@ -116,12 +113,8 @@ impl MatchEvent {
     ///
     /// # Errors
     ///
-    /// - [`StatsError::EmptyCauseTrace`] if `cause_trace.primary_cause` is empty.
     /// - [`StatsError::InvalidMinute`] if `timestamp_minute > 120`.
-    pub fn validate(&self) -> Result<(), StatsError> {
-        if self.cause_trace.primary_cause.is_empty() {
-            return Err(StatsError::EmptyCauseTrace);
-        }
+    pub const fn validate(&self) -> Result<(), StatsError> {
         if self.timestamp_minute > 120 {
             return Err(StatsError::InvalidMinute(self.timestamp_minute));
         }
@@ -134,7 +127,6 @@ mod tests {
     use super::*;
     use pcfm_core::ids::{EventId, MatchId, PlayerId};
     use pcfm_core::time::GameInstant;
-    use pcfm_model::Factor;
 
     fn valid_event() -> MatchEvent {
         MatchEvent {
@@ -147,17 +139,8 @@ mod tests {
             career_minutes_cumulative: 450,
             season_label: Some("2026-27".into()),
             event_type: EventType::Goal,
-            fields: serde_json::json!({ "xg_value": 0.35 }),
+            fields: serde_json::json!({ "goal": true }),
             observed_attrs_snapshot_hash: None,
-            cause_trace: CauseTrace {
-                primary_cause: "shot".into(),
-                contributing_factors: vec![Factor {
-                    name: "finishing".into(),
-                    value: 0.7,
-                    weight: 1.0,
-                }],
-                explanation_template: "explanation.shot".into(),
-            },
             created_at: GameInstant::from_raw(100),
         }
     }
@@ -165,13 +148,6 @@ mod tests {
     #[test]
     fn valid_event_is_accepted() {
         assert!(valid_event().validate().is_ok());
-    }
-
-    #[test]
-    fn empty_cause_is_rejected() {
-        let mut ev = valid_event();
-        ev.cause_trace.primary_cause = String::new();
-        assert!(matches!(ev.validate(), Err(StatsError::EmptyCauseTrace)));
     }
 
     #[test]

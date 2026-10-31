@@ -221,7 +221,7 @@ These are the `pcfm-*` crates that provide infrastructure to multiple modules. T
 |---|---|---|---|
 | `pcfm-core` | L0.01 §2.2 (RNG), L0.02 §2.1 (event bus), L0.03 §3.1 (IDs), `00-foundations` §4 (fixed-point) | — | The core crate. Used by every other crate. |
 | `pcfm-stats` | L0.05 §2.4 (`EventChain`), L0.06 (consumer) | `L3-statistics` | Storage of `MatchEvent`, query engine. |
-| `pcfm-metrics` | L0.04 §2.4 (sub-models), L0.06 §2.3 (`MatchStatistics`) | `L3-statistics` | xG, PPDA, progressive actions. Minimal version at L0. |
+| `pcfm-metrics` | L0.04 §2.4 (sub-models), L0.06 §2.3 (`MatchStatistics`) | `L3-statistics` | PPDA, progressive actions. xG removed from L0 on 2026-10-31 (latent-derived at L0, no observable features). |
 | `pcfm-data` | L0.07 §2.3 (migration scripts) | `L3-quality` | Loader, validator, migrations. |
 | `pcfm-bridge` | `docs/adr/004-panic-strategy-ffi.md`, `docs/adr/005-qt-binding.md` | `L3-ui` | Qt FFI shim. The only crate that knows Qt. |
 
@@ -266,6 +266,7 @@ These are components that are referenced across modules but are not crates. They
 | [020](../docs/adr/020-split-test-runner-from-demo.md) | Split the test runner from the demo tool | ✅ accepted | Split `pcfm-debug` into `pcfm-test-runner` (tests) and `pcfm-demo` (demo) |
 | [021](../docs/adr/021-referee-non-physical.md) | Referee is a non-physical perceptual agent | ✅ accepted | Supersedes ADR-019 D9: referee visible but not physical, perception drives decisions |
 | [022](../docs/adr/022-presentation-tui-first.md) | Presentation strategy: TUI-first, GUI later | ✅ accepted | Amends ADR-005 (presentation primacy only); TUI is v1 primary, view model separation normative |
-| [023](../docs/adr/023-observed-cause-traces.md) | Observed cause traces, not latent-derived causes | 🟡 proposed | Blocks L0 match engine event emission, `pcfm-hidden` outcome types, `pcfm-stats` event validation, `pcfm-model::cause`, the R-01 fix and its anti-leak test |
+| [023](../docs/adr/023-observed-cause-traces.md) | Observed cause traces, not latent-derived causes | ⬜ superseded by ADR-024 | — |
+| [024](../docs/adr/024-remove-cause-trace-l0.md) | Remove `CauseTrace` at L0 | ✅ accepted | Supersedes ADR-023; removes the empty cause trace; R-01 fix |
 
-**Open ADRs:** 017 (proposed), 023 (proposed). **Accepted:** 001, 002, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 018, 019, 020, 021, 022 (18).
+**Open ADRs:** 017 (proposed). **Accepted:** 001, 002, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 018, 019, 020, 021, 022, 024 (19). **Superseded:** 023 (by ADR-024).
