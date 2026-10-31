@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (B1-bis: transient `M` after `awk > tmp && mv`, cause not diagnosed, use `git diff HEAD` before acting). IDEA-INFRA-006: splash screen ASCII ball for `pcfm-demo` (text needed). IDEA-INFRA-016: alternatives to positional (zones, graph, enriched events, hybrid) and why positional won. Earlier: gates startup|closing; closing Gate A text describes gates.sh; chiudi; heredoc lesson; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
+**Last updated:** 2026-10-31 (closing step 2a now also captures a command that succeeded with an unexpected observation, not only a command that failed; the transient `M` of this session is the first case). Earlier: B1-bis transient M; IDEA-006 splash; IDEA-016 positional alternatives; gates startup|closing; closing Gate A text describes gates.sh; chiudi; heredoc lesson; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
 
 ---
 
@@ -286,7 +286,7 @@ If anything is red: **stop**. Do not declare the session closed. Fix first.
 
 Capture session patterns into the rule files, **not** into the report.
 
-**2a — Workflow.** For each command that failed and was retried with a different approach, tool that turned out unavailable, or anchor that went stale: if likely to recur, add to B1-bis (observed) or B4 (mutation). If one-off, no action.
+**2a — Workflow.** For each command that failed and was retried with a different approach, tool that turned out unavailable, anchor that went stale, **or command that succeeded with an unexpected observation** (odd output, transient state, a result that contradicts a previous run): if likely to recur, add to B1-bis (observed) or B4 (mutation). If one-off, no action.
 
 **2b — Rules self-audit.** Only if this session modified `NEW-SESSION-PROMPT.md`, `DECISION-PATTERNS.md`, a hard-stop, the startup, or the closing. If no rule was touched, write `Rules-Audit: skipped, no rule changes` as the closing commit trailer.
 
