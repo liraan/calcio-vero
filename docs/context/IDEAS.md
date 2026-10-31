@@ -444,6 +444,35 @@
 - **When:** when Plane C exists and produces observed attributes (windowed indexes, projection profiles). Prerequisite: L2-scouting / Plane C.
 - **What:** the event carries the hash of the observed attributes at the moment of the event, for audit. It is a hash of Plane C data, never of Plane A. Reintroduced via a new ADR.
 
+### IDEA-INFRA-014 — Strict contract between L1 and L0
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31 (discussion about L0 being rewritten and L1 collapsing).
+- **Idea:** L1 depends only on a narrow contract with L0: match identity, teams, score, scorers. It never reads internal L0 details (events, positions, xG, cause traces, statistics). If L0 grows into a positional monster, L1 does not change.
+- **Why:** the risk "L0 too small → L1 collapses when L0 grows" is real only if L1 is coupled to L0 internals. With a strict contract, L0 can be rewritten and L1 survives.
+- **Test:** count how many types L1 imports from L0. Two (`MatchResult`, `Score`) is safe; twenty is fragile.
+- **When:** when L1 is designed. Prerequisite: L1 has content. Not now (D3).
+
+### IDEA-INFRA-015 — ObservationEvent: guscio or L2 channel?
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31 (census of gusci). Not touched in this session.
+- **Finding:** `resolve_*` builds an `ObservationEvent` on every call. `drain_observations` is never called. `ObservationEvent` is constructed and discarded; `MatchEvent` is the only thing that leaves.
+- **Question:** is `ObservationEvent` a residual (remove it, like `CauseTrace`), or the future Plane A→B channel for L2 (statistics that are not match events)? Both are defensible. The answer depends on what L2 needs, and L2 does not exist.
+- **When:** when L2 is designed. Not now (D3).
+- **Anti-pattern:** do not remove it and do not populate it before the question is answered.
+
+### IDEA-INFRA-016 — L1/L2 boundary: compute vs decide
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31 (discussion about merging L1 and L2).
+- **Finding:** the current boundary (season vs career) is fuzzy: a career is made of seasons, so "where L1 ends and L2 begins" has no clean answer. Merging them loses the dependency direction (L2 needs L1, L1 does not need L2) and mixes aggregation with persistent state.
+- **Proposal:** redefine the boundary by object, not duration. L1 = the competition (calendar, results, standings: **computes** from L0). L2 = the club (squad, contracts, money, youth: **creates and changes state**). They coexist; L2 participates in L1, not the reverse.
+- **Rejected formulation:** "objective vs manipulable" — it is an epistemic dichotomy, overlapping with the Three Planes (A/B/C), and it splits L1 in two (a standing is objective, a tactic is manipulable).
+- **When:** when L1 is opened. The first decision of L1 is "what is L1 and what is L2", not "which modules do I write". Not now (D3): neither level exists.
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch
