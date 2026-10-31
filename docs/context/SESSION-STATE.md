@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `246f64b` — "docs(session-state): closing 2026-10-31 — A2 exact words, Decisions trailer, granularity OI"
+**Last commit verified:** `eaa0eaf` — "docs(context): TUI scope — board and events now, pitch after L0 positional"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -201,3 +201,5 @@ OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); 
 **Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Last commit verified 718605d, Done storico, this entry). Nient'altro modificato in questa tornata: i commit `843ba4b`, `718605d` sono già su disco.
 
 **Files touched this session (2026-10-31, censimento L0 — E3c):** `docs/context/analysis/2026-10-31-22-28-review.md` (NEW — censimento operativo L0: 12 divergenze spec↔code, G1–G12, con file:line; fotografia, da archiviare quando L0 cambia); `docs/context/SESSION-STATE.md` (OI-17: puntatore al report + decisione su quali gap chiudere prima di L1/L2; questo Files touched; `Last commit verified`).
+
+**Files touched this session (2026-10-31, TUI scope + fix — E3c):** `docs/context/IDEAS.md` (IDEA-INFRA-006 split: board + events now, pitch with 22 players later; link to OI-17); `docs/context/SESSION-STATE.md` (Plan 12 and Prime azioni 12 updated with the scope; `Last commit verified` aligned to `eaa0eaf`; this entry). `eaa0eaf` contained the first two but not the bookmark fields; corrected here.
