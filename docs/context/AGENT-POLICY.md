@@ -82,16 +82,23 @@ The audit agent is a **separate role** from the chat agent (Warp, DeepSeek-TUI, 
 - **Asynchronous by design.** The audit agent is not a synchronous channel: for time-critical fixes, use the chat agent or the maintainer directly.
 - **Even when authorized**, the change follows the standard flow: verify (`NEW-SESSION-PROMPT.md` rule 8), atomic commit, and — in Phase 2 — branch + PR (rule 1).
 
-## 10. Rollback and post-push review
+## 9. Rollback, post-push review, residual risks
 
-The closing ritual may now proceed without a pre-push pause (E2, green-path derogation, 2026-10-31). This section defines the two safeguards that replace it.
+The closing ritual may now proceed without a pre-push pause (E2, green-path derogation, 2026-10-31). This section defines the safeguards that replace it, and the risks it accepts.
 
 **Post-push review.** The maintainer reviews the closing report after the push, not before. The report opens with `SESSION CLOSED — no further work executed (E3)` and lists, per commit: subject, trailers (`DPs-Applied`, `Rules-Audit`, `Verified`), and any `Deferred:` entry. A `Deferred:` that the maintainer judges improper is a policy violation, not a stylistic choice.
 
 **Rollback.** A wrong auto-close is undone with `git revert <commit>` followed by a push. History is preserved; no rewriting. The revert commit message names the reverted SHA and the reason. Reopening the session after the revert follows the normal ritual.
 
+**Residual risks (judgment-bound, accepted).** D5 requires that a judgment-bound condition produce a visible artifact. These three are the known residual risks, declared not hidden:
+
+- **Blast radius** (D4 question 4). Predicting downstream effects requires judgment. If the pre-mortem misses it, the artifact is the report: the maintainer sees the rule and can contest it. Not mechanizable.
+- **D5 depends on the maintainer reading the report.** A visible artifact that nobody inspects is theatre. This is a pact, not an enforcement: the value of the protocol is proportional to the review that follows it.
+- **Auto-push skips the human check before the push.** Mitigated by rollback (above) and by post-push review (above). Not eliminated.
+
 **Not a guarantee.** Auto-closing skips the human check on the *content* of the work (C2 and the gates check mechanics, not judgment). A green closing is not a correctness proof: it is a statement that the protocol was followed. When the work is uncertain, the maintainer can still pause before the closing (E2, first paragraph).
-## 9. What this policy is not
+
+## 10. What this policy is not
 
 - It is not a substitute for `CONTRIBUTING.md` (process for humans).
 - It is not a specification of the agent's implementation.

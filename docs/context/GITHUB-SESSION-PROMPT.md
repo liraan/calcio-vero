@@ -3,7 +3,7 @@
 **Purpose:** prompt to paste as the first message of a new chat with a **read-only audit agent** (GitHub Copilot, Hermes Agent, or any AI agent with analysis capabilities). The agent produces one comprehensive Markdown report and does not modify code.
 
 **Last updated:** 2026-10-30 (commit `55a932a`)
-
+**Last updated:** 2026-10-31 (added: pure/gap classification per D4 exit clause, with `maintainer_override` column — a later audit must not re-classify a maintainer override)
 ---
 
 ## How to use
@@ -106,6 +106,8 @@ Design notes that are not bugs but that the maintainer should know about. Exampl
 Write to: `docs/context/analysis/YYYY-MM-DD-HH-MM-review.md` (ISO date, UTC).
 
 Structure: a header with `title`, `version`, `status`, `last_updated`, `auditor`, `conforms_to`; then sections 1-8 as in the existing reports (see `docs/context/analysis/archive/2026-10-29-18-18-review.md` for the exact structure). Number every finding `R-01`, `R-02`, … so the maintainer can verify each one with `grep`/`sed`.
+
+**Classify every finding.** Each finding carries a class per the exit clause of `NEW-SESSION-PROMPT.md` D4: **pure** if it exposes a latent (D2), violates an invariant (`SIM_VERSION`, `chain_hash`, schema), touches a doctrine ADR, or has no executable first action; **gap** otherwise. Present the class in the finding's row: `R-NN | class | ... | maintainer_override`. A `maintainer_override` is written by the maintainer (e.g. `gap (reason)`) and **must not be re-classified** by a later audit: read it, do not overwrite it. Default when in doubt: pure.
 
 ## Rules (non-negotiable)
 

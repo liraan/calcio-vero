@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (fase 2+fixes: B1-bis tool fallbacks; D4 decision pre-mortem + exit clause; E2 green-path derogation (auto-closing + auto-push); startup reads AGENT-POLICY + DECISION-PATTERNS (grep); §G What Git already does (interpret-trailers, commit-msg hook fires on SESSION-STATE staged, commit.template .gitmessage, DP archival check, git bisect/notes/revert); closing Step 2 = capture (2a workflow, 2b rules self-audit, 2c DP archival); Step 5 commit via .gitmessage + required trailers; DECISION-PATTERNS.md, .gitmessage, .githooks/commit-msg added; AGENT-POLICY §10 rollback + post-push review)
+**Last updated:** 2026-10-31 (rules hardening: D4 rewritten — 4 questions incl. blast radius, evidential output, self-application, "operational" defined; D5 "Mechanical and objective (visible as fallback)"; exit clause pure-vs-gap; Filter agent for judgment-bound gaps (pause in prose, present once, then OI); Gate A check A4 narrowed; GITHUB-SESSION-PROMPT: pure/gap classification + maintainer_override column; earlier same day: B1-bis, E2 derogation, §G Git, closing Step 2 capture+2b+2c, DECISION-PATTERNS, .gitmessage, commit-msg hook, AGENT-POLICY §9 rollback + residual risks)
 
 ---
 
@@ -92,16 +92,23 @@ ordered next steps, the current priority, and the files touched.
 - 🛑 **D1 — Honesty and ideas.** If you have not read a file, say so. Do not invent numbers, commit hashes, or file contents. "I don't know" > invention. **When facing ambiguity, or when the context has not been fully read, prefer completeness over speed: read the full context before acting.** New ideas go to `docs/context/IDEAS.md` (status `sketch`, with prerequisites and open questions) **before** discussion, not after. Do not implement from an idea until it has an ADR (if it touches doctrine) or a step in `SESSION-STATE.md` (if it is a task).
 - 🛑 **D2 — Doctrine and codebase.** No `unwrap`/`expect`/`panic!` in simulation paths. No `HashMap` in simulation paths. No `unsafe` outside `pcfm-bridge` (future). `pcfm-hidden` contains Plane A: no public fields, not `Serialize`, custom `Debug`; the only door is `resolve_*` + `drain_observations`; never add getters on latent values. `pcfm-testkit` has no `pcfm-*` dependencies. The simulation model is a prototype: do not "optimise" without an ADR and a `SIM_VERSION` bump. The doctrine wins: if a change contradicts `00-foundations`, a doctrine ADR is required. `docs/adr/` contains only ADRs.
 - **D3 — Bee doctrine.** A structure is added only when concrete content requires it *today* — code that uses it, or a test that verifies it. A structure that only a *future* consumer would need is an idea, not a design: it goes to `IDEAS.md`, not into an ADR, a type, or a level. When the content is little, the temptation is to design much; resist it. This applies to the agent's proposals as much as to the maintainer's.
-- **D4 — Decision pre-mortem.** After any operational decision (a rule, a new file in `docs/context/`, a protocol step, a hard-stop, a closing/startup step), before writing it, ask three questions and state the answer in one line:
+- **D4 — Decision pre-mortem.** After any **operational decision** — anything that changes the protocol's behaviour (a rule, a new file in `docs/context/`, a protocol step, a hard-stop, a closing/startup step) — before writing it, ask four questions and state the answer with evidence:
     1. **Coherence:** if everything decided so far were implemented, would it contradict an existing rule? If yes → fix or amend, do not proceed.
     2. **Leak:** does it open a way to appear compliant without being compliant? (self-controlled conditions, unverified fields, silent exceptions.) If yes → close the leak before writing.
     3. **Existence:** does this already exist — in this prompt, in Git, in a standard tool? If yes → use the existing one, do not duplicate.
+    4. **Blast radius:** what will it weaken downstream? Which future rule, gate, or artifact does it make harder to enforce? This is the one judgment-bound question: if you cannot see the downstream effect, say so — it is a finding, not a pass.
 
-    Output: `pre-mortem: coherence ok; leak ok; exists no` (or the specific finding). A finding → pause (A2), not "note for later".
+    Output (evidential, not declarative): `pre-mortem: coherence=none; leak=none (checked: self-controlled condition, unverified field, silent exception); exists=none (checked: prompt, Git, standard tool); blast=none (checked: D1-D5, C2, E2-E5)`. A finding is classified by the exit clause below.
 
-    **Mandatory triggers:** (a) new rule; (b) removed rule; (c) new file in `docs/context/`; (d) any change to D1/D2/C2, startup, closing, or a closing step; (e) any decision the maintainer declares will be implemented. For minor edits (typos, formatting, moving bullets within a section), the pre-mortem is implicit and produces no output.
-    **Exit clause.** A finding that requires a decision unavailable in this session (maintainer async, or out of scope) does not block the session. The rule change does not enter; the finding goes to `SESSION-STATE.md` Open items with a first action; the `Rules-Audit:` trailer records `findings=[...; unresolved: OI-XX]`. A finding blocks the rule, not the session.
+    **Self-application:** D4 applies to itself. The first iteration of any rule change is D4 on D4.
 
+    **Mandatory triggers:** (a) new rule; (b) removed rule; (c) new file in `docs/context/`; (d) any change to D1/D2/C2, startup, closing, or a closing step; (e) any decision the maintainer declares will be implemented. For minor edits (typos, formatting, moving bullets within a section) the pre-mortem is implicit and produces no output.
+
+    **Exit clause (objective, pure vs gap).** A finding **blocks** the session (pause, no closing) if it is **pure**: (a) exposes a latent (D2); (b) violates an invariant (`SIM_VERSION`, `chain_hash`, schema); (c) touches a doctrine ADR or a rule in this file that the finding itself would weaken; (d) is **not tracked** as an OI or step with an executable first action (§F). Otherwise it is a **gap**: it goes to `SESSION-STATE.md` with the verification action, the closing commit carries `Deferred: OI-XX` (validated by the hook), and the session closes. **Tracking does not exempt a D2 or invariant violation** — (a) and (b) always block, even if tracked. Default when in doubt: pure.
+
+    **Filter agent (FA).** The maintainer is the FA for **gaps that require judgment** (D4 question 4, D5's visible-as-fallback conditions). FA does not apply to **pure** findings: those block per the exit clause until the maintainer decides. Invoking the FA is **always a pause (A2), in prose** — no commands, no file edits, until the maintainer writes "riprendi". The agent presents the gap **once** (finding, options, default, cost) and does not iterate on a fix without a decision. No decision → the gap goes to `SESSION-STATE.md` Open items with a first action, and the session proceeds (E3).
+
+- **D5 — Mechanical and objective (visible as fallback).** The default lens for every discussion and every rule: a condition should be verifiable mechanically and objectively, by the maintainer, without trusting the agent's word. Where the condition is **inherently judgment-bound** (e.g. E2's "when the work seems complete", D4's "blast radius"), the rule must at minimum produce a visible artifact — a commit trailer, a report field, a `git log` entry. A condition controlled only by the agent's judgment, with no artifact, is a leak, even when the agent is honest. This applies to every rule in this file, including D5 itself.
 
 **E. Session lifecycle**
 
@@ -294,7 +301,7 @@ Compare the numbers across the files that claim them:
     grep -n 'tests\|crates\|ADR' docs/context/SESSION-STATE.md | head -10
     grep -n '^| 0' STRUCTURE.md | tail -25
     grep -n '^| \[0' specs/_index.md | tail -25
-    grep -n 'test\|crate\|ADR' docs/context/NEW-SESSION-PROMPT.md | head -15
+    grep -nE '[0-9]+ (tests?|crates?|ADRs?)\b|(tests?|crates?|ADRs?) [0-9]+' docs/context/NEW-SESSION-PROMPT.md | head -15
 
 All must agree. If they diverge, one is stale: fix it, and commit the fix in the same session.
 
