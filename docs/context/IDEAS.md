@@ -327,6 +327,8 @@
 - **Critical note:** this is a **sketch**, not a decision. Do not implement
   until `L2-tactics` exists and a dedicated ADR (if needed) is accepted.
 
+- **Splash screen:** an ASCII ball (character density, no ANSI needed) shown at the start of `pcfm-demo`, before the match. The artwork is supplied by the maintainer; without the text it cannot be rendered (an image is not a string). Tracked here so the decision is not lost.
+
 ### IDEA-INFRA-007 — In-match intervention (manual pause, engine hints)
 
 - **Status:** sketch
@@ -473,6 +475,13 @@
 - **Proposal:** redefine the boundary by object, not duration. L1 = the competition (calendar, results, standings: **computes** from L0). L2 = the club (squad, contracts, money, youth: **creates and changes state**). They coexist; L2 participates in L1, not the reverse.
 - **Rejected formulation:** "objective vs manipulable" — it is an epistemic dichotomy, overlapping with the Three Planes (A/B/C), and it splits L1 in two (a standing is objective, a tactic is manipulable).
 - **When:** when L1 is opened. The first decision of L1 is "what is L1 and what is L2", not "which modules do I write". Not now (D3): neither level exists.
+
+- **Alternatives to positional (considered 2026-10-31, not adopted):**
+  - **Zones:** the pitch divided into zones (defence, midfield, final third, box); each player is in a zone, not at a point. *Gives:* "shot from the box", "high press". *Loses:* distances, angles.
+  - **Graph only:** players are nodes, passes are edges; "position" is the topology. *Gives:* "the pass network was dense on the right". *Loses:* everything spatial.
+  - **Enriched events, no space:** keep the abstract model, add more event types and fields (pressure, body part, context). *Gives:* "long pass under pressure". *Loses:* "from where", "how far".
+  - **Hybrid:** space for some events (shots, corners), enriched events for the rest. *Gives:* maximum where it matters. *Loses:* coherence (a pass has no space, a shot does).
+  - **Why positional won:** it is the only model that supports *all* the sentences an FM player expects ("he was outside the box", "the defender did not see him", "the cross came from the wing"). The others support a subset. Cost: geometry, movement, perception, physics. Decided in step 18: positional with coordinates; the derived graph is downstream (IDEA-INFRA-017).
 ### IDEA-INFRA-017 — Derived graph from coordinates (downstream, not L0)
 
 - **Status:** sketch
