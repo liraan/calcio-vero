@@ -473,6 +473,17 @@
 - **Proposal:** redefine the boundary by object, not duration. L1 = the competition (calendar, results, standings: **computes** from L0). L2 = the club (squad, contracts, money, youth: **creates and changes state**). They coexist; L2 participates in L1, not the reverse.
 - **Rejected formulation:** "objective vs manipulable" — it is an epistemic dichotomy, overlapping with the Three Planes (A/B/C), and it splits L1 in two (a standing is objective, a tactic is manipulable).
 - **When:** when L1 is opened. The first decision of L1 is "what is L1 and what is L2", not "which modules do I write". Not now (D3): neither level exists.
+### IDEA-INFRA-017 — Derived graph from coordinates (downstream, not L0)
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31 (discussion on the L0 positional rewrite).
+- **Idea:** if L0 is positional with coordinates (step 18), the graph of relations between agents (who is connected to whom, who is free, who is marked) is a **derived view**, computable from the coordinates. It is not a datum L0 produces.
+- **Where it lives:** downstream, in whatever level consumes match statistics. It does not exist today. It is not part of L0.
+- **Why not L0:** L0 needs coordinates to decide actions. It does not need the graph: the graph is a *post-hoc* description, not a decision input.
+- **Plane caveat (D2):** the graph is Plane B (an agent's perception), not Plane A (the full map of coordinates). An event must never expose the full map; it exposes what the agent perceived.
+- **When:** when a container for match statistics exists. Not now (D3).
+- **Not rejected:** moved. If a future level needs topological relations, it computes them from the coordinates; nothing is lost.
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch
