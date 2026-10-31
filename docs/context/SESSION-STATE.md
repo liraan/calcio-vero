@@ -71,7 +71,7 @@ the rest of the bookmark in the same commit.
 
 | Pr. | #  | Cosa                    | Dipende da                   |
 |-----|----|-------------------------|------------------------------|
-| 🟡  | 12 | TUI demo (IDEA-INFRA-006): ADR breve + codice | — |
+| 🟡  | 12 | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR breve + codice in `pcfm-demo`. Il campo con 22 giocatori richiede L0 posizionale (step 18). Leggere prima il censimento (OI-17) per sapere cosa mostrare | — |
 | 🟡  | 2  | Fix ADR-003 (nota rename fatta `a391b85`; restano `demo.rs`, autorizzazione `pcfm-demo`) | —                            |
 | 🟡  | 3  | Terminologia (T1+T2, T3 done) | —                        |
 | 🟡  | 11 | GitHub agent Phase 2    | ruleset attivo               |
@@ -124,7 +124,7 @@ the rest of the bookmark in the same commit.
 | 9  | Leggere ADR-017, decidere: ratificare o rinviare |
 | 10 | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
 | 11 | Decisione del maintainer: attivare o no il ruleset |
-| 12 | Leggere `crates/pcfm-demo/src/` e `MatchResult` |
+| 12 | Leggere `docs/context/analysis/2026-10-31-22-28-review.md` (L0: 4 eventi su 27, nessuna posizione) e `crates/pcfm-demo/src/`, poi decidere il contenuto del board |
 | 13 | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
 | 16 | `ls -R archive data mods registry docs/calibration docs/legal 2>&1; git ls-files | wc -l; grep -rn "PLUGINS-WORLDS-READING-GUIDE\|PROJECT-STATUS" --include="*.md" . | head -20` — poi classificare vivo/orfano/alveare e proporre tagli |
 

@@ -327,6 +327,12 @@
 - **Critical note:** this is a **sketch**, not a decision. Do not implement
   until `L2-tactics` exists and a dedicated ADR (if needed) is accepted.
 
+
+- **Scope now (2026-10-31, after the L0 census).** Two things, not one:
+  - **Now — board + events.** Score, possession, shots, the event list (today 4 types: Shot, Goal, Duel, Foul), narrative, state hash, chain. This is a TUI a *scoreboard*, not a *pitch*. It validates the architectural point: a second renderer reads `MatchResult` without touching the engine (ADR-022, `simulation_is_shared_and_renderer_agnostic`). That point holds even without positions.
+  - **Later — pitch with 22 players.** Requires L0 positional (step 18), which requires L2 as a concrete consumer (D3). Not now.
+- **Why the distinction matters:** if the TUI is built as a pitch today, it will be rebuilt when `MatchResult` gains `PositionSnapshot` and attempt/outcome events. If it is built as a board, the split renderer/engine survives the rewrite: the structure (renderer reads `MatchResult`, engine unaware) is the durable part, the drawing is not.
+- **Link to OI-17:** the TUI shows the real state, and the census says what that state is (4 events out of 27, no positions). Building it after reading the census means it shows the truth, not a state we are about to change.
 - **Splash screen:** an ASCII ball (character density, no ANSI needed) shown at the start of `pcfm-demo`, before the match. The artwork is supplied by the maintainer; without the text it cannot be rendered (an image is not a string). Tracked here so the decision is not lost.
 
 ### IDEA-INFRA-007 — In-match intervention (manual pause, engine hints)
