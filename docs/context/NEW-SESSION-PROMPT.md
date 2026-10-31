@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (rules hardening: D4 rewritten — 4 questions incl. blast radius, evidential output, self-application, "operational" defined; D5 "Mechanical and objective (visible as fallback)"; exit clause pure-vs-gap; Filter agent for judgment-bound gaps (pause in prose, present once, then OI); E2 derogation (e) reformulated — "classified as 🔴 during this session", pre-existing tracked not deferred; Gate A check A4 narrowed; GITHUB-SESSION-PROMPT: pure/gap classification + maintainer_override column; earlier same day: B1-bis, §G Git, closing Step 2 capture+2b+2c, DECISION-PATTERNS, .gitmessage, commit-msg hook, AGENT-POLICY §9 rollback + residual risks)
+**Last updated:** 2026-10-31 (gates: `scripts/gates.sh` extracted from Gate A/B; `.githooks/pre-push` blocks a red push; Step 3 and Step 5 reference the script. Earlier: rules hardening — D4 four questions, D5 mechanical-and-objective, pure-vs-gap exit clause, Filter agent; B1-bis; E2 green-path derogation; §G Git trailers; Step 2 capture + 2b + 2c; DECISION-PATTERNS; AGENT-POLICY §9)
 
 ---
 
@@ -290,9 +290,13 @@ Output trailer: `Rules-Audit: findings=[...]` (paused) or `Rules-Audit: N change
 
 **2c — DP archival check** (only if active DPs ≥ 3). Run `git log --format='%h %(trailers:key=DPs-Applied,valueonly)' -6 --grep='checkpoint\|session-state'` and compare against active DPs. A DP absent from the two most recent closings is proposed for archival in the report; archival is a maintainer decision, not automatic.
 
-### 3. Pre-close gates (both must pass before step 4)
+### 3. Pre-close gates
+
+Run `scripts/gates.sh` first: it performs the mechanical subset of Gate A and Gate B and exits non-zero on failure. Then do the manual checks (B2 Plan vs Detail order, B4 Prime azioni match reality, B5 Files touched vs git status) as described below.
 
 Two gates, run in order. If either fails, fix and re-run it before step 4. Do not note a failure for later; the bookmark must be true when the closing commit is made.
+
+The commands below are the source of truth for `scripts/gates.sh`; keep them in sync.
 
 **Gate A — documentation coherence.**
 
@@ -342,8 +346,10 @@ The checkpoint commit is **one logical commit**:
 
     git add docs/context/SESSION-STATE.md
     git commit -t .gitmessage
-    git push
+    scripts/gates.sh && git push
     git status -sb
+
+`scripts/gates.sh` re-runs the mechanical checks of Gate A and Gate B. The `pre-push` hook (`.githooks/pre-push`) calls it automatically and blocks the push if red. Running it explicitly first means a red gate is fixed before the commit is made, not after.
 
 The commit message uses `.gitmessage` as template. Compile subject, optional body, and the **required trailers** (validated by `.githooks/commit-msg`):
 
@@ -352,7 +358,7 @@ The commit message uses `.gitmessage` as template. Compile subject, optional bod
 - `Verified: C2-green`
 - `Deferred: OI-XX (reason)` — optional, only if the OI exists in `SESSION-STATE.md`
 
-`--no-verify` is a protocol violation, not a shortcut.
+`--no-verify` is a protocol violation, not a shortcut. If a push was made with `--no-verify`, the closing report says so explicitly.
 
 `git status -sb` must show `## main...origin/main` with no `[ahead]` or `[behind]`. If it does, the session is not closed.
 

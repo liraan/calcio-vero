@@ -403,6 +403,19 @@
 - **What:** a `CauseTrace` with a non-empty `contributing_factors`, each factor an observed metric with a declared source. Reintroduced via a new ADR, not by reviving the old one.
 - **Anti-pattern to avoid:** do not reintroduce `CauseTrace` as a placeholder field. It comes back only when it can hold content (D3).
 
+### IDEA-INFRA-010 — CI workflow + ruleset (phase 2)
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31 (pre-push hook discussion).
+- **Why:** the `pre-push` hook is bypassable with `--no-verify`. Server-side enforcement is not. In phase 1 (ruleset disabled, no CI, single maintainer) the hook is the best available defence; in phase 2 it must be replaced by CI + ruleset.
+- **When:** the commit that activates the ruleset (phase 2, `AGENT-POLICY` §1).
+- **What:**
+  - `.github/workflows/ci.yml`: runs C2 and `scripts/gates.sh` on every push and PR. The script is the single source of truth: the CI job calls it, it does not duplicate the logic.
+  - Ruleset on `main`: branch + PR + 1 approval, required status check = the CI job. Direct push blocked server-side.
+- **Prerequisite:** phase 2 start, a second reviewer (or a bot with a write token), and the ruleset activated per `AGENT-POLICY` §1.
+- **Anti-pattern:** do not create an inactive workflow file now (D3). It is created when it can run.
+
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch

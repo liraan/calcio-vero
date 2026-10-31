@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-push gate: runs scripts/gates.sh before any push.
+# Exit non-zero to block the push.
+#
+# Bypass: `git push --no-verify` (documented, not recommended).
+# In phase 2 this is replaced by the ruleset + CI on GitHub (server-side,
+# not bypassable). See docs/context/AGENT-POLICY.md and IDEA-INFRA-010.
+
+set -u
+
+if [ ! -x scripts/gates.sh ]; then
+  echo "pre-push: scripts/gates.sh not found or not executable" >&2
+  exit 1
+fi
+
+if sh scripts/gates.sh; then
+  exit 0
+else
+  echo "" >&2
+  echo "pre-push: gates RED - push blocked." >&2
+  echo "pre-push: fix the failures above, or bypass with --no-verify (not recommended)." >&2
+  exit 1
+fi
