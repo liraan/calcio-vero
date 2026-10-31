@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `be0da42` — "feat(hooks): Decisions trailer — captures the residue of the conversation at closing"
+**Last commit verified:** `718605d` — "docs(rules): B1-bis — a git commit block may run twice"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -129,6 +129,7 @@ the rest of the bookmark in the same commit.
 
 **Done (storico):** 1, 2, 6, 10bis, 10ter, 10quater, 0ter, 15; OI-1 (R-01 decision: causa osservata, ADR-023); OI-3 (C: PROJECT-IDEA-LOG archived) — commit hash in `git log --oneline`.
 Step 14 (R-01 + xg + CauseTrace): closed in `f4506d7`. ADR-024 supersedes ADR-023. OI-5, OI-9, OI-10, OI-11, OI-15, OI-16, OI-17 closed. SIM_VERSION 1→2. Tests 103→102.
+Sessione 2026-10-31 (multi-tornata): A2/E2 con "chiudi" e "riprendi" esatti (no equivalente); `Decisions:` trailer (hook + template + §G + closing step 4 con conversation sweep); closing 2a esteso alle osservazioni inattese; B1-bis: transient M e doppio commit; gates.sh `startup|closing` + startup step 2-bis; narrativa: template_key/params rimossi (SIM 2→3); 4 gusci rimossi (SIM 3→4); step 4 (sanitize --html), 6a (F1/R-07/R-04), 6b (maturity), 16 (PROJECT-STATUS rimosso); OI-12 chiuso, OI-15 e OI-16 aggiunti; IDEA-INFRA-014/015/016/017 + splash in 006; step 18 riscritto (posizionale deciso). 105 test, SIM 4.
 Step 6a (doc consistency meccanica): closed in `cc5294b`. F1 (`Cargo.toml:10` → `PLUGIN_DEVELOPER_GUIDE.md`), R-07 (`CODE_TOUR:128` 5→4 refs), R-04 (`STRUCTURE` ADR inventory 21→22, 000–024). R-05 no-op.
 OI-12 (Gate A check A4 rumoroso): closed 2026-10-31. The broad pattern on NEW-SESSION-PROMPT.md was replaced by the narrow `[0-9]+ (tests?|crates?|ADRs?)` in both the ritual and `scripts/gates.sh` A3. Verified: the old pattern no longer exists.
 Step 6b (F6 maturity statement): closed 2026-10-31. README has a "Maturity" table: doctrine (settled), L0 spec (ratified), L0 implementation (prototype), ADRs (evolving), tests (green), L1-L3 (not started). Explicit: "L0 complete" means the contract is ratified, not that the engine is realistic.
@@ -195,3 +196,5 @@ OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); 
 **Files touched this session (2026-10-31, `Decisions:` trailer — E3c):** `.githooks/commit-msg` (`Decisions:` required on closing commits); `.gitmessage` (template line); `docs/context/NEW-SESSION-PROMPT.md` (§G trailer list, closing step 4 conversation sweep, `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `6fac1da`).
 
 **Files touched this session (2026-10-31, A2 exact words + OI-16 — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (A2: exactly two words exit the pause, `riprendi` and `chiudi`, written exactly, no equivalent; E2 aligned; `Last updated`); `docs/context/SESSION-STATE.md` (OI-16: granularity assessment + one-off measurement plan; this entry; `Last commit verified` aligned to `be0da42`).
+
+**Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Last commit verified 718605d, Done storico, this entry). Nient'altro modificato in questa tornata: i commit `843ba4b`, `718605d` sono già su disco.
