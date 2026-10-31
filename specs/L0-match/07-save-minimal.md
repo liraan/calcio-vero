@@ -58,7 +58,6 @@ pub struct MatchSave {
 
     // Metadata
     pub command_log: Vec<Command>,       // for replay
-    pub config_versions: BTreeMap<String, SemVer>,
 }
 ```
 
@@ -130,7 +129,7 @@ At L0, there are no interactive commands (a friendly match runs to completion). 
 - **Save of a match in progress**: not supported at L0 (a match is atomic); supported at L1
 - **Save of a completed match**: replayable
 - **`command_log` contains an unknown command**: rejected, save quarantined
-- **`config_versions` missing**: load fails with a clear error (the match cannot be reconstructed without knowing which config it ran with)
+- **`config_versions` was removed at L0** (SIM_VERSION 4, 2026-10-31): it was always empty and had no reader. Config versioning returns when there are config files to version (L2+). At that point, the edge case "missing → load fails" will be reintroduced.
 - **`GroundTruth::new` produces a different state than at the original save**: this is a determinism regression. The chain verification fails. The save is quarantined. A `SIM_VERSION` bump is required.
 
 ## 5. Definition of Done

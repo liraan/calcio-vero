@@ -8,7 +8,7 @@
 //! - The `EventChain` (append-only events).
 //! - The `MatchResult` (score, stats, state hash, narrative).
 //! - Metadata: `schema_version`, `sim_version`, `world_seed`, `match_id`,
-//!   `created_at`, `config_versions`.
+//!   `created_at`.
 //!
 //! # What is NOT saved
 //!
@@ -47,8 +47,6 @@
 //!   `replay` would produce a different result.
 //! - If the chain hash does not verify, the save is rejected (tampering).
 
-use std::collections::BTreeMap;
-
 use pcfm_core::ids::MatchId;
 use pcfm_core::rng::RngRegistry;
 use pcfm_core::time::GameInstant;
@@ -73,7 +71,7 @@ pub const SCHEMA_VERSION: u32 = 1;
 /// event emission). A bump requires a `CHANGELOG-SIM.md` entry and a
 /// golden-test regeneration. See `docs/adr/003-plane-a-enforcement.md` and
 /// `CHANGELOG-SIM.md`.
-pub const SIM_VERSION: u32 = 3;
+pub const SIM_VERSION: u32 = 4;
 
 /// The save of a single match.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,8 +92,6 @@ pub struct MatchSave {
     pub events: EventChain,
     /// The result of the simulation (score, stats, state hash, narrative).
     pub result: MatchResult,
-    /// The versions of the configuration files used.
-    pub config_versions: BTreeMap<String, String>,
 }
 
 impl MatchSave {
@@ -116,7 +112,6 @@ impl MatchSave {
             match_: match_.clone(),
             events: result.events.clone(),
             result: result.clone(),
-            config_versions: BTreeMap::new(),
         }
     }
 

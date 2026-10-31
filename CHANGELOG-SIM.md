@@ -91,6 +91,36 @@ match), say so and give the distribution delta.
 
 ## History
 
+## [SIM_VERSION 4] — 2026-10-31
+
+### Why the bump
+
+`MatchEvent` lost three fields: `career_minutes_cumulative`, `season_label`, `observed_attrs_snapshot_hash`. All three were always `None` or a duplicate of another field: `career_minutes_cumulative` equalled `minutes_played_cumulative`, `season_label` was `None` in production, `observed_attrs_snapshot_hash` was `None`. The event payload enters `chain_hash`, so the bump is mandatory. `MatchSave` also lost `config_versions`, always empty: that alone would not require a bump, but it is included in the same change.
+
+### What changes for the same seed
+
+The `chain_hash` differs from SIM_VERSION 3 for the same seed: the serialised `MatchEvent` has three fewer fields. Score, possession, shots and the events themselves (type, minute, player) are identical.
+
+### Saves affected
+
+- Load: yes, unknown fields are ignored.
+- Replay: no — `can_replay()` returns false for SIM_VERSION < 4.
+- Migration: none. Old saves are read-only.
+
+### Golden hash
+
+- Not recorded. The 10-season golden test does not exist yet (OI-14).
+- Verified by: C2, locally, 2026-10-31.
+
+### Related changes
+
+- `crates/pcfm-stats/src/event.rs`: three fields removed from `MatchEvent`; `Hash` import removed.
+- `crates/pcfm-match/src/save.rs`: `config_versions` removed; `SIM_VERSION` 3 -> 4.
+- Specs: `05-match-events.md` §2.4/§2.5 (removed fields), `07-save-minimal.md` (`config_versions`).
+- IDEAS: IDEA-INFRA-012 (career/season data at L1), IDEA-INFRA-013 (observed-attrs snapshot at Plane C).
+
+---
+
 ## [SIM_VERSION 3] — 2026-10-31
 
 ### Why the bump

@@ -116,11 +116,8 @@ mod tests {
             timestamp_minute: minute,
             timestamp_second: 0,
             minutes_played_cumulative: u16::from(minute),
-            career_minutes_cumulative: u32::from(minute),
-            season_label: None,
             event_type: EventType::Pass,
             fields: serde_json::json!({}),
-            observed_attrs_snapshot_hash: None,
             created_at: GameInstant::from_raw(u64::from(minute)),
         }
     }

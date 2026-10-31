@@ -7,7 +7,6 @@
 //! Events are **never** modified or deleted. The `EventChain` (in `chain.rs`)
 //! enforces this at the storage level: there is no `update` or `delete`.
 
-use pcfm_core::hash::Hash;
 use pcfm_core::ids::{EventId, MatchId, PlayerId};
 use pcfm_core::time::GameInstant;
 use serde::{Deserialize, Serialize};
@@ -94,16 +93,10 @@ pub struct MatchEvent {
     pub timestamp_second: u8,
     /// The minutes played by this player, in this match, up to this event.
     pub minutes_played_cumulative: u16,
-    /// The minutes played by this player, in their career, up to this event.
-    pub career_minutes_cumulative: u32,
-    /// The season label, e.g. `"2026-27"`, or `None` at L0.
-    pub season_label: Option<String>,
     /// The type of event.
     pub event_type: EventType,
     /// Variant-dependent fields.
     pub fields: serde_json::Value,
-    /// The hash of the observed attributes snapshot at the time of the event.
-    pub observed_attrs_snapshot_hash: Option<Hash>,
     /// When the event was created (simulation time).
     pub created_at: GameInstant,
 }
@@ -136,11 +129,8 @@ mod tests {
             timestamp_minute: 45,
             timestamp_second: 30,
             minutes_played_cumulative: 45,
-            career_minutes_cumulative: 450,
-            season_label: Some("2026-27".into()),
             event_type: EventType::Goal,
             fields: serde_json::json!({ "goal": true }),
-            observed_attrs_snapshot_hash: None,
             created_at: GameInstant::from_raw(100),
         }
     }

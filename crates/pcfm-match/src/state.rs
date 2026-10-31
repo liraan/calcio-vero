@@ -236,11 +236,8 @@ impl MatchState {
             timestamp_minute: minute,
             timestamp_second: second,
             minutes_played_cumulative: minutes_played,
-            career_minutes_cumulative: u32::from(minutes_played),
-            season_label: None,
             event_type,
             fields,
-            observed_attrs_snapshot_hash: None,
             created_at: GameInstant::from_raw(tick),
         };
         self.next_event_slot += 1;

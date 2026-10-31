@@ -53,9 +53,6 @@ pub struct MatchEvent {
     pub timestamp_minute: u8,               // 0–120, may exceed 90 for stoppage
     pub timestamp_second: u8,
     pub minutes_played_cumulative: u16,     // for this player, this match
-    pub career_minutes_cumulative: u32,     // for this player, career
-
-    pub season_label: Option<String>,       // None at L0 (friendly)
 
     pub event_type: EventType,
     pub fields: serde_json::Value,          // variant-dependent
@@ -64,13 +61,9 @@ pub struct MatchEvent {
     position_snapshot: Option<PositionSnapshot>,  // positions at the moment of the attempt
     attempt_event_id: Option<EventId>,            // for outcome events: the attempt that produced them
 
-    // Audit — never contains a latent value
-    pub observed_attrs_snapshot_hash: Option<Hash>,
     pub created_at: GameInstant,
 }
 ```
-
-**Important:** `observed_attrs_snapshot_hash` is a hash of the **observed** attributes (Plane C) at the moment of the event, not the latent attributes. It is used for audit, not for exposing latents. If the observed attributes change later, the event still references the hash of what was observed at the time.
 
 ### 2.2 Event types (L0 set)
 
@@ -125,7 +118,7 @@ pub struct EventChain {
 
 ### 2.5 Career minutes
 
-`career_minutes_cumulative` at L0 is derived from the save, not from a global career. At L0 (friendly match), it equals `minutes_played_cumulative`. At L1+, it accumulates across matches.
+**Removed at L0 (SIM_VERSION 4, 2026-10-31).** `career_minutes_cumulative` duplicated `minutes_played_cumulative` at L0 and `season_label` was always `None` (a friendly has no season). Both are gusci (D3). They return at L1, with real content: see IDEA-INFRA-012. The section number is kept to avoid breaking the `§2.6` cross-references in `ARCHITECTURE.md`, `CODE_TOUR.md`, `GLOSSARY.md`, `PLUGIN_DEVELOPER_GUIDE.md`.
 
 ### 2.6 Two synchronous phases
 
@@ -159,7 +152,6 @@ All fields are `Serialize`/`Deserialize` for the save (see `L0.07`). None of the
 - **Event with empty `fields`**: allowed; `fields` may be `{}` when the event carries no variant data
 - **Event chain broken**: load fails, save is quarantined
 - **Duplicate `event_id`**: rejected, this is a generational ID collision (bug)
-- **`observed_attrs_snapshot_hash` is `None`**: allowed (the observed attributes were not snapshotted at this event; used for low-importance events)
 - **Attempt event with no outcome**: allowed (the action was interrupted before resolution; the attempt is kept for audit)
 - **Outcome event with no attempt**: rejected at construction for attempt-derived event types (e.g. `Pass`, `Offside` require `attempt_event_id`)
 
@@ -172,7 +164,6 @@ All fields are `Serialize`/`Deserialize` for the save (see `L0.07`). None of the
 - [ ] Append-only enforced by type (no `&mut` accessor to events)
 - [ ] Test: chain hash verified on reload
 - [ ] Test: no `MatchEvent` field contains a latent value (compile-time check on types)
-- [ ] Test: `observed_attrs_snapshot_hash` is a hash of Plane C data, not Plane A
 - [ ] Test: `PassAttempted` carries a `position_snapshot`; the resulting `Pass` or `Offside` references it via `attempt_event_id`
 - [ ] Test: attempt with no outcome leaves `attempt_event_id` = `None` and does not break the chain
 

@@ -426,6 +426,24 @@
 - **What:** `NarrativeEntry` gets back `template_key` and `params` (or a typed equivalent). `render_text` becomes a lookup. The default `text` stays as a fallback for renderers that do not localise.
 - **Anti-pattern:** do not reintroduce the fields before the locale files exist. A field with no reader is a guscio (the reason it was removed).
 
+### IDEA-INFRA-012 — Career and season data on the event (L1+)
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31, removal of `career_minutes_cumulative` and `season_label` from `MatchEvent` (SIM_VERSION 3→4).
+- **Why:** at L0 both were gusci. `career_minutes_cumulative` duplicated `minutes_played_cumulative`; `season_label` was always `None` (a friendly has no season). They were removed under D3.
+- **When:** L1, when a season exists. Prerequisite: L1-season implemented, a global career ledger.
+- **What:** the fields come back with real content. `career_minutes_cumulative` accumulates across matches; `season_label` is `Some("2026-27")` during a season. Reintroduced via a new ADR, not by reviving L0.
+
+### IDEA-INFRA-013 — Observed-attributes snapshot hash (Plane C)
+
+- **Status:** sketch
+- **Category:** Infra
+- **Source:** session 2026-10-31, removal of `observed_attrs_snapshot_hash` from `MatchEvent` (SIM_VERSION 3→4).
+- **Why:** at L0 the field was always `None`: no observed attributes exist yet (Plane C is not implemented). It was removed under D3.
+- **When:** when Plane C exists and produces observed attributes (windowed indexes, projection profiles). Prerequisite: L2-scouting / Plane C.
+- **What:** the event carries the hash of the observed attributes at the moment of the event, for audit. It is a hash of Plane C data, never of Plane A. Reintroduced via a new ADR.
+
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch
