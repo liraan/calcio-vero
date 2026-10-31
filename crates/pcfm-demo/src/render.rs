@@ -85,6 +85,51 @@ fn hex(bytes: &[u8]) -> String {
 /// # Errors
 ///
 /// Returns an I/O error if the file cannot be written.
+/// Validates that `path` stays inside the current working directory.
+///
+/// Rejects absolute paths and any `..` component. Canonicalises the parent
+/// directory (which must exist) and checks that it is a descendant of the
+/// current directory, so symlinks cannot escape either.
+///
+/// # Errors
+///
+/// Returns `InvalidInput` for an absolute path or a `..` component, and
+/// `PermissionDenied` if the resolved parent escapes the working directory.
+fn sanitize_output_path(path: &str) -> std::io::Result<std::path::PathBuf> {
+    use std::path::{Component, Path};
+
+    let p = Path::new(path);
+    if p.is_absolute() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "absolute paths are not allowed; use a path relative to the current directory",
+        ));
+    }
+    for comp in p.components() {
+        if matches!(comp, Component::ParentDir) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "path traversal ('..') is not allowed",
+            ));
+        }
+    }
+    let parent = p
+        .parent()
+        .filter(|d| !d.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let file_name = p.file_name().ok_or_else(|| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no file name")
+    })?;
+    let canon_parent = std::fs::canonicalize(parent)?;
+    let cwd = std::fs::canonicalize(std::env::current_dir()?)?;
+    if !canon_parent.starts_with(&cwd) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            "output path escapes the current working directory",
+        ));
+    }
+    Ok(canon_parent.join(file_name))
+}
 pub fn write_html(result: &MatchResult, path: &str) -> std::io::Result<()> {
     let mut html = String::new();
     html.push_str("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">");
@@ -151,7 +196,8 @@ pub fn write_html(result: &MatchResult, path: &str) -> std::io::Result<()> {
     );
     html.push_str("</body></html>");
 
-    std::fs::write(path, html)
+    let safe_path = sanitize_output_path(path)?;
+    std::fs::write(safe_path, html)
 }
 
 /// Minimal HTML escaping: `&`, `<`, `>`.
@@ -164,6 +210,21 @@ fn html_escape(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sanitize_rejects_absolute() {
+        assert!(sanitize_output_path("/tmp/x.html").is_err());
+    }
+
+    #[test]
+    fn sanitize_rejects_parent_dir() {
+        assert!(sanitize_output_path("../x.html").is_err());
+    }
+
+    #[test]
+    fn sanitize_accepts_relative() {
+        assert!(sanitize_output_path("x.html").is_ok());
+    }
 
     #[test]
     fn hex_of_zero_is_all_zeros() {

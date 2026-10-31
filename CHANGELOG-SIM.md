@@ -11,10 +11,10 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 2
+SIM_VERSION = 4
 ```
 
-This is the **second baseline**. `SIM_VERSION = 1` was the initial baseline; `SIM_VERSION = 2` is the first real bump (ADR-024, 2026-10-31). The reference against which all future bumps are measured is the current value.
+`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. The current value is the reference against which all future bumps are measured.
 
 **Known gap (OI-14):** no golden hash exists yet — the 10-season golden test is not implemented. The bump procedure below notes this explicitly.
 
