@@ -6,4 +6,5 @@
 # DPs-Applied: DP-01, DP-03   |   DPs-Applied: none
 # Rules-Audit: N changes, 0 contradictions, 0 leaks   |   Rules-Audit: skipped, no rule changes
 # Verified: C2-green
+# Decisions: N (X -> IDEA-006; Y -> OI-15; Z -> B1-bis)   |   Decisions: none
 # Deferred: OI-XX (reason)    -- optional, only if the OI exists in SESSION-STATE.md

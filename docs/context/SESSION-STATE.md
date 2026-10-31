@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `64b2fef` — "docs(context): capture 4 items — OI-15 (A2 redundancy), splash screen, positional alternatives, transient M"
+**Last commit verified:** `6fac1da` — "docs(rules): closing 2a captures unexpected observations, not only failures"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -190,3 +190,5 @@ OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); 
 **Files touched this session (2026-10-31, gates text coherence — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (closing Gate A rewritten: A1 count comparison, A2 badge, A3 no hardcoded — the "commands below are the source of truth" line removed, D5 leak; startup step 2-bis gains "Why these checks run twice"; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `1e7fbad`).
 
 **Files touched this session (2026-10-31, closing step 2a — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (closing 2a now also captures a command that succeeded with an unexpected observation; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `64b2fef`).
+
+**Files touched this session (2026-10-31, `Decisions:` trailer — E3c):** `.githooks/commit-msg` (`Decisions:` required on closing commits); `.gitmessage` (template line); `docs/context/NEW-SESSION-PROMPT.md` (§G trailer list, closing step 4 conversation sweep, `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `6fac1da`).

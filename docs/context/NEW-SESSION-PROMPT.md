@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-10-31 (closing step 2a now also captures a command that succeeded with an unexpected observation, not only a command that failed; the transient `M` of this session is the first case). Earlier: B1-bis transient M; IDEA-006 splash; IDEA-016 positional alternatives; gates startup|closing; closing Gate A text describes gates.sh; chiudi; heredoc lesson; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
+**Last updated:** 2026-10-31 (`Decisions:` trailer added — hook mandatory on closing commits, .gitmessage, §G, closing step 4 with a conversation sweep. The trailer captures design decisions/open questions/unexpected observations that are not yet in a file. Earlier: closing 2a unexpected observations; B1-bis transient M; IDEA-006 splash; IDEA-016 alternatives; gates startup|closing; closing Gate A text; chiudi; heredoc lesson; D4/D5; pure-vs-gap; Filter agent; E2 green-path; §G Git; Step 2 capture+2b+2c; DECISION-PATTERNS; AGENT-POLICY §9)
 
 ---
 
@@ -145,6 +145,7 @@ If Git provides the mechanism, use it. Session metadata lives in **commit traile
     - `DPs-Applied:` — which decision patterns were used (`DP-01, DP-03` or `none`).
     - `Rules-Audit:` — output of Step 2b (`N changes, 0 contradictions, 0 leaks`, or `findings=[...]`).
     - `Verified:` — `C2-green` when the full quality gate ran and passed.
+    - `Decisions:` — what the session decided and where it went (`N (X -> IDEA-006; Y -> OI-15)`, or `none`). This is the trailer that captures the residue of the conversation: a design decision, an open question, an unexpected observation. Written by the agent from a reread of the session, not from memory.
     - `Deferred:` — an explicit deferral of a 🔴 or a step (`OI-XX (reason)`), only if the referenced OI exists in `SESSION-STATE.md`.
 - **Reading trailers**:
     - `git log -1 --format='%(trailers:key=DPs-Applied,valueonly)'`
@@ -351,6 +352,9 @@ If any check fails, update `SESSION-STATE.md` and re-run the failed check. The b
 ### 4. Bookmark update
 
 Update all five sections of the Bookmark contract (§F above). In particular: `Last commit verified` (S1 semantics), Open items (new verifications, decisions deferred, ideas), Plan (next steps, each with first concrete action), Files touched this session (dated), Done (closed items, commit ranges).
+
+
+**Before writing the bookmark, a conversation sweep.** Reread the session (since the last closing) and list every design decision, open question, and unexpected observation that is not yet in a file. Each goes to its home: design ideas → `IDEAS.md` (status `sketch`), open questions → Open items, workflow lessons → B1-bis, decisions that change the protocol → the rule files (Step 2b already covers them). Then write the `Decisions:` trailer: `N (X -> IDEA-006; Y -> OI-15)`, or `none`. The hook rejects a closing commit without it. This is the one step that cannot be made fully mechanical: the trailer is the artifact, the reread is judgment.
 
 ### 5. Commit and push (before the report)
 

@@ -22,6 +22,7 @@ fi
 echo "$trailers" | grep -qE '^DPs-Applied:'  || { echo "commit-msg: missing 'DPs-Applied:' trailer (exact case, at line start)" >&2; exit 1; }
 echo "$trailers" | grep -qE '^Rules-Audit:'  || { echo "commit-msg: missing 'Rules-Audit:' trailer (exact case, at line start)" >&2; exit 1; }
 echo "$trailers" | grep -qE '^Verified:'     || { echo "commit-msg: missing 'Verified:' trailer (exact case, at line start)" >&2; exit 1; }
+echo "$trailers" | grep -qE '^Decisions:' || { echo "commit-msg: missing 'Decisions:' trailer (exact case, at line start)" >&2; exit 1; }
 
 deferred=$(echo "$trailers" | grep -E '^Deferred:' || true)
 if [ -n "$deferred" ]; then
