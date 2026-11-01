@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `a3ffc2b` — "docs(rules): the prompt said "there is no CI"; CI exists since 23ed159"
+**Last commit verified:** `39c444b` — "feat(l0): spatial state — AgentState, SpatialState, 4-4-2 grid (slice A)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -33,7 +33,7 @@
 | ⬜ | 8 | **ADR-019 deferred 4-9: verificati 2026-11-01, nessuno chiudibile.** 4 (UX) e 5 (resolution per piattaforma) richiedono UI/mobile reali; 6 (adaptive) richiede un ADR dedicato; 7 (LOD override) un emendamento ad ADR-013; 8 (zona di influenza) `docs/calibration/` vuota; 9 (role→tactic) `L2-tactics` non esiste. Non è un rinvio: è D3, non c'è contenuto concreto | — | Riaprire quando la dipendenza esiste. Nessuna azione ora |
 | ⬜ | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
 | ✅ | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
-| 🟡 | A | **Slice posizionale A — fondamenta** (`docs/context/L0-POSITIONAL-SLICE.md` §7). `spatial.rs`: `AgentState` (posizione intera, velocità, heading), `SpatialState` (`BTreeMap<PlayerId, AgentState>`, palla), griglia 4-4-2 da `Squad.formation`. Test: griglia deterministica, away mirror, 11 starter. C2 verde | — | Aprire `docs/context/L0-POSITIONAL-SLICE.md` §3.1 e §3.2, scrivere `crates/pcfm-match/src/spatial.rs` |
+| ✅ | A | **Slice posizionale A — fondamenta**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b`. Il motore non lo usa ancora: `pick_players` c'è ancora | — | Fatto. Vedi slice B |
 | ⬜ | B | **Slice posizionale B — percezione + decisione.** `perception.rs` (distanza al quadrato, 3 più vicini); `pick_players` sostituito da "agisce l'agente più vicino alla palla"; una decisione: passa al compagno libero più vicino, o muoviti verso la porta. Test: l'agente che agisce è il più vicino; il target del pass è il compagno libero più vicino. C2 verde | A | Leggere §3.3 e §3.4 della nota, scrivere `perception.rs` |
 | ⬜ | C | **Slice posizionale C — movimento + bump.** Velocità applicata alla posizione ogni tick (interi). OI-22 (stream RNG con `match_id`). `SIM_VERSION` 7→8, golden hash rigenerato, `CHANGELOG-SIM`. C2 verde, commit, push | B | Leggere §3.5 e §7-sessione C della nota; `save.rs` SIM_VERSION |
 ## Decisioni operative (2026-11-01)

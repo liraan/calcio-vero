@@ -196,6 +196,45 @@ The board keeps working: `MatchResult` does not change.
    This is why `SIM_VERSION` bumps and the golden hash is regenerated. The
    new distribution is not calibrated; it is the first spatial one.
 
+## 6-bis. State at 2026-11-01, end of session
+
+**Slice A is done** (commit `39c444b`). What exists now:
+
+- `crates/pcfm-match/src/spatial.rs` (204 lines): `AgentState`
+  (`position: (i32, i32)` cm, `velocity: (i16, i16)`, `heading: u16`),
+  `SpatialState` (`BTreeMap<PlayerId, AgentState>` + `ball: (i32, i32)`),
+  `from_squads(pitch, home, away)` with the 4-4-2 grid, away mirrored, ball
+  at the centre.
+- 6 tests, all green: 22 agents, determinism (same input → same output),
+  ball at the centre, goalkeepers at the extremes, every position inside
+  the pitch, away mirrored on x.
+- Exported from `pcfm-match`: `pub use spatial::{AgentState, SpatialState};`
+- 129 tests total (was 123). Badge and the four docs updated. A4 green.
+
+**What has NOT changed** (important for the next agent):
+
+- `state.rs` still has `pick_players` (random pick, no space).
+- `SpatialState` exists but **nobody uses it yet**. The engine does not
+  build it, does not read it. It is dead code until slice B.
+- `SIM_VERSION` is still 7. The golden hash is unchanged.
+- `MatchEvent` has no `position_snapshot`. `MatchResult` is unchanged.
+- The board still works: `cargo run -p pcfm-demo -- --seed 42 --board`.
+
+**The next concrete step (slice B):** in `state.rs`, `MatchState::new`
+takes the match and builds the `SpatialState` (or `simulate_match` builds
+it and passes it). `pick_players` is replaced by "the agent nearest the
+ball acts". `perception.rs` computes squared distance to the 3 nearest
+opponents and teammates. One decision: pass to the nearest free teammate
+(free = no opponent within 3 m), or move toward the goal.
+
+**Reading order for the next agent, before writing any code:**
+
+1. `docs/context/SESSION-STATE.md` (the bookmark: where we are)
+2. this note, §1 (the gap), §3 (the decisions), §6-bis (what exists)
+3. `crates/pcfm-match/src/spatial.rs` (what slice A produced)
+4. `crates/pcfm-match/src/state.rs`, `pick_players` at `:228` (what slice B
+   replaces)
+5. `specs/L0-match/04-match-engine.md` §2.2 (the target tick loop)
 ## 7. The three sessions, concretely
 
 **Session A (morning, design + foundations).**
