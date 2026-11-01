@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `f750446` — "docs(context): note rewritten for a new agent — vision, map, next step"
+**Last commit verified:** `ec86eed` — "docs(context): §For the new agent — self-contained note for a fresh agent"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
