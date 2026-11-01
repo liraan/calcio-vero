@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `0d605e0` — "docs(session-state): reformat §F — 17a (Stato lavoro → Done, Dettagli compact, 17b traced)"
+**Last commit verified:** `b1f6d12` — "docs(analysis): amend 12-42-review (L reversed, not applied); archive it"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -80,3 +80,4 @@ the rest of the bookmark in the same commit.
 
 **Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; OI-16 chiuso; OI-18 riformulato; aggiunta sezione `Analysis reports (vivi)`; `Last commit verified` aligned to `d504e0e`; this entry).
 **Files touched this session (2026-11-01, review of 12-42 + archival):** `docs/context/analysis/2026-10-31-12-42-review.md` (amended: status header, table H and L, §3a H/L split, Verdict, footer; then `git mv` to `analysis/archive/`); `docs/context/SESSION-STATE.md` (rimossa entry dalla sezione "Analysis reports (vivi)", aggiunto in `Done` l'entry di amend+archival, `Last commit verified` aligned to `0d605e0`, this entry).
+**Files touched this session (2026-11-01, B1-bis lesson — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (B1-bis: new bullet — `git add` with multiple paths fails entirely if one pathspec is missing; fallback: one path per `git add`, verify with `git status --short`; `Last updated` refreshed); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `b1f6d12`).
