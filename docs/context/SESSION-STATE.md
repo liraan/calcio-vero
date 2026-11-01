@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `4f3aa94` — "docs(audit): dimension 7 Gate integrity — audit gates.sh as code"
+**Last commit verified:** `d504e0e` — "docs(session-state): closing 2026-10-31 — S1 hook, OI-18, Gate integrity, TUI scope"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -11,80 +11,45 @@ the rest of the bookmark in the same commit.
 
 **Ideas backlog:** `docs/context/IDEAS.md` — open and rejected ideas. Read it at session start to see what is not yet decided; do not implement from it.
 
-<!-- Formato Piano: legenda in alto, due tabelle (Stato lavoro, Da fare) con emoji di priorità, dettagli sotto. Se cambi la forma, aggiorna questa nota nello stesso commit. Non riformattare senza motivo. -->
+<!-- Formato Piano: legenda in alto, tabella "Da fare" con emoji di priorità, dettagli sotto, prime azioni per step in tabella separata. Se cambi la forma, aggiorna questa nota nello stesso commit. Non riformattare senza motivo. -->
 
 **Legenda:** ✅ done · 🔵 in corso · ⚫ bloccato · 🔴 urgente · 🟡 prossimo · ⬜ aperto
 
-**Stato lavoro (sessione 2026-10-28/29):**
+**Analysis reports (vivi):**
 
-| Stato | Cosa |
-|-------|------|
-| ✅    | ADR-021: D9 referee non-fisico (Supersedes ADR-019 D9) |
-| ✅    | Hermes policy: §1 reconcile, §8 retitle, Last updated, eccezione push audit |
-| ✅    | 0septies chiuso (opzione A: eccezione scritta in `AGENT-POLICY.md`) |
-| ✅    | Sketch ×3 in `IDEAS.md`: TACT-001, INFRA-007, STAFF-001 |
-| ✅    | Audit Hermes 2026-10-29 verificato: 4/4 finding veri |
-| ✅    | `NEW-SESSION-PROMPT` consolidato: 13→8 regole, startup + closing ritual, B1/A1/B2 |
-| ✅    | Tabella Piano in `SESSION-STATE` + nota di formato |
-| ✅    | Doc-pass ADR-022 completo: README (2 righe), STRUCTURE (ADR-005 amended), ARCHITECTURE (TUI primary). STATUS e 00-foundations già neutri |
-| ✅    | ADR-022: TUI-first, GUI later (amends ADR-005, view model separation normativo) |
-| ✅    | Closing ritual: obbligo di presentare la tabella Piano in chat |
-| ✅    | IDEA-REJ-003 (ritratti TUI), IDEA-REJ-004 (nomi reali) |
-| ✅    | Closing ritual step 4: ogni step deve avere la prima azione concreta |
-| ✅    | Tabella "Prime azioni" per tutti gli step aperti |
-| ✅    | Step 3 T3: rename `modules/` → `specs/` (13 rename + 62 file con riferimenti aggiornati, commit `5e77d17`) |
-| ✅    | Doc-pass `NEW-SESSION-PROMPT.md`: 260→256 righe, B2 aggiornata + B3 "OUTPUT START/END", sezione E (session lifecycle), accorpamento First step, rimozione Performance target, dedup "Where we are" (6 commit, `00bd5ba`..`c86ab8b`) |
-| ✅    | Unificazione agent prompt: `GITHUB-SESSION-PROMPT.md` agent-agnostic, rimossi `GITHUB-AGENT-PROMPT.md` e `HERMES-AGENT-PROMPT.md` (`0a20a9d`, `0b941b9`) |
-| ✅    | Policy "functional directory" per `docs/context/` in `README.md` + `analysis/archive/` creata (`a2c02c1`, `fe31d5c`) |
-| ✅    | C2-bis "beyond baseline" + closing step invertiti (report dopo push) + startup step 3 legge tutti i report (`5365cef`) |
-| ✅    | D1 esteso (completeness over speed), B1 senza limiti 120/80 (testato: 195 righe integre) (`45bc60d`, `ac2d39a`) |
-| ✅    | Report 2026-10-28/29/30 archiviati; finding in step 6 + `IDEA-DOC-001`; policy di chiusura raffinata (`b0c3b9b`..`64e6713`) |
-| ✅    | 🛑 marker su hard-stop (D1, D2, C2) + legenda; E2 riscritta (closing mai automatico, pausa + domanda esplicita); A2 e header closing ripuliti; Rule precedence ridotta a una riga (`5101f9d`) |
-| ✅    | Baseline C2 eseguita dopo l audit di Copilot (che l aveva bloccata): build, clippy, test 103/103, fmt, test-runner 6/6 — tutta verde |
-| ✅    | Audit prompt 2026-10-30 valutato: test plan rispettato (5 pianificati, 5 skipped con motivazione), evidenza negativa presente, R-01 Critical trovato e verificato — il prompt funziona |
-| ✅    | Fase A cleanup repo: `REPO-SNAPSHOT.md` rimosso, 15 riferimenti vivi corretti, `PROJECT-IDEA-LOG.md` §6 tagliato + §5 disclaimer (`e22d9f3`) |
-| ✅    | ADR-003: nota rename `pcfm-debug` → `pcfm-test-runner` + split `pcfm-demo`, corpo ADR intatto (`a391b85`) |
-| ✅    | R-01 verificato end-to-end: `Factor`→`cause_trace`→`chain_hash`→save. Decisione: rimuovere `CauseTrace`+`Factor` (1b), `risk_modifier`, `temperament`/`injury_risk_modifier` di `DuelOutcome`; `SIM_VERSION` bump |
-| ✅    | Fase B cleanup completata: CHANGELOG-SIM (19/41/47/107-109), README (9/156), STRUCTURE §5, L0-match conforms_to v2.0 + stale refs, IDEA-PM-005 (D3 proposal), SESSION-STATE HERMES, NEW-SESSION-PROMPT REPO-SNAPSHOT (verified: none) (`18232f9`..`09e6cf4`) |
-| ✅    | D3 Bee doctrine in `NEW-SESSION-PROMPT.md` §D (struttura solo se contenuto concreto oggi; altrimenti `IDEAS.md`, non ADR/tipo/livello) (`6a123d8`) |
-| ✅    | Discussioni rinviate per dottrina ape: tassonomia valori (diretto/inferito/costrutto), Plane C, livello interpretazione (già in IDEA-PRES-001+INFRA-006); niente ADR finché manca contenuto |
-| ✅    | Step 14 espanso: decisioni R-01, opzione C resolver, forma test anti-leak, fuori scope (`73f7ad1`) |
-| ✅    | Step 16 tracciato: censimento repo (file orfani, cartelle vuote, D3) (`da0c1d7`) |
-| ✅    | E3 in `NEW-SESSION-PROMPT.md` §E: dopo il closing il default è "traccia, non esegui"; 3 eccezioni (bookmark incoerente, C2 rosso, richiesta esplicita) (`2d6339b`) |
-| ⚫    | — (nessun bloccato) |
+- `docs/context/analysis/2026-10-31-12-42-review.md` — rules hardening (D4/D5 weaknesses); fixes landed in `d4304f9`. Candidates for archival (per the report's own §4, "archived after the closing commit", which is now true).
+- `docs/context/analysis/2026-10-31-22-28-review.md` — L0 operational census; OI-17. Snapshot at `246f64b`; archive when L0 changes, do not update in place.
 
 **Open items (what is not decided or verified yet):**
 
 | # | Cosa | Perché aperto | Prima azione |
 |---|------|---------------|--------------|
 | OI-4 | **`README.md:148` cita `pcfm-gen`** come esistente, ma non è tra i 9 crate | Verificare se è nota intenzionale o stale | `grep -rn "pcfm-gen" --include="*.md" --include="*.rs" .` |
-| OI-6 | **`docs/performance.md` e `docs/save-security.md`** mancanti (dal §2.3 di `PROJECT-IDEA-LOG`, ora archiviato) | Mai creati, non tracciati altrove | Decidere se e quando crearli (probabilmente pre-release, insieme a step 13) |
-| OI-7 | **Gap B: `ProjectionProfile` senza metodo di calcolo** (dal §2.2 di `PROJECT-IDEA-LOG`): bootstrap? Bayesiano? quantili empirici? Senza specifica, la banda è arbitraria | Mai tracciato altrove; con (C) si perderebbe | Decidere il metodo quando si apre `L2-scouting` |
-| OI-8 | **Gap C: `ScoutReport.DeclaredBias` senza formula** (dal §2.2): è solo un'etichetta o entra nel calcolo? | Mai tracciato altrove; con (C) si perderebbe | Decidere quando si apre `L2-scouting` |
-| OI-13 | **Deferred a L1: finding dei 2 report non assegnati a step**. **CORREZIONE 2026-10-31:** `conforms_to v1.1` in 10/11 file L0 **NON è un bug** — `specs/_index.md:50,180` documenta che v1.1 è l’ultima versione verificata; i file L0 restano a v1.1 finché non parte L1 (v2.0 ha cambiato solo pillar 1, che L0 non dipende). Riformulato: la ri-verifica a v2.0 è un task di L1, non un finding. **Altri finding ancora aperti:** report1: "ratified" in 00-overview:92-106 vs checklist pending 00-overview:165-177; L0.03 condition-clamp (03:189) vs reject (pitch.rs:56-60); L0.06 output contract + DoD unchecked (06:159-171); L0.08 random-events: nessuna integrazione trovata (08:185-205); L0.10 GroundTruth getter/Debug (riga 104 cita ma non step). Report2: R-08 RNG stream senza match_id (state.rs:57-63); R-10 EventBus panics (event_bus.rs:81-85,126-140); R-11 expect in simulazione (state.rs:57-63, hidden/lib.rs:68-71); R-02/R-03 attempt/outcome + save contract (attesi: implementazione futura). | Nessuno è bloccante per L0; sono gap spec↔code o doc drift che non cambiano il motore. Diventano step quando si apre L1 (o prima se un bump SIM li tocca). | Decidere: (a) promuovere un singolo finding a step, oppure (b) dichiararli "target design, non current" in `specs/L0-match/00-overview.md` (una riga) e chiudere OI-13. Per la ri-verifica v1.1→v2.0: task in L1 |
-| OI-14 | **Golden test 10 stagioni non esiste**: `CHANGELOG-SIM.md:42` lo richiede come step 2 della bump procedure; `specs/00-foundations.md` §4 lo elenca fra le regole operative ("Golden tests: 10 seasons from a known seed -> state hash comparison"). Grep su `crates/`, `docs/`, `specs/`: nessun test chiamato così. **CORREZIONE 2026-10-31** (dopo lettura integrale di §4): la spec non specifica se "10 stagioni" implichi promozioni/mercato (L1) oppure N partite con rose fisse. La mia ipotesi precedente ("= L1") era un'aggiunta non verificata. **Il testo non basta a decidere (i) vs (ii).** | Manca la scelta della maintainer | (a) dichiarare in `CHANGELOG-SIM.md:42` che il golden test e "planned, form TBD"; (b) creare ora un golden test "10 x 380 partite, rose fisse, hash finale"; (c) attendere L1 se la maintainer conferma (i) |
-| OI-15 | **A2 esegue `cargo test` una terza volta per sessione**: startup step 4 (necessario), closing step 1 C2 (hard-stop, necessario), closing step 3 `gates.sh` A2 (ridondante con step 1, stesso albero). Costo: ~1-2 s. Non bloccante; il rischio è che il closing diventi lento. | Mai deciso: tenere come safety net o rimuovere? | Decidere: (a) saltare A2 in closing e dichiarare "A2 = closing step 1"; (b) tenerlo e dichiararlo come safety net esplicito nel testo di Step 3. |
-| OI-16 | **Granularità del processo: alta, in parte accumulata.** In questa sessione ~2 commit su 3 sono sul processo (regole, gate, trailer), non sul prodotto. Il loop è: closing pesante → si usa "pusha" → le decisioni si perdono → si aggiunge un trailer → il closing si allunga. Il `Decisions:` trailer è l'ultimo giro. **Misurazione una tantum (4 comandi, non uno script):** (1) `git log --format='%h | %s | %(trailers:key=Decisions,valueonly)' -20 -- docs/context/SESSION-STATE.md`; (2) `git log --format='%h | %(trailers:key=Rules-Audit,valueonly)' -10 -- docs/context/NEW-SESSION-PROMPT.md`; (3) `git log --format='%h | %(trailers:key=Deferred,valueonly)' -20`; (4) `git log --oneline -- docs/context/SESSION-STATE.md | head -30`. **Cosa guardare:** `Decisions:` è sempre `none`? I closing sono rari rispetto ai checkpoint? `Deferred:` è mai usato? Se il test dice "cerimonia", la risposta è **semplificare, non aggiungere**. | Aperto 2026-10-31; nessun dato raccolto ancora | Eseguire i 4 comandi e presentare il risultato; decidere se togliere `Decisions:`, alleggerire il closing, o potare B1-bis |
-| OI-17 | **Censimento operativo L0: 12 divergenze spec↔code.** Il report `docs/context/analysis/2026-10-31-22-28-review.md` confronta gli 11 contratti L0 con il codice. 5 gap alti (G1 stream RNG senza match_id; G2 panic del bus; G5 attempt/outcome assenti; G11 4 eventi su 27 emessi), 5 medi, 2 bassi. Due toccano la dottrina (G2 panic, G10 getter pubblici su `GroundTruth`). Il report è una **fotografia**: si archivia quando L0 cambia, non si aggiorna in place. | Aperto 2026-10-31. Nessuna decisione presa su quali gap chiudere e quando | Decidere quali gap chiudere prima di L1 (probabilmente nessuno) e quali prima di L2 (G11 e G5 sono i candidati). Leggere il report §5 "Verdict" |
-| OI-18 | **Ottimizzazione dei rituali: 6 ridondanze reali, 0 decisioni prese.** R1: startup step 3 (`cat NEW-SESSION-PROMPT.md`) rilegge un file già in contesto — serve solo verificare se è cambiato (`git log -1 -- docs/context/NEW-SESSION-PROMPT.md` vs riga 5). R2: "unexpected observation" appare sia in 2a sia nello sweep di step 4 — confine da fissare (2a = comandi, step 4 = design). R3: `cargo test` gira in closing step 1 (C2) e in closing step 3 (A2) — è OI-15, mai deciso. R4: startup step 1 "HEAD matches Last commit verified" è ambiguo sotto S1 (il hook ora lo enforcea, il check manuale è quasi sempre falso). R5: startup 2-bis esegue A1/A3 (che non cambiano in sessione) — potrebbero stare solo al closing; B1/B3/B6/B7 restano. R6: startup step 4 (confirm numbers) duplica A1 (stesso conteggio ADR) e confronta col prompt che per design non ha numeri hardcoded. **Non ottimizzare ora (D3):** prima il dato di OI-16, poi il taglio. | Aperto 2026-10-31, in attesa di OI-16 | Eseguire OI-16 (4 `git log --format`); con il dato, decidere quali di R1–R6 rimuovere e in che ordine |
+| OI-6 | **`docs/performance.md` e `docs/save-security.md`** mancanti | Mai creati, non tracciati altrove | Decidere se e quando crearli (probabilmente pre-release, insieme a step 13) |
+| OI-7 | **Gap B: `ProjectionProfile` senza metodo di calcolo** | Mai tracciato altrove | Decidere il metodo quando si apre `L2-scouting` |
+| OI-8 | **Gap C: `ScoutReport.DeclaredBias` senza formula** | Mai tracciato altrove | Decidere quando si apre `L2-scouting` |
+| OI-13 | **Deferred a L1: finding dei 2 report non assegnati a step** (con `conforms_to v1.1` non-bug, riformulato 2026-10-31) | Nessuno è bloccante per L0; diventano step quando si apre L1 | Decidere: (a) promuovere un finding a step, oppure (b) dichiararli "target design, non current" in `specs/L0-match/00-overview.md` (una riga) e chiudere OI-13 |
+| OI-14 | **Golden test 10 stagioni non esiste** (`CHANGELOG-SIM:42` lo richiede; `00-foundations` §4 lo elenca) | Manca scelta della maintainer: forma (i) L1 o (ii) N partite con rose fisse | Decidere (a) dichiararlo "planned, form TBD" in `CHANGELOG-SIM:42`; (b) creare ora; (c) attendere L1 |
+| OI-15 | **A2 esegue `cargo test` una terza volta per sessione** (startup step 4, closing C2, closing gates A2) | Mai deciso: tenere come safety net o rimuovere? | Decidere: (a) saltare A2 in closing e dichiarare "A2 = closing step 1"; (b) tenerlo e dichiararlo safety net esplicito |
+| OI-17 | **Censimento operativo L0: 12 divergenze spec↔code** (`analysis/2026-10-31-22-28-review.md`) | Fotografia; nessuna decisione su quali gap chiudere prima di L1/L2 | Leggere §5 "Verdict"; decidere quali gap (probabilmente nessuno prima di L1) |
+| OI-18 | **Ottimizzazione dei rituali: R1–R6** (startup step 3 rilegge prompt; "unexpected observation" doppia in 2a/step 4; `cargo test` doppio = OI-15; startup step 1 ambiguo sotto S1; startup 2-bis esegue A1/A3 che non cambiano in sessione; step 4 duplica A1) | OI-16 misurato 2026-11-01: `Decisions:` usato (11/20), `Rules-Audit:` verde (10/10), `Deferred:` mai usato (0/20), ~1 commit su 2 tocca il bookmark. **Decisione C:** step 17 prima; semplificazione dei rituali dopo, con dati aggiornati | Step 17b come primo item; poi valutare R1–R6 con i dati OI-16 |
 
 **Da fare (in dependency order):**
 
-| Pr. | #  | Cosa                    | Dipende da                   |
-|-----|----|-------------------------|------------------------------|
-| 🟡  | 12 | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR breve + codice in `pcfm-demo`. Il campo con 22 giocatori richiede L0 posizionale (step 18). Leggere prima il censimento (OI-17) per sapere cosa mostrare | — |
-| 🟡  | 2  | Fix ADR-003 (nota rename fatta `a391b85`; restano `demo.rs`, autorizzazione `pcfm-demo`) | —                            |
-| 🟡  | 3  | Terminologia (T1+T2, T3 done) | —                        |
-| 🟡  | 11 | GitHub agent Phase 2    | ruleset attivo               |
-| ⬜  | 5  | Review sketch ×3        | L2-tactics, input, L2-staff  |
-| ⬜  | 7  | Verification cascade    | —                            |
-| ⬜  | 8  | ADR-019 deferred 4-9    | —                            |
-| ⬜  | 9  | Ratify ADR-017          | —                            |
-| ⬜  | 10 | `L1-world/01-nation`    | —                            |
-| ⬜  | 13 | `cargo-audit`/`cargo-deny` pre-release | — |
-| 🟡  | 17 | **Riformatto §F residuo**: `SESSION-STATE` ha 3 sezioni extra (`Stato lavoro`, `Dettagli`, `Prime azioni`) non previste da §F, `Files`/`Done` invertiti, e 151 righe (contratto: "short bookmark"). Consolidamento meccanico: spostare `Stato lavoro` dentro `Done`, fondere `Dettagli`+`Prime azioni` nel Piano, riordinare, ridurre a ~80-100 righe. Rischio: tabelle con emoji, `sed` fallisce su pattern multibyte (già visto); usare `sed` per numero di riga. | — |
-
-| 🟡  | 18 | **Ristrutturazione e riscrittura di L0 (posizionale con coordinate)**: la rappresentazione accurata della partita è il fine, non un orpello. **Modello deciso (2026-10-31): posizionale con coordinate** — ogni agente ha (x, y), velocità, orientamento. Il grafo delle relazioni **non appartiene a L0**: è una derivata calcolabile dalle coordinate da qualsiasi consumatore a valle, e vive dove esiste un contenitore di statistiche di partita (oggi non esiste); non è scartato, è spostato (IDEA-INFRA-017). Due parti distinte: **(a) Modello** — `pcfm-pitch` (geometria), `pcfm-agents` (posizione/velocità/orientamento), `pcfm-perception` (cosa vede ogni agente: Plane B, mai la mappa completa), `pcfm-decisions` (cosa fa, dati i latenti e lo spazio), `pcfm-physics` (movimento), tutti i 27 `EventType` emessi, `PositionSnapshot` in ogni evento. **(b) Architettura** — spezzare i crate esistenti, spostare la presentazione (narrativa, importanza, statistiche da leggere) in `pcfm-presentation`, che L1 non importa mai: L1 legge solo punteggio + marcatori (contratto stretto, IDEA-INFRA-014). La (b) non richiede la (a), ma un L0 posizionale in un crate unico è ingestibile. **Non aprire ora:** L2 non esiste, il contenuto concreto che giustifica la struttura manca (D3). | L2 (rating/scouting) come consumatore concreto | 1) Leggere `crates/pcfm-match/src/state.rs` e contare quali `EventType` sono emessi vs risolti (oggi 4 su 27); 2) leggere `specs/L0-match/05-match-events.md` §2.6 e `docs/adr/019-match-engine-contract.md` (posizionale) per capire cosa è già previsto; 3) scrivere una nota di design (non un ADR) con l'elenco dei crate e il confine presentazione/core; 4) decidere: prerequisito di L1 o di L2. |
+| Pr. | #   | Cosa                    | Dipende da                   |
+|-----|-----|-------------------------|------------------------------|
+| 🟡  | 12  | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR breve + codice in `pcfm-demo`. Il campo con 22 giocatori richiede L0 posizionale (step 18). Leggere prima il censimento (OI-17) | — |
+| 🟡  | 2   | Fix ADR-003 (nota rename fatta `a391b85`; restano `demo.rs`, autorizzazione `pcfm-demo`) | — |
+| 🟡  | 3   | Terminologia (T1+T2, T3 done) | — |
+| 🟡  | 11  | GitHub agent Phase 2    | ruleset attivo               |
+| 🟡  | 17b | **Fusione Prime azioni nel Piano**: aggiungere colonna/riga "first action" al Plan, rimuovere la tabella separata, aggiornare B1 in `scripts/gates.sh` e il testo closing Gate B in `NEW-SESSION-PROMPT.md`. Split di DP-03; richiede `Rules-Audit` | — |
+| ⬜  | 5   | Review sketch ×3        | L2-tactics, input, L2-staff  |
+| ⬜  | 7   | Verification cascade    | —                            |
+| ⬜  | 8   | ADR-019 deferred 4-9    | —                            |
+| ⬜  | 9   | Ratify ADR-017          | —                            |
+| ⬜  | 10  | `L1-world/01-nation`    | —                            |
+| ⬜  | 13  | `cargo-audit`/`cargo-deny` pre-release | — |
+| ⬜  | 18  | **Ristrutturazione e riscrittura di L0 (posizionale con coordinate)** — non aprire ora: L2 non esiste (D3) | L2 (rating/scouting) come consumatore concreto |
 
 **Dettagli (solo dove servono):**
 
@@ -94,125 +59,24 @@ the rest of the bookmark in the same commit.
 
 **3. Terminologia** — T1 (small): `PLUGIN_DEVELOPER_GUIDE.md` §1 + `GLOSSARY.md`. T2 (small): "core module" → "framework crate" in §2 and §11. T3 (large, one commit): rename `modules/` → `specs/` — **✅ done, commit `5e77d17`**.
 
-**4. Audit 2026-10-29** — T1: sanitize `--html` in `pcfm-demo/src/render.rs:159`. T2: align `CHANGELOG-SIM.md` lines 19/41 (`pcfm-core` → `pcfm-match`). T3 (note, not a task): `pick_players` correlation in `state.rs:222-226`. Fourth finding (`pcfm-debug`) is item 2.
-
-
-**14. R-01 Critical — Plane A leak** (verificato 2026-10-30/31 + 2026-10-31). 7 siti in `Factor.value` (`attacker_score`/`defender_score`, `finishing`, `passing`, `injury_proneness`, `goalkeeping`, `set_pieces`) → `MatchEvent.cause_trace` → `chain_hash` → save JSON. **Decisione:** ADR-023 option 2 (causa osservata dal motore, non rimossa). **Scelta B (2026-10-31): `ShotOutcome.xg_value` è DENTRO ADR-023**, non "fuori scope" come ADR-023 attuale: emendamento obbligatorio prima della ratifica (vedi OI-9). **Test anti-leak:** unico, in `pcfm-match`, forma da `specs/L0-match/07-save-minimal.md:149` (no latent name nel save serializzato), esteso a causa + `xg`; deve fallire pre-fix (OI-10). **Ordine DoD:** emendare ADR-023 (include `xg`) → ratificare (OI-11) → test fallisce pre-fix → fix causa trace → fix `xg` (rimozione da `MatchStatistics.xg` o ricalcolo da osservabili, decisione in emendamento) → `SIM_VERSION` bump → `CHANGELOG-SIM` (bump + OI-5 + R-04/R-05 + OI-15) → `STRUCTURE` status flip → C2 verde. **Test in `pcfm-hidden`** (regressioni boundary/accessor/costruttore) in commit separato pre-fix (vedi OI-16). Golden test 10 stagioni: non esistente, decisione in OI-14. Dettagli implementativi in ADR-023 §Implementation notes.
-
-**Altri finding audit 2026-10-30** (dopo R-01, da verificare e triagare): R-02 attempt/outcome assenti (già noto); R-03 save contract (già noto); R-04 doc drift (`STRUCTURE.md` 17 ADR vs 20 file, `CHANGELOG-SIM.md` dice `pcfm-core`) → confluisce in step 6; R-05 stream senza `match_id` (`state.rs:57-63`); R-06 `pick_players` (già T3 noto); R-07 panic handler non isolati (`event_bus.rs:81-85,126-140`); R-08 `expect` in simulazione (`state.rs:57-63`, `hidden/lib.rs:68-71`); R-09 `MatchContext` senza bus/modifiers (già noto); R-10 `GroundTruth` getter/Debug (`hidden/lib.rs:84-91,351-356`).
-**5. Review sketch 2026-10-29** — IDEA-TACT-001, IDEA-INFRA-007, IDEA-STAFF-001. Decide: ADR, task, or stays sketch. Depends on `L2-tactics`, runtime input channel, `L2-staff` (none exist).
-
-**6. Doc consistency check** — finding dai report 2026-10-28 (da chiudere):
-- **F1** `crates/pcfm-test-runner/Cargo.toml:10`: `documentation = ".../docs/MODULE_DEVELOPER_GUIDE.md"` → `.../docs/PLUGIN_DEVELOPER_GUIDE.md` (file inesistente, verificato).
-- **F2** `README.md:9` badge tests `107` → `103` (verificato: 103 reali); `README.md:156` ADR range `012–020` → `012–022`.
-- **F6** Aggiungere in `README.md` una "maturity statement" (doctrine / implementation / ADR / test status), come chiesto dal report 09-42.
-- **F3/F5/F7** narrativi: F7 → coperto da D1 esteso; F5 → "Do not assume CI exists"; F3 → backlog in `IDEAS.md` (IDEA-DOC-001).
-- **R-07** (report `2026-10-30-20-24`): `docs/CODE_TOUR.md:128` calls `MatchContext` "5 references"; actual is 4 references + by-value `MatchConfig` (low).
-- **R-04** (report `2026-10-30-13-39`): `STRUCTURE.md:101-113` dice "17 ADR, 000–019" ma `docs/adr/` ha 20 file (000–008, 012–022); `STRUCTURE.md:340-360` già include 020–022 e conta 18 accepted → snapshot vs tabella incoerenti. `CHANGELOG-SIM.md:19,41` dice `SIM_VERSION` "planned in pcfm-core", ma la costante è in `crates/pcfm-match/src/save.rs:76`.
-- **R-05** (report `2026-10-30-20-24`): sovrapposto a R-04 precedente per `STRUCTURE` + `CHANGELOG-SIM`. In più: verificare che la location `SIM_VERSION` citata nei riferimenti (`CODE_TOUR.md:210`) sia coerente con `save.rs:76`.
+**17b. Fusione Prime azioni nel Piano** — Split di DP-03. Il Plan prende una cella "first action" (colonna o riga subito sotto); la tabella "Prime azioni" sparisce; `scripts/gates.sh` B1 controlla la stessa cella nel Plan; il testo closing Gate B (check 1 e 4) aggiornato. Richiede D4 pre-mortem + `Rules-Audit` completo. Blast radius: 3 file (`SESSION-STATE.md`, `scripts/gates.sh`, `NEW-SESSION-PROMPT.md`).
 
 **Prime azioni (per step):**
 
-| #  | Prima azione |
-|----|--------------|
-| 2  | Leggere ADR-003 §Exception: `sed -n '204,235p' docs/adr/003-plane-a-enforcement.md` |
-| 3  | Leggere `PLUGIN_DEVELOPER_GUIDE.md` §1: `sed -n '13,40p'` |
-| 4  | Leggere `render.rs:150-170` e `CHANGELOG-SIM.md:19,41` |
-| 5  | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
-| 6  | Leggere `crates/pcfm-test-runner/Cargo.toml:10`, `README.md:9,156` (F1, F2) e decidere dove inserire la maturity statement (F6) |
-| 7  | Decidere da quale file parte la cascade (candidato: `README.md`) |
-| 8  | Rileggere ADR-019 §Deferred, decidere quali dei 4-9 chiudere (3 già resolved) |
-| 9  | Leggere ADR-017, decidere: ratificare o rinviare |
-| 10 | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
-| 11 | Decisione del maintainer: attivare o no il ruleset |
-| 12 | Leggere `docs/context/analysis/2026-10-31-22-28-review.md` (L0: 4 eventi su 27, nessuna posizione) e `crates/pcfm-demo/src/`, poi decidere il contenuto del board |
-| 13 | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
-| 16 | `ls -R archive data mods registry docs/calibration docs/legal 2>&1; git ls-files | wc -l; grep -rn "PLUGINS-WORLDS-READING-GUIDE\|PROJECT-STATUS" --include="*.md" . | head -20` — poi classificare vivo/orfano/alveare e proporre tagli |
+| #   | Prima azione |
+|-----|--------------|
+| 2   | Leggere ADR-003 §Exception: `sed -n '204,235p' docs/adr/003-plane-a-enforcement.md` |
+| 3   | Leggere `PLUGIN_DEVELOPER_GUIDE.md` §1: `sed -n '13,40p'` |
+| 5   | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
+| 7   | Decidere da quale file parte la cascade (candidato: `README.md`) |
+| 8   | Rileggere ADR-019 §Deferred, decidere quali dei 4-9 chiudere (3 già resolved) |
+| 9   | Leggere ADR-017, decidere: ratificare o rinviare |
+| 10  | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
+| 11  | Decisione del maintainer: attivare o no il ruleset |
+| 12  | Leggere `docs/context/analysis/2026-10-31-22-28-review.md` e `crates/pcfm-demo/src/`, poi decidere il contenuto del board |
+| 13  | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
+| 17b | Aprire `scripts/gates.sh` blocco B1 (righe 67-74) e il testo closing Gate B in `NEW-SESSION-PROMPT.md`; decidere la forma della colonna "first action" nel Plan |
 
-**Done (storico):** 1, 2, 6, 10bis, 10ter, 10quater, 0ter, 15; OI-1 (R-01 decision: causa osservata, ADR-023); OI-3 (C: PROJECT-IDEA-LOG archived) — commit hash in `git log --oneline`.
-Step 14 (R-01 + xg + CauseTrace): closed in `f4506d7`. ADR-024 supersedes ADR-023. OI-5, OI-9, OI-10, OI-11, OI-15, OI-16, OI-17 closed. SIM_VERSION 1→2. Tests 103→102.
-Sessione 2026-10-31 (multi-tornata): A2/E2 con "chiudi" e "riprendi" esatti (no equivalente); `Decisions:` trailer (hook + template + §G + closing step 4 con conversation sweep); closing 2a esteso alle osservazioni inattese; B1-bis: transient M e doppio commit; gates.sh `startup|closing` + startup step 2-bis; narrativa: template_key/params rimossi (SIM 2→3); 4 gusci rimossi (SIM 3→4); step 4 (sanitize --html), 6a (F1/R-07/R-04), 6b (maturity), 16 (PROJECT-STATUS rimosso); OI-12 chiuso, OI-15 e OI-16 aggiunti; IDEA-INFRA-014/015/016/017 + splash in 006; step 18 riscritto (posizionale deciso). 105 test, SIM 4.
-Sessione 2026-10-31 (tornate E3c/E5): E4 S1 enforceata su ogni bookmark update (hook `commit-msg`); OI-18 (6 ridondanze R1-R6, non toccare prima di OI-16); R7 corretto ("Five reads"); GITHUB-SESSION-PROMPT dimensione 7 "Gate integrity"; TUI scope (board, non campo) in IDEA-006 + step 12; B2 fixato (Detail 12 allineato a Plan/Prime azioni). 105 test, SIM 4.
-Sessione 2026-10-31 (tornate E3c/E5): E4 S1 enforceata su ogni bookmark update (hook `commit-msg`); OI-18 (6 ridondanze R1-R6, non toccare prima di OI-16); R7 corretto ("Five reads"); GITHUB-SESSION-PROMPT dimensione 7 "Gate integrity"; TUI scope (board, non campo) in IDEA-006 + step 12; B2 fixato (Detail 12 allineato a Plan/Prime azioni). 105 test, SIM 4.
-Step 6a (doc consistency meccanica): closed in `cc5294b`. F1 (`Cargo.toml:10` → `PLUGIN_DEVELOPER_GUIDE.md`), R-07 (`CODE_TOUR:128` 5→4 refs), R-04 (`STRUCTURE` ADR inventory 21→22, 000–024). R-05 no-op.
-OI-12 (Gate A check A4 rumoroso): closed 2026-10-31. The broad pattern on NEW-SESSION-PROMPT.md was replaced by the narrow `[0-9]+ (tests?|crates?|ADRs?)` in both the ritual and `scripts/gates.sh` A3. Verified: the old pattern no longer exists.
-Step 6b (F6 maturity statement): closed 2026-10-31. README has a "Maturity" table: doctrine (settled), L0 spec (ratified), L0 implementation (prototype), ADRs (evolving), tests (green), L1-L3 (not started). Explicit: "L0 complete" means the contract is ratified, not that the engine is realistic.
-Step 4 (audit 2026-10-29): closed in `efe5fec`. T1: `--html` path sanitized (absolute and `..` rejected, parent canonicalised inside cwd, 3 tests). T2: CHANGELOG `pcfm-core` already fixed; found and fixed a real bug (Current SIM_VERSION said 2, real 4). T3 (pick_players) is not a task, it is step 18.
-Step 16 (censimento repo): closed 2026-10-31. PROJECT-STATUS.md removed (stale duplicate of SESSION-STATE + README maturity, already 3 days and 2 tests behind). 3 live references updated (README, CONTRIBUTING ×2, docs/context/README). PLUGINS-WORLDS-READING-GUIDE.md is alive (4 references). 8 `.gitkeep`-only directories are intentional hives (D3), kept. Two stale references left in ADR-019 and ADR-020/022 (historical docs, append-only, declared not fixed).
-OI-2 (triag 2 report 2026-10-30: tracked in steps 2/4/6/14, deferred in OI-13); reports moved to analysis/archive/ (13-39 + 20-24).
+**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. Storico dettagliato in `git log --oneline`. Sessione 2026-10-31: A2/E2 exact words, Decisions trailer, S1 on every bookmark update, OI-18, TUI scope, L0 positional (step 18). 105 test, SIM 4.
 
-**Archiviati:** `PROJECT-IDEA-LOG.md` → `archive/PROJECT-IDEA-LOG.md` (2026-10-30). Le decisioni durevoli sono in ADR; le minori nei commit message; le narrative storiche nel file archiviato. §2.2 (gap B, C) e §2.3 (2 documenti) sono migrati in OI-7, OI-8, OI-6.
-
-**Files touched this session (2026-10-29):** `docs/context/IDEAS.md` (added IDEA-TACT-001, IDEA-INFRA-007, IDEA-STAFF-001; rejected IDEA-REJ-003, IDEA-REJ-004); `docs/context/SESSION-STATE.md`; `docs/adr/021-referee-non-physical.md` (new, accepted); `docs/adr/019-match-engine-contract.md` (Superseded by ADR-021 D9 only); `STRUCTURE.md` (ADR status table, added 020/021); `specs/_index.md` (ADR status table, added 020/021); `docs/context/analysis/2026-10-29-18-18-review.md` (renamed from audit-full); `docs/context/AGENT-POLICY.md` (audit-report push exception, §1 and §8); `docs/context/HERMES-AGENT-PROMPT.md` (new, audit agent contract); `docs/context/NEW-SESSION-PROMPT.md` (refreshed counts, startup + closing rituals, rule 13; closing ritual now requires presenting the Plan table in chat); `docs/adr/022-presentation-tui-first.md` (new, accepted); `docs/adr/005-qt-binding.md` (Amended by ADR-022); `STRUCTURE.md` + `specs/_index.md` (ADR 022 added, count 18). Audit workflow 2026-10-30: `GITHUB-SESSION-PROMPT.md` wrapper paste-ready + test plan + 3b ambiguities + comprehensive report + evidenza negativa (`55a932a`, `5fbaf34`, `c8f3291`); audit Copilot pubblicato (`943b317`, `2026-10-30-13-39-review.md`); R-01 Critical verificato e tracciato come step 14 🔴 (`9c937a0`); baseline C2 verde post-audit. B3 fix (`2178270`): literal echo template, sentinel was ambiguous in new sessions.
- 🛑 hard-stop marker + E2 rewritten + Rule precedence trimmed (`5101f9d`).
-**Files touched this session (2026-10-30, seconda sessione):** `docs/context/REPO-SNAPSHOT.md` (deleted); `docs/context/NEW-SESSION-PROMPT.md`, `docs/context/README.md`, `docs/ARCHITECTURE.md`, `docs/CODE_TOUR.md`, `docs/context/IDEAS.md`, `docs/context/PROJECT-IDEA-LOG.md`, `docs/context/SESSION-STATE.md` (reference cleanup + trim, `e22d9f3`); `docs/adr/003-plane-a-enforcement.md` (note rename, `a391b85`). `docs/context/SESSION-STATE.md` (step 14 detail `73f7ad1`, step 16 tracking `da0c1d7`). `docs/context/NEW-SESSION-PROMPT.md` (E3, `2d6339b`).
-**Files touched this session (2026-10-30):** `docs/context/NEW-SESSION-PROMPT.md` (removed duplicate B1 bullet); `docs/context/SESSION-STATE.md` (step 13 cargo-audit; step 3 T3 done); `STRUCTURE.md` (Italian example → English); **rename `modules/` → `specs/`** with 62 files updated: `.github/*`, `crates/*` (Cargo.toml + src), `docs/*.md`, `docs/adr/*.md`, `docs/context/*` (except `analysis/` and `PROJECT-IDEA-LOG.md` body), `archive/README.md` (live refs only), `CHANGELOG-REGISTRY.md:19`, `specs/*` self-references; note in `PROJECT-IDEA-LOG.md` header; historical commands preserved in `archive/README.md:35-36` and `docs/MIGRATION-01-04.md:45`. Doc-pass on `NEW-SESSION-PROMPT.md` (6 commits `00bd5ba`..`c86ab8b`): B3 renamed to OUTPUT START/END, section E session lifecycle, First step merged into What remains, perf target removed, dedup Where we are. Agent prompt unification (`0a20a9d`..`fe31d5c`): new `GITHUB-SESSION-PROMPT.md`, removed `GITHUB-AGENT-PROMPT.md` + `HERMES-AGENT-PROMPT.md`, functional-directory policy in `README.md`, `analysis/archive/` created, `AGENT-POLICY.md` §8 and startup step 3 updated. D1 extended with completeness-over-speed (`45bc60d`); B1 paste limits removed (`ac2d39a`); 2026-10-28 audit findings tracked in step 6 + IDEA-DOC-001 (`b0c3b9b`); 6 reports archived to `analysis/archive/` (`cd882dc`); report-closure policy refined (`1c50db1`); audit prompt points to archived example (`64e6713`). 🛑 hard-stop marker + E2 rewritten + Rule precedence trimmed (`5101f9d`).
-
-**Files touched this session (2026-10-30/31):** `docs/context/NEW-SESSION-PROMPT.md` (startup reads full files via `cat` not obsolete `sed` ranges, `f678b4b`; E4 bookmark update + E5 ideas-from-pause + §F bookmark contract, `3cfbd93`; startup step 4 reads `IDEAS.md`, `0ab92c6`); `CHANGELOG-SIM.md` (crate rename, migration status, `modules/`→`specs/`, `18232f9`); `README.md` (tests 107→103, ADR 012-020→012-022, `7b6a50e`); `STRUCTURE.md` (current-state snapshot, `4695828`); `specs/L0-match/*` (stale `MIGRATION-01-04` refs `6f85770`; false `crates/` claim `f8f9768`; `conforms_to` v2.0, 10 files `858ef08`); `docs/context/IDEAS.md` (IDEA-PM-005 D3 proposal `7b9c35d`; IDEA-DOC-002/003 `d9dbe38`); `docs/context/SESSION-STATE.md` (HERMES cleanup `09e6cf4`; step 15 complete `56805ae`; Open items `557e1d4`; archive log `03f3ea2`); `docs/context/README.md` (archived log ref, `03f3ea2`); **archived** `docs/context/PROJECT-IDEA-LOG.md` → `archive/PROJECT-IDEA-LOG.md` (`03f3ea2`).
-**Files touched this session (2026-10-31, chiusura OI-1):** `docs/adr/023-observed-cause-traces.md` (new, proposed, `946459f`); `STRUCTURE.md`, `specs/_index.md` (ADR-023 added to status tables, `946459f`); `docs/context/SESSION-STATE.md` (OI-1 closed, OI-9/OI-10 added, step 14 re-scoped, `946459f`..).
-
-**Files touched this session (2026-10-31, IDEA-INFRA-008):** `docs/context/IDEAS.md` (added IDEA-INFRA-008, `2e89f88`); `docs/context/SESSION-STATE.md` (step 14 links IDEA-INFRA-008, `2e89f88`..).
-
-**Files touched this session (2026-10-31, ADR-023 amendment):** `docs/adr/023-observed-cause-traces.md` (amended: A-G points, `a94049d`); `docs/context/SESSION-STATE.md` (bookmark update, `a94049d`..).
-
-**Files touched this session (2026-10-31, closing):** `docs/context/SESSION-STATE.md` (Dettagli step 14 aligned to ADR-023, step 17 traced, bookmark updated, `cd31500`..).
-
-**Files touched this session (2026-10-31, closing fixes):** `docs/context/SESSION-STATE.md` (step 14 first action = ratify ADR-023, OI-11 added, Prime azioni 14 updated); `docs/context/NEW-SESSION-PROMPT.md` (closing step 3 rewritten as 7 mechanical checks before commit).
-
-**Files touched this session (2026-10-31, ritual optimisation):** `docs/context/NEW-SESSION-PROMPT.md` (B4 mutation protocol added; startup 8→5 steps; closing 6→5 steps with gates A+B under one step, `3bdc0d9`); `docs/context/SESSION-STATE.md` (bookmark updated, `3bdc0d9`..).
-
-**Files touched this session (2026-10-31, closing fixes and ritual test):** `docs/context/SESSION-STATE.md` (OI-12 traced, step 17 includes bookmark length, `Last commit verified` updated, `f8c2e2d`); `docs/context/NEW-SESSION-PROMPT.md` (`Last updated` refreshed after B4/startup/closing rewrite, `f8c2e2d`..).
-
-**Files touched this session (2026-10-31, closing ritual hardening):** `docs/context/NEW-SESSION-PROMPT.md` (closing: order enforcement, Gate A `Last updated` check, B5 reformulated for the closing commit, `41506ae`..); `docs/context/SESSION-STATE.md` (bookmark update, `41506ae`..).
-
-**Files touched this session (2026-10-31, triag + archive 2 report):** `docs/context/SESSION-STATE.md` (OI-2 rewritten with per-report mapping; OI-13 added: deferred findings from both reports; step 6 extended with R-04 (report1), R-05 (report2), R-07 (report2); format fix R-07; OI-2 removed after triage); `docs/context/analysis/2026-10-30-13-39-review.md` → `analysis/archive/` (git mv); `docs/context/analysis/2026-10-30-20-24-review.md` → `analysis/archive/` (git mv).
-
-**Files touched this session (2026-10-31, fase 1 E5 — documentazione decisioni):** `docs/context/SESSION-STATE.md` (step 14 detail: scelta B `xg` dentro ADR-023, test unico `pcfm-match` forma `L0.07:149`, ordine DoD esplicito; Plan step 14 riscritto con scelta B e ordine; Plan step 6 sdoppiato 6a meccanico / 6b contenuto; OI-5 → “si chiude in step 14”; OI-9 → deciso (dentro ADR-023, scelta B) + verifica end-to-end 5 siti; OI-10 → forma decisa (unico test in `pcfm-match`, `L0.07:149`, commit test+fix insieme); OI-11 → ordine “emendare poi ratificare”; OI-13 → corretto, `conforms_to v1.1` non è bug ma politica (`specs/_index.md:50,180`); OI-14 nuovo (golden test 10 stagioni inesistente, ipotesi di lavoro (i) = L1); OI-15 nuovo (`CHANGELOG-SIM:39,45` inapplicabili in fase 1); OI-16 nuovo (autorizzazione sessione `docs/adr/` + `00-foundations`)).
-
-**Files touched this session (2026-10-31, coda post-closing eseguita — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (§G: `git config commit.template .gitmessage` documentato accanto a `core.hooksPath`); `docs/context/SESSION-STATE.md` (OI-17 aggiunto: 2c non ancora eseguito; questo Files touched).
-
-**Files touched this session (2026-10-31, rules hardening — D4/D5 + report):** `docs/context/NEW-SESSION-PROMPT.md` (D4 rewritten: 4 domande incl. blast radius, output evidentiale, self-application, "operational" definita; D5: "Mechanical and objective (visible as fallback)"; exit clause pure/gap: puro se latente/invariante/non tracciato con first action, altrimenti gap; Gate A check A4 ristretto ai numeri); `docs/context/AGENT-POLICY.md` (§9: rollback + post-push review + 3 rischi residui dichiarati — blast radius, D5 dipende dalla lettura, auto-push; §10 resta "What this policy is not"); `.githooks/commit-msg` (messaggi espliciti su case esatta dei trailer); `docs/context/analysis/2026-10-31-12-42-review.md` (NUOVO — analisi debolezze, classificazione tipizzata 13 voci Impl×Risolv, §3b classificazione retroattiva OI-9/OI-15 come puri).
-
-**Files touched this session (2026-10-31, FA + audit prompt):** `docs/context/NEW-SESSION-PROMPT.md` (D4: aggiunto **Filter agent** — vale solo per i gap di giudizio, mai per i pure; invocazione = sempre pausa in prosa; presentazione una volta sola, poi OI se non deciso; `Last updated`); `docs/context/GITHUB-SESSION-PROMPT.md` (classificazione **pure/gap** per ogni finding secondo D4 exit clause, con colonna `maintainer_override` che un audit successivo non può ri-classificare; `Last updated`); `docs/context/analysis/2026-10-31-12-42-review.md` (D "D5 dipende dalla lettura" mitigata da FA; Verdict cita FA).
-
-**Files touched this session (2026-10-31, A2 — remove CauseTrace and xg):** `crates/pcfm-model/src/cause.rs` (deleted); `crates/pcfm-model/src/lib.rs` (export removed); `crates/pcfm-stats/src/event.rs` (cause_trace field removed, validate() simplified, EmptyCauseTrace removed from error.rs); `crates/pcfm-stats/src/chain.rs` (fixture); `crates/pcfm-hidden/src/outcome.rs` (cause/xg_value/modifiers removed); `crates/pcfm-hidden/src/lib.rs` (7 CauseTrace constructions removed); `crates/pcfm-match/src/state.rs` (xg + cause removed, emit_event simplified); `crates/pcfm-match/src/result.rs` (xg field removed); `crates/pcfm-match/src/narrative.rs`, `engine.rs` (fixtures, dead test removed); `crates/pcfm-match/src/save.rs` (SIM_VERSION 1→2); `crates/pcfm-demo/src/render.rs` (xG output removed); `crates/pcfm-test-runner/src/features/l0_match.rs` (cause check removed); `crates/pcfm-match/tests/anti_leak.rs` (NEW — fails pre-fix, passes post-fix); `docs/adr/024-remove-cause-trace-l0.md` (NEW); `docs/adr/023-observed-cause-traces.md` (superseded); `specs/L0-match/05-match-events.md` §2.3, `10-ground-truth.md` §2.2, `06-match-output.md` §2.3 (amended); `specs/L0-match/00-overview.md`, `specs/_index.md`, `STRUCTURE.md` (ADR tables); `CHANGELOG-SIM.md` (bump entry, OI-5, OI-15); `README.md` (103→102); `docs/context/IDEAS.md` (IDEA-INFRA-009, IDEA-008 fix); `docs/context/analysis/2026-10-31-12-42-review.md` (bimodality corrected).
-
-**Files touched this session (2026-10-31, pre-push gates — E3c):** `scripts/gates.sh` (NEW — mechanical Gate A + Gate B subset, extracted from the closing ritual; `manual` for B2/B4/B5, not falsely `ok`); `.githooks/pre-push` (NEW — calls `scripts/gates.sh`, blocks a red push); `docs/context/NEW-SESSION-PROMPT.md` (Step 3 + Step 5 reference the script; `Last updated`); `docs/context/IDEAS.md` (IDEA-INFRA-010: CI + ruleset at phase 2). Tested: green → exit 0, red (injected ADR divergence) → exit 1 with message, restore → exit 0.
-
-**Files touched this session (2026-10-31, chiudi + narrativa + 4 gusci + L0 posizionale):** `390c667` — "chiudi" in A2/E2. `fb14201` — `crates/pcfm-match/src/narrative.rs` (template_key+params rimossi, template_for→importance_for, render_text su EventType, test sostitutivo), `crates/pcfm-demo/src/render.rs` (fixture), `crates/pcfm-match/src/save.rs` (SIM_VERSION 2→3), `CHANGELOG-SIM.md`, `docs/context/IDEAS.md` (IDEA-INFRA-011), `specs/L0-match/06-match-output.md` §2.4+§2.5. `194f480` — `crates/pcfm-stats/src/event.rs` (3 campi rimossi), `crates/pcfm-match/src/save.rs` (config_versions rimosso, SIM_VERSION 3→4), `crates/pcfm-match/src/state.rs`, `crates/pcfm-match/src/narrative.rs`, `crates/pcfm-stats/src/chain.rs` (fixture), `specs/L0-match/05-match-events.md` (struct + §2.5 nota), `specs/L0-match/07-save-minimal.md`, `CHANGELOG-SIM.md` (entry SIM 4), `docs/context/IDEAS.md` (IDEA-INFRA-012/013). `SESSION-STATE.md` — step 18 (riscrittura L0 posizionale, non aperta: L2 non esiste, D3).
-
-**Files touched this session (2026-10-31, pause-capture — B1-bis + IDEAS 014-016):** `docs/context/NEW-SESSION-PROMPT.md` (B1-bis: `block=$(printf ...)` con apici annidati non è affidabile; fallback heredoc quotato su file + `awk -v b="$(cat /tmp/f)"`; `Last updated`); `docs/context/IDEAS.md` (IDEA-INFRA-014 contratto stretto L1↔L0; IDEA-INFRA-015 ObservationEvent guscio o canale L2; IDEA-INFRA-016 confine L1/L2 compute vs decide — tutte status sketch, nessuna da implementare); `docs/context/SESSION-STATE.md` (step 18, `Last commit verified`, `Files touched`).
-
-**Files touched this session (2026-10-31, step 6a):** `crates/pcfm-test-runner/Cargo.toml` (F1: `MODULE_DEVELOPER_GUIDE.md` → `PLUGIN_DEVELOPER_GUIDE.md`); `docs/CODE_TOUR.md` (R-07: `MatchContext` "5 references" → "4 references + by-value `MatchConfig`"); `STRUCTURE.md` (R-04: ADR inventory 21→22 files, 000–024). `docs/context/SESSION-STATE.md` (step 6a closed, `Last commit verified`, `Files touched`).
-
-**Files touched this session (2026-10-31, OI-12 + step 6b):** `README.md` (maturity statement: doctrine/spec/implementation/ADR/tests/L1-L3; "L0 complete" clarified); `docs/context/SESSION-STATE.md` (OI-12 closed, step 6b closed).
-
-**Files touched this session (2026-10-31, step 4 audit):** `crates/pcfm-demo/src/render.rs` (T1: `sanitize_output_path`, 3 tests; clippy fix); `CHANGELOG-SIM.md` (Current SIM_VERSION 2→4, history 1→2→3→4); `README.md` (tests 102→105, badge + table); `docs/context/SESSION-STATE.md` (step 4 closed, `Files touched`).
-
-**Files touched this session (2026-10-31, step 16 census):** `PROJECT-STATUS.md` (deleted); `README.md` (link → SESSION-STATE); `CONTRIBUTING.md` (2 refs → SESSION-STATE); `docs/context/README.md` (PROJECT-STATUS "planned" → README + STRUCTURE); `docs/context/SESSION-STATE.md` (step 16 closed).
-
-**Files touched this session (2026-10-31, gates startup mode — E3c):** `scripts/gates.sh` (flag `startup|closing`; startup: A1, A3, B1, B3, B6, B7 + B2 manual, A2 skipped because step 4 runs the tests; closing: unchanged + B4/B5 manual; invalid mode exits 2); `docs/context/NEW-SESSION-PROMPT.md` (startup step 2-bis runs `scripts/gates.sh startup`; closing step 5 no longer runs the script twice — `pre-push` does it; `Last updated`); `docs/context/SESSION-STATE.md` (this Files touched). Tested: closing green, startup green, startup red on an injected ADR mismatch (exit 1), restore (exit 0), invalid mode (exit 2).
-
-**Files touched this session (2026-10-31, gates text coherence — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (closing Gate A rewritten: A1 count comparison, A2 badge, A3 no hardcoded — the "commands below are the source of truth" line removed, D5 leak; startup step 2-bis gains "Why these checks run twice"; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `1e7fbad`).
-
-**Files touched this session (2026-10-31, closing step 2a — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (closing 2a now also captures a command that succeeded with an unexpected observation; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `64b2fef`).
-
-**Files touched this session (2026-10-31, `Decisions:` trailer — E3c):** `.githooks/commit-msg` (`Decisions:` required on closing commits); `.gitmessage` (template line); `docs/context/NEW-SESSION-PROMPT.md` (§G trailer list, closing step 4 conversation sweep, `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `6fac1da`).
-
-**Files touched this session (2026-10-31, A2 exact words + OI-16 — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (A2: exactly two words exit the pause, `riprendi` and `chiudi`, written exactly, no equivalent; E2 aligned; `Last updated`); `docs/context/SESSION-STATE.md` (OI-16: granularity assessment + one-off measurement plan; this entry; `Last commit verified` aligned to `be0da42`).
-
-**Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Last commit verified 718605d, Done storico, this entry). Nient'altro modificato in questa tornata: i commit `843ba4b`, `718605d` sono già su disco.
-
-**Files touched this session (2026-10-31, censimento L0 — E3c):** `docs/context/analysis/2026-10-31-22-28-review.md` (NEW — censimento operativo L0: 12 divergenze spec↔code, G1–G12, con file:line; fotografia, da archiviare quando L0 cambia); `docs/context/SESSION-STATE.md` (OI-17: puntatore al report + decisione su quali gap chiudere prima di L1/L2; questo Files touched; `Last commit verified`).
-
-**Files touched this session (2026-10-31, TUI scope + fix — E3c):** `docs/context/IDEAS.md` (IDEA-INFRA-006 split: board + events now, pitch with 22 players later; link to OI-17); `docs/context/SESSION-STATE.md` (Plan 12 and Prime azioni 12 updated with the scope; `Last commit verified` aligned to `eaa0eaf`; this entry). `eaa0eaf` contained the first two but not the bookmark fields; corrected here.
-
-**Files touched this session (2026-10-31, OI-18 ritual redundancies — E3c/E5):** `docs/context/SESSION-STATE.md` (OI-18: 5 real redundancies R1-R5 in the rituals, not to optimize before the OI-16 measurement; Last commit verified aligned to `1059751`; this entry).
-
-**Files touched this session (2026-10-31, R6/R7 — E3c/E5):** `docs/context/NEW-SESSION-PROMPT.md` (R7: "Three reads" → "Five reads", the text was stale; `Last updated`); `docs/context/SESSION-STATE.md` (OI-18 extended to 6 redundancies with R6: startup step 4 duplicates A1 and compares with a prompt that has no hardcoded numbers; `Last commit verified` aligned to `44c4cc3`; this entry).
-
-**Files touched this session (2026-10-31, Gate integrity — E3c):** `docs/context/GITHUB-SESSION-PROMPT.md` (dimension 7 "Gate integrity": audit `scripts/gates.sh` as code; read, not run as part of C2; `Last updated`); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `9e6d0a4`).
-
-**Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Detail 12 allineato a Plan/Prime azioni — B2 fix; Done storico; Last commit verified 4f3aa94; this entry). Nessun altro file in questa tornata: i commit `eaa0eaf`..`4f3aa94` sono già su disco.
-
-**Files touched this session (2026-10-31, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Detail 12 allineato a Plan/Prime azioni — B2 fix; Done storico; Last commit verified 4f3aa94; this entry). Nessun altro file in questa tornata: i commit `eaa0eaf`..`4f3aa94` sono già su disco.
+**Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; OI-16 chiuso; OI-18 riformulato; aggiunta sezione `Analysis reports (vivi)`; `Last commit verified` aligned to `d504e0e`; this entry).
