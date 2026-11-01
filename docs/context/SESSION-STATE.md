@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `7f268e0` — "ci: checkout@v7, ignore rand 0.10 (breaks the deterministic RNG)"
+**Last commit verified:** `87dbe82` — "docs(session-state): OI-15 measured (4 runs), OI-21 deduped"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -16,7 +16,6 @@
 
 | # | Cosa | Prima azione |
 |---|------|--------------|
-| OI-4 | `README.md:148` cita `pcfm-gen` (non tra i 9 crate) | `grep -rn "pcfm-gen" --include="*.md" --include="*.rs" .` |
 | OI-6 | `docs/performance.md` e `docs/save-security.md` mancanti | Decidere se crearli pre-release (con step 13) |
 | OI-7 | `ProjectionProfile` senza metodo di calcolo (Gap B) | Decidere quando apre `L2-scouting` |
 | OI-8 | `ScoutReport.DeclaredBias` senza formula (Gap C) | Decidere quando apre `L2-scouting` |

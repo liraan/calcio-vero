@@ -158,7 +158,7 @@ pcfootballmanager/
 ├── crates/           # code, one crate per architectural concern
 │   ├── pcfm-core/    # primitives: RNG, time, hashing
 │   ├── pcfm-model/   # domain types
-│   ├── pcfm-hidden/  # Plane A — accessible only to pcfm-match and pcfm-gen
+│   ├── pcfm-hidden/  # Plane A — accessible only to pcfm-match (and the future pcfm-gen)
 │   ├── pcfm-match/   # match engine
 │   ├── pcfm-stats/   # event chain, aggregations
 │   ├── pcfm-testkit/ # public test harness contract (no pcfm-* deps)
@@ -166,7 +166,7 @@ pcfootballmanager/
 │   ├── pcfm-demo/    # CLI: simulate a match, render text/JSON/HTML
 │   └── pcfm-fixtures/ # hardcoded squads and match fixture
 ├── docs/
-│   ├── adr/          # architectural decisions, 000, 001–008, 012–022
+│   ├── adr/          # architectural decisions, 000, 001–008, 012–026
 │   └── GLOSSARY.md
 └── archive/          # historical Prompt Masters, legacy modules
 ```
