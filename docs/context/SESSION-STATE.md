@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `a973117` — "feat(hooks): reject Files touched / Done in the bookmark (redundancy guard)"
+**Last commit verified:** `c87fcad` — "feat(gates): A4 — numbers in docs match the filesystem"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -10,7 +10,7 @@
 
 **Legenda:** 🔵 in corso · 🟡 prossimo · ⬜ aperto · 🔴 urgente
 
-**Analysis reports (vivi):** `docs/context/analysis/2026-10-31-22-28-review.md` (censimento L0, OI-17 — resta vivo: è la base del censimento), `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item, OI-13 fuso in OI-17). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25` (3/6 finding chiusi, 2 assorbiti da G2/OI-14, 1 era OI-21).
+**Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G1/G2/G10 ora OI-22/23/24). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
 
 ## Open items (what is not decided or verified yet)
 
@@ -20,7 +20,9 @@
 | OI-7 | `ProjectionProfile` senza metodo di calcolo (Gap B) | Decidere quando apre `L2-scouting` |
 | OI-8 | `ScoutReport.DeclaredBias` senza formula (Gap C) | Decidere quando apre `L2-scouting` |
 | OI-14 | Golden test 10 stagioni non esiste (`CHANGELOG-SIM:42`, `00-foundations` §4) | Decidere forma (L1 o N partite) e priorità |
-| OI-17 | **Censimento L0 (ex OI-13 fuso qui): 12 divergenze spec↔code** (`analysis/2026-10-31-22-28`), più i finding dei report archiviati non assegnati a step. G11 migliorato (4→8 eventi su 31 con ADR-026), non chiuso | Leggere §5 "Verdict" e classificare i 12 G: obbligatorio per L1/L2, o "target design, non current". I secondi si dichiarano in `specs/L0-match/00-overview.md` (una riga) e si chiudono. I primi diventano step |
+| OI-22 | **G1 — stream RNG senza `match_id`**: `"match:actions"`, `"match:action_kind"`, `"match:player_pick"` (`state.rs:60-64`). Due partite con lo stesso seed producono stream identici. Il census `22-28` lo segnala come "deterministico ma non per-match" | Prefissare gli stream con `match_.id` in `MatchState::new`. Richiede `SIM_VERSION` bump (cambia la sequenza RNG). Sessione dedicata |
+| OI-23 | **G2 — panic nel bus non isolato**: un handler che panica propaga e perde gli eventi in coda (`event_bus.rs:80-85`, documentato come "known limitation"). ADR-004 prevede `catch_unwind` al boundary | Decidere: `catch_unwind` al boundary o lasciare la limitazione. Tocca D2 (panic nelle path di simulazione). Sessione dedicata |
+| OI-24 | **G10 — getter pubblici su `GroundTruth`**: `world_seed()` e `match_id()` (`pcfm-hidden/src/lib.rs:81,87`). Non sono latenti (identificatori), ma ADR-003 dice "no public getters". Contratto dichiarato vs API reale | Decidere: rimuovere i getter, o emendare ADR-003 per dichiararli non-latenti. Sessione dedicata |
 
 ## Plan (in dependency order)
 
