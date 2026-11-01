@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `f438ae2` — "docs(session-state): step 8 verified, none of deferred 4-9 is closable"
+**Last commit verified:** `ecd24fa` — "docs(guide): step 3 — module/crate terminology"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
