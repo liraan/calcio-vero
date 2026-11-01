@@ -1,64 +1,159 @@
 # L0 positional slice — design note
 
+## For the new agent (read before §0)
+
+This note assumes you have run the startup ritual in
+`docs/context/NEW-SESSION-PROMPT.md` and read the bookmark. It does not
+repeat the operating rules. It tells you what this note is, what it is
+not, and where to find what you need.
+
+### The note and the spec
+
+`specs/L0-match/` is the **contract**, ratified. This note is a **plan to
+implement it**. If they disagree, the spec wins: the note is wrong and
+must be corrected. `04-match-engine.md` §2.2 (the tick loop) and
+`05-match-events.md` §2.1-§2.6 (the event, the two-phase pattern) are the
+two sections the note leans on most.
+
+### Before writing code, read (in this order)
+
+1. `docs/context/SESSION-STATE.md` — the bookmark: where we are
+2. this note, §0 (vision), §2 (the slices), §3 (the decisions), §6-ter (the
+   event map), §7 (what is next)
+3. `specs/L0-match/04-match-engine.md` §2.2 and `10-ground-truth.md` §2.2
+4. `crates/pcfm-match/src/spatial.rs` (slice A) and `perception.rs`
+   (slice B part 1): what exists
+5. `crates/pcfm-match/src/state.rs`, `pick_players` at `:228`: what B2
+   replaces
+
+### Where things are
+
+| What | Where |
+|---|---|
+| `SIM_VERSION` | `crates/pcfm-match/src/save.rs:74` |
+| Golden hash | `crates/pcfm-match/tests/golden_l0.rs:21` (`EXPECTED`) |
+| `EventType` enum | `crates/pcfm-stats/src/event.rs` |
+| Exhaustive `EventType` map (the board) | `crates/pcfm-demo/src/viewmodel.rs:178` — a new variant stops the build until mapped |
+| `MatchEvent.fields` type | `crates/pcfm-stats/src/event.rs:117` (`serde_json::Value`) |
+| `resolve_*` API | `crates/pcfm-hidden/src/lib.rs` |
+| Balance parameters | `balance/` (JSON, embedded with `include_str!`) |
+| The board | `cargo run -p pcfm-demo -- --seed 42 --board` |
+| The demo, JSON | `cargo run -p pcfm-demo -- --seed 42 --json` |
+
+### The DoD of a slice
+
+A slice is done when **all** hold:
+1. `cargo build --release`, `cargo clippy --workspace --all-targets -- -D
+   warnings`, `cargo test --workspace`, `cargo fmt --check`, `cargo run
+   --release --bin pcfm-test-runner -- --check --seed 42`: all green (C2).
+2. `scripts/gates.sh closing`: green.
+3. If the behaviour changed: `SIM_VERSION` bumped, golden hash regenerated,
+   `CHANGELOG-SIM` entry.
+4. Commit pushed, `git status -sb` shows `## main...origin/main`.
+5. The board still renders: `cargo run -p pcfm-demo -- --seed 42 --board`.
+
+"Compiles" is not a DoD. "Tests pass" is not a DoD. The five above are.
+
+### The "observed field" rule
+
+An event carries **observable** data: who, where, what happened, what
+condition. **Never a latent.** If a decision needs a latent (finishing,
+passing, tackling), it goes through `resolve_*`; the outcome is observable,
+the latent stays in `pcfm-hidden` (ADR-003, `00-foundations` §5). Adding a
+latent name to `fields` is a D2 violation, and the anti-leak test
+(`crates/pcfm-match/tests/anti_leak.rs`) will catch it in the save.
+
+### A ten-line glossary
+
+- **Slice**: a unit of work with an observable result; one session at most.
+- **Board**: the textual renderer in `pcfm-demo`; it reads `MatchResult`,
+  it is not the product (§0).
+- **Golden hash**: the concatenated state hashes of 10 matches, seed
+  42..51, compared with `EXPECTED`. Regenerated on every `SIM_VERSION`
+  bump.
+- **`resolve_*`**: the only way the engine reads Plane A. It returns an
+  outcome, never a latent.
+- **`fields`**: the variant-dependent payload of a `MatchEvent`,
+  `serde_json::Value`, observable only.
+- **`carrier`**: `SpatialState.carrier`, the agent with the ball, if any.
+- **Phenomenological**: effects are modelled, not simulated (§0).
+- **`pick_players`**: the current random picker (`state.rs:228`), the thing
+  slice B2 replaces.
+- **`pick_from_space`**: its replacement: the agent nearest the ball acts.
+- **`SIM_VERSION`**: the simulation behaviour version; bumped when the
+  output changes for the same seed.
+
 ## 0. Vision (read this first)
 
 **What this project is building:** a realistic simulation of a football
 match. Not a video game with a renderer: a **match engine** that
-understands space, physics-as-effects, and interactions between agents.
-The renderer is downstream; the engine is the product.
+understands space, interactions between agents, and the conditions that
+make an action succeed or fail. The renderer is downstream; the engine is
+the product.
 
 **The paradigm: phenomenological simulation.** The engine does not
 simulate physics (trajectories, contact forces, biomechanics). It models
-the **observable effects** of physical conditions:
-- rain does not fall: it makes perception noisy and the pitch slippery;
-- wet grass does not have friction coefficients: it raises the probability
-  of a slip event;
-- a strong press does not compute forces: it forces an error, and the
-  error is an event.
+the **observable effects** of conditions and decisions, tick by tick. The
+effects are modelled, not simulated: a slip is an event with a cause, not
+a computed friction coefficient.
 
-The events **emerge** from modelled conditions, tick by tick. They are not
-chosen by a global probability roll.
+### The scope: eight categories, not one
 
-**Why phenomenological:** it is deterministic (integer coordinates, named
-RNG streams, no platform-dependent floating point), calibratable (each
-model has parameters, in `balance/`), and it produces events that a fan
-recognises ("he slipped because it was raining"). A physical engine would
-require fixed-point physics, months of calibration, and data that does not
-exist publicly. That is a different project, not a later step of this one.
+The engine models eight kinds of phenomena. **Weather is an input to two
+of them, not the theme.**
 
-**The success criterion:** the board shows events a fan recognises, and
-every event carries the fields to understand *why* it happened. "He
-slipped" is not enough; "he slipped, at the 67th minute, on the wet grass,
-and lost the ball" is the target.
+| # | Category | What is modelled | Inputs (examples) |
+|---|---|---|---|
+| 1 | **Perception** | what an agent sees, with what error and delay | position, fatigue, concentration, crowd, *weather* |
+| 2 | **Decision** | the choice among *perceived* options | perception, psychology, tactical clarity, situation |
+| 3 | **Execution** | pass, shot, tackle, with error | skill (latent, via `resolve_*`), pressure, fatigue, *surface* |
+| 4 | **Interaction** | duels, pressing, marking as contests | position, timing, intensity |
+| 5 | **Collective shape** | lines compressing, transitions | individual decisions + tactical intents (L2) |
+| 6 | **State over time** | fatigue, condition, concentration | minutes, intensity, score |
+| 7 | **Psychology** | confidence, pressure, morale | events, context (L2) |
+| 8 | **Referee** | fouls, cards, advantage | perception, strictness, consistency |
 
-**The existing work.** The L0 specification (`specs/L0-match/`) is
-ratified and describes an agent-first, positional engine
-(`04-match-engine.md` §2.2). The code is a probability-per-tick prototype
-that does not implement it: `pick_players` (`state.rs:228`) picks an
-attacker and a defender **at random from the whole squad, with the same
-roll**. `MatchEvent` has 31 variants, the engine emits 8. The gap is
-declared, not hidden; this note is the plan to close it.
+**Weather is #1 (perception: rain makes the estimate noisy) and #3
+(execution: wet grass raises the control error).** It is an input, not a
+category. A slip is an execution event that depends on a surface input; a
+noisy pass under rain is a perception event. Neither is "the engine".
 
-**Slice A is done** (commit `39c444b`): `crates/pcfm-match/src/spatial.rs`,
-`AgentState` (integer position, velocity, heading), `SpatialState`
-(`BTreeMap<PlayerId, AgentState>` + ball + carrier), 4-4-2 grid. 6 tests.
-Nobody uses it yet: `pick_players` still runs.
+**The heart is #1–#4:** perception, decision, execution, interaction. A
+match is mostly these four, tick after tick. #5–#8 are the context that
+shapes them.
 
-**Part 1 of slice B is done** (commit `c231c98`):
-`crates/pcfm-match/src/perception.rs` (squared distance, nearest
-teammates/opponents, nearest to point, 4 tests) and
-`SpatialState.carrier` (who has the ball, if any). Also unused by the
-engine yet.
+### Why phenomenological
 
-**Part 2 of slice B is next**, and its shape changed after a discussion
-about realistic events: see §2 and §6-ter.
+It is deterministic (integer coordinates, named RNG streams, no
+platform-dependent floating point), calibratable (each model has
+parameters in `balance/`), and it produces events a fan recognises. A
+physical engine would require fixed-point physics, months of calibration,
+and data that does not exist publicly. That is a different project, not a
+later step of this one.
 
+### The success criterion
 
-(accepted). This note decides the *order* and the *scope* of the
-implementation, not the doctrine.
+The board shows events a fan recognises, and **every event carries the
+fields to understand why it happened**: who, where, under what condition,
+with what outcome. "He slipped" is not enough; "he slipped at the 67th
+minute on the wet grass and lost the ball" is the target. Same for "he
+passed", "he was pressed", "he anticipated".
 
-§2.1 and §2.6, `10-ground-truth.md` §2.2, `docs/adr/019-match-engine-contract.md`.
+### The existing work
 
+The L0 specification (`specs/L0-match/`) is ratified and describes an
+agent-first, positional engine (`04-match-engine.md` §2.2). The code is a
+probability-per-tick prototype that does not implement it: `pick_players`
+(`state.rs:228`) picks an attacker and a defender **at random from the
+whole squad, with the same roll**. `MatchEvent` has 31 variants, the
+engine emits 8. The gap is declared; this note is the plan to close it.
+
+- **Slice A is done** (`39c444b`): `spatial.rs`, `AgentState`,
+  `SpatialState`, 4-4-2 grid, 6 tests.
+- **Slice B part 1 is done** (`c231c98`): `perception.rs` (4 tests),
+  `SpatialState.carrier`.
+
+Neither is used by the engine yet. See §7.
 ## 1. The gap this note closes
 
 engine. The code is a prototype that does not implement it. This is declared,
@@ -353,14 +448,14 @@ See §2 and §7.
 ## 6-ter. The phenomenological event vocabulary (the map)
 
 The slices above produce **structure** (space, perception, conquest). This
-section is the **map of the events** the engine should eventually produce,
-so the next slices have a target. It is a map, not a commitment: each event
-is implemented when its model exists, not before (D3).
+section is the **map of the events** the engine should eventually produce.
+It is a map, not a commitment: each event is implemented when its model
+exists, not before (D3).
 
 ### The principle
 
 An event is worth adding when:
-1. a fan recognises it ("he slipped", "he lost control", "he was pressed");
+1. a fan recognises it;
 2. it has a **cause** the engine can model (a condition, a decision, an
    interaction), not a random draw;
 3. it carries the **fields** to understand why (position, condition,
@@ -370,32 +465,68 @@ An event is worth adding when:
 
 An event that fails any of the four is an idea, not a design (D3).
 
-### The candidates, with their fields
+### The candidates, by category (see §0)
+
+The category numbers refer to the eight categories in §0. **The heart is
+#1–#4**; the rest is context. Weather appears in #1 and #3 as an input,
+never as a category.
+
+**#1 Perception** — what an agent sees, with error. *(No event yet: a
+perception is not an observation. Its effects are events #3 and #4.)*
+
+**#2 Decision** — the choice among perceived options.
+
+| Event | Cause (modelled) | Fields | Consumer |
+|---|---|---|---|
+| `Pass` (already) | decision + perception | complete, from, to | board, narrative |
+
+**#3 Execution** — pass, shot, tackle, with error. Weather and surface are
+inputs here.
+
+| Event | Cause (modelled) | Fields | Consumer |
+|---|---|---|---|
+| `Shot` (already) | decision + skill (via `resolve_*`) | goal, on_target, position | board, narrative |
+| `ControlError` | surface × pressure × skill | position, pressure, lost_ball | board, narrative |
+| `Slip` | surface × velocity × balance | position, condition, lost_ball | board, narrative |
+
+**#4 Interaction** — duels, pressing, marking as contests. **This is the
+largest category and the first one slice B2 implements.**
 
 | Event | Cause (modelled) | Fields | Consumer |
 |---|---|---|---|
 | `Tackle` | defender wins a duel | from, to, position | board, narrative |
 | `Interception` | defender anticipates a pass | from, to, position | board, narrative |
-| `Pass` (already) | decision | complete, from, to | board, narrative |
-| `Slip` | `pitch_wear` × `weather` × velocity | position, condition, lost_ball | board, narrative |
-| `ControlError` | `pitch_wear` × pressure × skill (via `resolve_*`) | position, pressure, lost_ball | board, narrative |
+| `Duel` (already) | two agents contest the ball | winner_slot | board, narrative |
+| `Foul` (already) | illegal contest | position | board, narrative |
 | `Pressure` (in enum) | opponent within R, intent | position, intensity | board, narrative |
-| `Push` | contact, intensity, body part | position, intensity, outcome | board (needs data: deferred) |
+| `Push` | contact, intensity, body part | position, intensity, outcome | **deferred**: no public dataset for "which part of the body"; inventing it violates `00-foundations` §5 |
 
-`Push` is listed but **deferred**: "which part of the body" has no public
-dataset, and inventing it violates `00-foundations` §5. It returns when a
-calibration source exists.
+**#5 Collective shape** — lines compressing, transitions. *(No event yet:
+a shape is a relation, not an observation. L2 territory.)*
+
+**#6 State over time** — fatigue, condition, concentration. *(Inputs to
+#1–#4, not events of their own at L0. L2 territory.)*
+
+**#7 Psychology** — confidence, pressure, morale. *(L2 producers, via
+`ContextModifiers`. Not L0.)*
+
+**#8 Referee** — fouls, cards, advantage. *(`Foul` and `Card` exist; the
+referee as a perceptual agent is ADR-021, a separate slice.)*
+
+### What slice B2 implements
+
+Only **#4**: `Tackle` when a duel is won by the defender. `Interception`
+and `Pressure` follow in slice C, with #3 (`Slip`, `ControlError`). The
+order is deliberate: interaction first (the heart), execution after
+(weather as an input, not the theme).
 
 ### The parameters
 
-Every model has parameters (how much `pitch_wear` raises the slip
-probability, how much rain adds to perception noise). They live in
-`balance/`, they are **arbitrary and declared** until calibration. The
-`CHANGELOG-SIM` entry records them as "prototype, not calibrated".
-
-The calibration itself is a later step, with data. It does not block the
-model: a model with arbitrary parameters is still a model, and the board
-shows the events it produces.
+Every model has parameters (how much a surface raises the control error,
+how much pressure raises it further). They live in `balance/`, they are
+**arbitrary and declared** until calibration. The `CHANGELOG-SIM` entry
+records them as "prototype, not calibrated". Calibration is a later step
+with data; it does not block the model.
 
 ### What is not in the map
 
@@ -403,7 +534,7 @@ shows the events it produces.
 - "Which part of the body": no data, deferred.
 - Events with no cause the engine can model: a random draw is not a cause.
 - Events with no consumer: an idea, not a design.
-
+- L2 phenomena (#5–#7): they shape the events, they are not L0 events.
 ## 7. Where we are, and the next sessions
 
 **Done:**
