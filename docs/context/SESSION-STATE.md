@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `fc902c2` — "chore(balance): calibrate stoppage contributions, SIM_VERSION 7"
+**Last commit verified:** `ef49751` — "docs(ideas): IDEA-TACT-003 — foul severity parked with the positional engine"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -120,3 +120,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, ADR-026 phase 2 — E3c):** `crates/pcfm-stats/src/event.rs` (`Half` enum, `MatchEvent.half`); `crates/pcfm-match/src/state.rs` (`half`/`half_start_tick` fields, `begin_half`, `emit_boundary`, timestamp relativo al tempo); `crates/pcfm-match/src/balance.rs` (NEW — `StoppageTime`, `include_str!` del file JSON, `stoppage_for`); `balance/stoppage_time.json` (NEW); `crates/pcfm-match/src/orchestrator.rs` (quattro fasi, punto fisso, guard 45'); `crates/pcfm-demo/src/viewmodel.rs` (`EventRow.half`); `crates/pcfm-demo/src/board.rs` (`format_time`, `1T`/`2T`, `45'+X'`); `crates/pcfm-match/src/save.rs` (`SIM_VERSION` 6); `CHANGELOG-SIM.md` (entry 6, Current); `README.md` (122 test); `docs/context/SESSION-STATE.md` (OI-25 aggiornato, LCV → `efd7f14`, this entry).
 **Files touched this session (2026-11-01, ADR-026 calibration — E3c):** `balance/stoppage_time.json` (goal 60, foul 20, duel 10, base 0); `crates/pcfm-match/src/balance.rs` (test aggiornati); `crates/pcfm-match/src/save.rs` (`SIM_VERSION` 7); `CHANGELOG-SIM.md` (entry 7); `docs/context/SESSION-STATE.md` (LCV → `c7ced20`, this entry).
 **Files touched this session (2026-11-01, IDEA-TACT-003 — E3c):** `docs/context/IDEAS.md` (IDEA-TACT-003: foul severity parked with step 18); `docs/context/SESSION-STATE.md` (LCV → `fc902c2`, this entry).
+**Files touched this session (2026-11-01, nota recupero — E3c):** `docs/context/IDEAS.md` (IDEA-TACT-003: nota "Known consequence", il recupero alto è il motore a 4 eventi, non la formula; niente moltiplicatore per tempo); `docs/context/SESSION-STATE.md` (LCV → `ef49751`, this entry).

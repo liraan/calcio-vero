@@ -367,6 +367,8 @@
 - **Why parked with step 18:** severity is a *perception* the engine must resolve (how violent was the contact?), and the positional engine is where contact resolution will live. Adding it now, on the event-only prototype, would mean inventing a severity from a `DuelOutcome` that does not model contact intensity. D3: structure after content.
 - **Link:** step 18 (L0 positional), `IDEA-INFRA-019` (spatial primitives), `balance/stoppage_time.json`.
 - **Not rejected:** scheduled. The flat 20s is a declared placeholder, not a final value.
+- **Known consequence (2026-11-01):** the recovery is high for high-scoring halves. Seed 42 (4 goals in the first half) produces `45'+4'`, against a real-game 2-3'. The cause is not the formula: it is the prototype engine, which emits 4 of 27 event types (`action_probability = 0.0005` produces ~27 events per match, with a goal-heavy distribution). A half with 4 goals is rare IRL; the prototype generates it more often. The recovery is reported as the engine produces it, not hidden with a coefficient.
+- **Do not add a per-half multiplier.** It would be arbitrary and would mask the engine's distribution. When the engine emits more event types (substitutions, injuries, cards, VAR), the contributions are recalibrated, not the formula.
 
 ### IDEA-INFRA-007 — In-match intervention (manual pause, engine hints)
 
