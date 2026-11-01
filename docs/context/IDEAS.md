@@ -352,6 +352,22 @@
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`. Kept as reference, not merged.
 
 
+### IDEA-TACT-003 — Foul severity and differentiated stoppage time (parked with step 18)
+
+- **Status:** sketch
+- **Category:** Tactics / simulation
+- **Source:** session 2026-11-01 (discussion on stoppage time calibration). Parked explicitly, not forgotten.
+- **Idea:** a foul is not one thing. A light foul (push in midfield) and a serious foul (late tackle, injury, VAR review) produce different stoppage time. Today `Foul` contributes a flat 20s (`balance/stoppage_time.json`); the severity does not exist in the model.
+- **What it requires:**
+    1. `pcfm-hidden::resolve_foul` (or an extension of `resolve_duel`) returns a severity: `Light | Serious | Card`.
+    2. `MatchEvent.fields` on `Foul` carries `"severity": "light" | "serious"`.
+    3. `balance/stoppage_time.json` splits `foul` into `foul_light` and `foul_serious` (proposed: 15s and 60s).
+    4. `stoppage_for` reads `fields.severity`.
+    5. `SIM_VERSION` bump.
+- **Why parked with step 18:** severity is a *perception* the engine must resolve (how violent was the contact?), and the positional engine is where contact resolution will live. Adding it now, on the event-only prototype, would mean inventing a severity from a `DuelOutcome` that does not model contact intensity. D3: structure after content.
+- **Link:** step 18 (L0 positional), `IDEA-INFRA-019` (spatial primitives), `balance/stoppage_time.json`.
+- **Not rejected:** scheduled. The flat 20s is a declared placeholder, not a final value.
+
 ### IDEA-INFRA-007 — In-match intervention (manual pause, engine hints)
 
 - **Status:** sketch
