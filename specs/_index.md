@@ -67,7 +67,7 @@ Modules marked *(planned)* below do not have a file yet. Their links are intenti
 | L0.09 | [`L0-match/09-context-modifiers.md`](L0-match/09-context-modifiers.md) | ✅ ratified | 00, L0.03 |
 | L0.10 | [`L0-match/10-ground-truth.md`](L0-match/10-ground-truth.md) | ✅ ratified | 00, L0.01, L0.03 |
 
-**L0 is done when:** a friendly match is playable, savable, reloadable, deterministic, and every event has a cause trace. The **specification** is complete; the **code** is complete (9 crates, 122 tests). See `STRUCTURE.md` §3.
+**L0 is done when:** a friendly match is playable, savable, reloadable, deterministic, and every event has a cause trace. The **specification** is complete; the **code** is complete (9 crates, 123 tests). See `STRUCTURE.md` §3.
 
 ---
 

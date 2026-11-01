@@ -140,6 +140,7 @@ name = "pcfm-match"
 version = "0.1.0"
 dependencies = [
  "pcfm-core",
+ "pcfm-fixtures",
  "pcfm-hidden",
  "pcfm-model",
  "pcfm-stats",
