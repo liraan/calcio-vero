@@ -7,7 +7,7 @@
 //! Events are **never** modified or deleted. The `EventChain` (in `chain.rs`)
 //! enforces this at the storage level: there is no `update` or `delete`.
 
-use pcfm_core::ids::{EventId, MatchId, PlayerId};
+use pcfm_core::ids::{ActorId, EventId, MatchId};
 use pcfm_core::time::GameInstant;
 use serde::{Deserialize, Serialize};
 
@@ -67,8 +67,12 @@ pub enum EventType {
     Pressure,
     /// A random in-match event.
     RandomEvent,
+    /// Kick-off.
+    KickOff,
     /// Half-time.
     HalfTime,
+    /// Second half.
+    SecondHalf,
     /// Full-time.
     FullTime,
     /// Match abandoned.
@@ -85,8 +89,8 @@ pub struct MatchEvent {
     pub event_id: EventId,
     /// The match this event belongs to.
     pub match_id: MatchId,
-    /// The player who performed the action.
-    pub player_id: PlayerId,
+    /// The actor who performed the action, or `None` for a match boundary.
+    pub actor: Option<ActorId>,
     /// The minute of the match, 0–120.
     pub timestamp_minute: u8,
     /// The second of the match, 0–59.
@@ -118,14 +122,14 @@ impl MatchEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pcfm_core::ids::{EventId, MatchId, PlayerId};
+    use pcfm_core::ids::{ActorId, EventId, MatchId, PlayerId};
     use pcfm_core::time::GameInstant;
 
     fn valid_event() -> MatchEvent {
         MatchEvent {
             event_id: EventId::new(1, 0),
             match_id: MatchId::new(1, 0),
-            player_id: PlayerId::new(1, 0),
+            actor: Some(ActorId::Player(PlayerId::new(1, 0))),
             timestamp_minute: 45,
             timestamp_second: 30,
             minutes_played_cumulative: 45,

@@ -101,6 +101,27 @@ pub type RefereeId = EntityId<RefereeTag>;
 /// A `MatchEvent` identifier.
 pub type EventId = EntityId<EventTag>;
 
+// --- ActorId ---------------------------------------------------------------
+
+/// The actor of a `MatchEvent`: a player or a referee.
+///
+/// Match-boundary events (`KickOff`, `HalfTime`, `SecondHalf`, `FullTime`)
+/// have no actor. `MatchEvent.actor` is therefore `Option<ActorId>`.
+///
+/// # Adding a new actor (ADR-026)
+///
+/// A future actor (VAR, fourth official, assistant referee) extends this
+/// enum with a new variant. It does **not** use `RefereeId` for a
+/// non-referee actor, and it does **not** add a sentinel `PlayerId`.
+/// The type is the contract.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum ActorId {
+    /// A player.
+    Player(PlayerId),
+    /// A referee.
+    Referee(RefereeId),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

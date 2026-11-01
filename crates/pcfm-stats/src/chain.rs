@@ -105,14 +105,14 @@ impl Default for EventChain {
 mod tests {
     use super::*;
     use crate::event::{EventType, MatchEvent};
-    use pcfm_core::ids::{EventId, MatchId, PlayerId};
+    use pcfm_core::ids::{ActorId, EventId, MatchId, PlayerId};
     use pcfm_core::time::GameInstant;
 
     fn make_event(slot: u32, minute: u8) -> MatchEvent {
         MatchEvent {
             event_id: EventId::new(slot, 0),
             match_id: MatchId::new(1, 0),
-            player_id: PlayerId::new(1, 0),
+            actor: Some(ActorId::Player(PlayerId::new(1, 0))),
             timestamp_minute: minute,
             timestamp_second: 0,
             minutes_played_cumulative: u16::from(minute),

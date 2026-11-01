@@ -79,7 +79,10 @@ pub fn narrate(match_: &Match, chain: &EventChain) -> Vec<NarrativeEntry> {
 
 fn narrate_event(ev: &MatchEvent, names: &BTreeMap<PlayerId, &str>) -> NarrativeEntry {
     let importance = importance_for(ev.event_type);
-    let player = names.get(&ev.player_id).copied().unwrap_or("<unknown>");
+    let player = match ev.actor {
+        Some(pcfm_core::ids::ActorId::Player(id)) => names.get(&id).copied().unwrap_or("<unknown>"),
+        Some(pcfm_core::ids::ActorId::Referee(_)) | None => "<match>",
+    };
     let minute = ev.timestamp_minute;
 
     let text = render_text(ev.event_type, player, minute);
@@ -117,7 +120,9 @@ const fn importance_for(event_type: EventType) -> Importance {
         | EventType::Substitution
         | EventType::Injury
         | EventType::Assist
+        | EventType::KickOff
         | EventType::HalfTime
+        | EventType::SecondHalf
         | EventType::FullTime => Importance::High,
         EventType::Penalty | EventType::Goal | EventType::MatchAbandoned => Importance::Critical,
     }
@@ -154,7 +159,9 @@ fn render_text(event_type: EventType, player: &str, minute: u8) -> String {
         }
         EventType::Pressure => format!("{player} presses in the {minute}'"),
         EventType::RandomEvent => format!("Random event: {player} in the {minute}'"),
+        EventType::KickOff => "Kick-off".to_string(),
         EventType::HalfTime => "Half-time".to_string(),
+        EventType::SecondHalf => "Second half".to_string(),
         EventType::FullTime => "Full-time".to_string(),
         EventType::MatchAbandoned => "Match abandoned".to_string(),
     }
@@ -211,7 +218,7 @@ mod tests {
         MatchEvent {
             event_id: EventId::new(slot, 0),
             match_id: MatchId::new(1, 0),
-            player_id,
+            actor: Some(pcfm_core::ids::ActorId::Player(player_id)),
             timestamp_minute: minute,
             timestamp_second: 0,
             minutes_played_cumulative: u16::from(minute),

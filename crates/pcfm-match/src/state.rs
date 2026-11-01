@@ -3,7 +3,7 @@
 //! `MatchState` is mutated by the tick loop. At the end of the match, it
 //! produces a `MatchResult` via `finish`.
 
-use pcfm_core::ids::{EventId, PlayerId};
+use pcfm_core::ids::{ActorId, EventId, PlayerId};
 use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
 use pcfm_stats::{EventChain, EventType, MatchEvent};
@@ -111,7 +111,7 @@ impl MatchState {
             self.emit_event(
                 ctx,
                 tick,
-                attacker,
+                Some(ActorId::Player(attacker)),
                 EventType::Shot,
                 serde_json::json!({ "goal": outcome.goal }),
             );
@@ -128,7 +128,13 @@ impl MatchState {
                     Possession::Home => self.score.home += 1,
                     Possession::Away => self.score.away += 1,
                 }
-                self.emit_event(ctx, tick, attacker, EventType::Goal, serde_json::json!({}));
+                self.emit_event(
+                    ctx,
+                    tick,
+                    Some(ActorId::Player(attacker)),
+                    EventType::Goal,
+                    serde_json::json!({}),
+                );
             }
             self.flip_possession();
         } else if action_kind_roll < 0.97 {
@@ -141,7 +147,7 @@ impl MatchState {
             self.emit_event(
                 ctx,
                 tick,
-                attacker,
+                Some(ActorId::Player(attacker)),
                 EventType::Duel,
                 serde_json::json!({ "winner_slot": outcome.winner.slot() }),
             );
@@ -155,7 +161,13 @@ impl MatchState {
                 duel_type: pcfm_hidden::DuelType::Ground,
             };
             let _outcome = ctx.hidden.resolve_duel(&ctx_duel);
-            self.emit_event(ctx, tick, defender, EventType::Foul, serde_json::json!({}));
+            self.emit_event(
+                ctx,
+                tick,
+                Some(ActorId::Player(defender)),
+                EventType::Foul,
+                serde_json::json!({}),
+            );
             self.flip_possession();
         }
     }
@@ -219,7 +231,7 @@ impl MatchState {
         &mut self,
         ctx: &mut MatchContext<'_>,
         tick: u64,
-        player_id: PlayerId,
+        actor: Option<ActorId>,
         event_type: EventType,
         fields: serde_json::Value,
     ) {
@@ -232,7 +244,7 @@ impl MatchState {
         let event = MatchEvent {
             event_id: EventId::new(self.next_event_slot, 0),
             match_id: ctx.match_.id,
-            player_id,
+            actor,
             timestamp_minute: minute,
             timestamp_second: second,
             minutes_played_cumulative: minutes_played,

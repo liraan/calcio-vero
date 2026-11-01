@@ -21,6 +21,8 @@ pub enum Team {
     Home,
     /// Away side.
     Away,
+    /// A match official or a boundary event.
+    Match,
 }
 
 impl Team {
@@ -29,6 +31,7 @@ impl Team {
         match self {
             Self::Home => "Home",
             Self::Away => "Away",
+            Self::Match => "--",
         }
     }
 }
@@ -126,11 +129,20 @@ fn is_goal_shot(event: &MatchEvent) -> bool {
 
 /// Projects one `MatchEvent` into an `EventRow`.
 fn event_row(event: &MatchEvent) -> EventRow {
-    let slot = event.player_id.slot();
-    // Slot encoding: <100 = home, >=100 = away. The modulo brings
-    // the shirt number into 0..=99, which always fits in u8.
-    let number = u8::try_from(slot % 100).unwrap_or(0);
-    let team = if slot >= 100 { Team::Away } else { Team::Home };
+    let (team, number) = match event.actor {
+        Some(pcfm_core::ids::ActorId::Player(id)) => {
+            let slot = id.slot();
+            // Slot encoding: <100 = home, >=100 = away. The modulo brings
+            // the shirt number into 0..=99, which always fits in u8.
+            let number = u8::try_from(slot % 100).unwrap_or(0);
+            if slot >= 100 {
+                (Team::Away, number)
+            } else {
+                (Team::Home, number)
+            }
+        }
+        Some(pcfm_core::ids::ActorId::Referee(_)) | None => (Team::Match, 0),
+    };
     EventRow {
         minute: event.timestamp_minute,
         second: event.timestamp_second,
@@ -179,7 +191,9 @@ const fn event_kind(kind: EventType) -> &'static str {
         EventType::ProgressivePass => "progressive_pass",
         EventType::Pressure => "pressure",
         EventType::RandomEvent => "random_event",
+        EventType::KickOff => "kick_off",
         EventType::HalfTime => "half_time",
+        EventType::SecondHalf => "second_half",
         EventType::FullTime => "full_time",
         EventType::MatchAbandoned => "match_abandoned",
     }
@@ -283,7 +297,9 @@ mod tests {
         let home = MatchEvent {
             event_id: pcfm_core::ids::EventId::new(0, 0),
             match_id: pcfm_core::ids::MatchId::new(1, 0),
-            player_id: pcfm_core::ids::PlayerId::new(9, 0),
+            actor: Some(pcfm_core::ids::ActorId::Player(
+                pcfm_core::ids::PlayerId::new(9, 0),
+            )),
             timestamp_minute: 1,
             timestamp_second: 0,
             minutes_played_cumulative: 1,
@@ -296,7 +312,9 @@ mod tests {
         assert_eq!(row.number, 9);
 
         let away = MatchEvent {
-            player_id: pcfm_core::ids::PlayerId::new(109, 0),
+            actor: Some(pcfm_core::ids::ActorId::Player(
+                pcfm_core::ids::PlayerId::new(109, 0),
+            )),
             ..home
         };
         let row = event_row(&away);

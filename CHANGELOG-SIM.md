@@ -11,10 +11,10 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 4
+SIM_VERSION = 5
 ```
 
-`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. The current value is the reference against which all future bumps are measured.
+`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). The current value is the reference against which all future bumps are measured.
 
 **Known gap (OI-14):** no golden hash exists yet — the 10-season golden test is not implemented. The bump procedure below notes this explicitly.
 
@@ -90,6 +90,43 @@ match), say so and give the distribution delta.
 ---
 
 ## History
+
+## [SIM_VERSION 5] — 2026-11-01
+
+### Why the bump
+
+ADR-026 (accepted 2026-11-01): match boundaries and stoppage time.
+`MatchEvent.actor: Option<ActorId>` replaces `player_id: PlayerId`; new
+`EventType::KickOff` and `EventType::SecondHalf`; `HalfTime` and `FullTime`
+emitted; two halves with separate clocks and separate stoppage time.
+
+### What changes for the same seed
+
+Events carry `actor` instead of `player_id`. Boundaries (`KickOff`,
+`HalfTime`, `SecondHalf`, `FullTime`) have `actor: None`. Match end time is
+`45+rec1` for the first half and `45+rec2` for the second, with `rec`
+computed from the events of each half (fixed point, no cap; guard at 45').
+
+### Saves affected
+
+Breaking: `player_id` removed, `actor` added. A v4 save does not load under
+v5. Migration is not provided: no v4 save exists outside test fixtures, and
+the fixture is regenerated. The `docs/MIGRATION-01-04.md` procedure is the
+template; a `MIGRATION-04-05.md` is not needed for phase 1.
+
+### Golden hash
+
+- Before: not recorded. OI-14 tracks the missing golden test.
+- After: not recorded. OI-14 still open.
+
+### Related changes
+
+- ADR-026 (Match boundaries and stoppage time) — accepted 2026-11-01.
+- `pcfm-core`: `ActorId` (`Player | Referee`).
+- `pcfm-stats::MatchEvent`: `player_id` -> `actor`.
+- `pcfm-stats::EventType`: `KickOff`, `SecondHalf` added.
+- `pcfm-match::narrative`: handles `actor` and the new event types.
+- `pcfm-demo::viewmodel`: `EventRow.team` gains `Match` for boundary events.
 
 ## [SIM_VERSION 4] — 2026-10-31
 
