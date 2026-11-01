@@ -9,11 +9,19 @@
 //! `GroundTruth::resolve_*`. This is the whole point of ADR-003 (option B):
 //! the match engine calls `resolve_*` and receives an outcome; it never
 //! reads a latent number.
+//!
+//! # Future-facing spatial state
+//!
+//! A player may carry a future-facing spatial pose. This is intentionally
+//! optional and separate from the current L0 player contract. It gives the
+//! project a position/movement foundation without disturbing the deterministic
+//! match engine or Plane A access rules.
 
 use pcfm_core::ids::PlayerId;
 use serde::{Deserialize, Serialize};
 
 use crate::error::ModelError;
+use crate::spatial::PlayerPose;
 
 /// The player's preferred foot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -158,6 +166,9 @@ pub struct Player {
     pub physical: PhysicalStateMinimal,
     /// The minimal psychological state.
     pub psychological: PsychologicalStateMinimal,
+    /// Optional future-facing positional pose.
+    #[serde(default)]
+    pub pose: Option<PlayerPose>,
 }
 
 impl Player {
@@ -191,7 +202,21 @@ impl Player {
             height_cm,
             physical,
             psychological,
+            pose: None,
         })
+    }
+
+    /// Attaches a future-facing positional pose to the player.
+    #[must_use]
+    pub fn with_pose(mut self, pose: PlayerPose) -> Self {
+        self.pose = Some(pose);
+        self
+    }
+
+    /// Returns `true` when a future-facing positional pose is attached.
+    #[must_use]
+    pub fn has_pose(&self) -> bool {
+        self.pose.is_some()
     }
 }
 
@@ -206,6 +231,7 @@ fn check_unit(field: &'static str, value: f32) -> Result<(), ModelError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::spatial::{Heading, PlayerPose, Position2D, Velocity2D};
     use pcfm_core::ids::PlayerId;
 
     fn valid_player() -> Player {
@@ -226,6 +252,17 @@ mod tests {
         let p = valid_player();
         assert_eq!(p.name, "Alice");
         assert_eq!(p.height_cm, 180);
+        assert!(!p.has_pose());
+    }
+
+    #[test]
+    fn player_accepts_future_pose() {
+        let p = valid_player().with_pose(PlayerPose::try_new(
+            Position2D::try_new(5.0, 7.0).unwrap(),
+            Velocity2D::try_new(1.0, 0.5).unwrap(),
+            Heading::try_new(0.25).unwrap(),
+        ).unwrap());
+        assert!(p.has_pose());
     }
 
     #[test]
