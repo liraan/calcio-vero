@@ -32,6 +32,7 @@ pub mod narrative;
 pub mod orchestrator;
 pub mod result;
 pub mod save;
+pub mod spatial;
 pub mod state;
 
 pub use context::{MatchConfig, MatchContext};
@@ -41,6 +42,7 @@ pub use narrative::{Importance, NarrativeEntry, narrate};
 pub use orchestrator::simulate_match;
 pub use result::{MatchResult, MatchStatistics, Score};
 pub use save::{MatchSave, SCHEMA_VERSION, SIM_VERSION, SaveError, replay};
+pub use spatial::{AgentState, SpatialState};
 pub use state::MatchState;
 
 /// Returns the version of `pcfm-match`, as declared in `Cargo.toml`.
