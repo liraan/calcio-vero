@@ -3,9 +3,9 @@ title: "L0 — Match (overview)"
 level: 0
 cell: "L0-match"
 module_id: "L0.00"
-version: "1.2"
-status: "ratified"
-last_updated: "2026-10-25"
+version: "1.3-draft-review"
+status: "ratified-prototype"
+last_updated: "2026-11-01"
 supersedes: null
 depends_on: ["00-foundations"]
 referenced_by: ["L1-season", "L1-roster", "L1-world", "L2-tactics", "L2-psyche"]
@@ -16,8 +16,9 @@ conforms_to: "00-foundations (v2.0)"
   MAINTAINER NOTE: this is the "front door" of L0. If you change the cell list
   or the dependency rules, update this file AND specs/_index.md. They must agree.
 
-  ADR-003 is accepted. All 11 cells of L0 are now `ratified`. The specification
-  is complete. Code can be written.
+  This version explicitly preserves the project doctrine: L0 is a ratified
+  contract, while the implementation remains a prototype. The code may be partial,
+  but the specification remains the formal boundary for the layer.
 -->
 
 # L0 — Match (overview)
@@ -27,6 +28,8 @@ This is the **core** of the whole project. Everything else expands it. If L0 doe
 L0 answers one question: **can two teams play a football match, deterministically, and produce a result that a human can read, understand, and trust?**
 
 It does **not** answer: who owns the club, who is the manager, what is the league table, how much a player is worth, what the fans think. Those are L1 and L2.
+
+**Important interpretation for this draft:** this file describes the ratified L0 contract and does not claim that every part of that contract is fully implemented in the current prototype. The current implementation is a valid early prototype, but the specification remains the authoritative boundary until the implementation closes the remaining gaps.
 
 ---
 
@@ -84,6 +87,7 @@ If any of those seven fails, L0 is not done.
 <!--
   MAINTAINER NOTE: the seven-point checklist is the acceptance test for L0 as a
   whole. If you add a cell to L0, check that all seven still hold.
+  This version makes the prototype-vs-contract distinction explicit.
 -->
 
 ---
@@ -103,7 +107,7 @@ If any of those seven fails, L0 is not done.
 | L0.09 | [`09-context-modifiers.md`](09-context-modifiers.md) | How external state enters the engine | ✅ ratified |
 | L0.10 | [`10-ground-truth.md`](10-ground-truth.md) | Public API of `pcfm-hidden` (Plane A access) | ✅ ratified |
 
-**11 cells in total.** All `ratified`. ADR-003 (Plane A enforcement, option B) is accepted. The specification is complete; the code can be written.
+**11 cells in total.** All `ratified` at the contract level. The implementation is still a prototype, and some L0 gaps remain explicit in the review notes.
 
 ---
 
@@ -123,7 +127,7 @@ Within L0:
 
 **No cell in L0 depends on L1, L2, or L3.** Ever.
 
-The three cells that touch Plane A (`04-match-engine`, `08-random-events`, `10-ground-truth`) do so only through the `GroundTruth` API defined in `10-ground-truth`. The type system enforces this: `GroundTruth` has no public fields, is not `Serialize`, and its `Debug` does not leak.
+The three cells that touch Plane A (`04-match-engine`, `08-random-events`, `10-ground-truth`) do so only through the `GroundTruth` API defined in `10-ground-truth`. The type system enforces this boundary.
 
 ---
 
@@ -149,7 +153,7 @@ L0 is where the Three Planes are born.
 
 Every L0 cell that consumes randomness uses a **named stream** derived from `(world_seed, cell_id, match_id)`. No cell shares a stream with another. Adding a new consumer never shifts existing results.
 
-`GroundTruth` is created by `GroundTruth::new(world_seed, match_id)`. Two calls with the same arguments produce the same initial state. This is what makes the save reconstruct-able (see `07-save-minimal.md` §2.6).
+`GroundTruth` is created by `GroundTruth::new(world_seed, match_id)`. Two calls with the same arguments produce the same initial state. This is what makes the save reconstruct-able.
 
 Golden test: `same_seed → same MatchResult` bit-for-bit, across 1,000 randomly generated matches.
 
@@ -162,7 +166,7 @@ Golden test: `same_seed → same MatchResult` bit-for-bit, across 1,000 randomly
 - [x] All 11 cells specified and ratified
 - [x] ADR-003 accepted (Plane A enforcement, option B)
 
-**Implementation (pending):**
+**Implementation (prototype status):**
 
 - [ ] Two squads can play a match from a seed
 - [ ] The match produces `MatchEvent`s, ratings, statistics, narrative
@@ -174,7 +178,7 @@ Golden test: `same_seed → same MatchResult` bit-for-bit, across 1,000 randomly
 - [ ] Performance: 90 min simulated in < 1 s on mid-range hardware
 - [ ] Golden test: 1,000 matches, same seed → same hash
 
-The specification half of the DoD is done. The implementation half begins with the first line of code.
+This document treats the specification as ratified and the implementation as the current prototype. That is the correct repository-level stance.
 
 ---
 
