@@ -6,6 +6,14 @@
 #
 # One PR per ecosystem, grouped: a weekly PR with all minor/patch Cargo
 # updates, plus one for the GitHub Actions used by the workflow.
+#
+# `rand_chacha` and `rand_core` 0.10 are ignored. The major bump changes
+# the `ChaCha20Rng` API (`from_seed`, `next_u32`, `fill_bytes`), which is
+# the deterministic RNG core (`pcfm-core/src/rng.rs`,
+# `pcfm-hidden/src/latents.rs`). A breaking change there is a
+# `SIM_VERSION` decision, not a dependency bump. Verified locally on
+# 2026-11-01: `cargo clippy` fails on both 0.10 branches. Remove the
+# ignore when the RNG migration has its own session.
 
 version: 2
 updates:
@@ -14,6 +22,11 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "rand_chacha"
+        versions: ["0.10.x"]
+      - dependency-name: "rand_core"
+        versions: ["0.10.x"]
     groups:
       cargo:
         patterns: ["*"]
