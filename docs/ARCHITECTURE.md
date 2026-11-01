@@ -21,7 +21,7 @@ fit together.
 | Crate | Role | Plane | Depends on |
 |-------|------|-------|------------|
 | `pcfm-core` | Infrastructure: RNG, event bus, IDs, hash, time | — | (none) |
-| `pcfm-model` | Minimal entities: Player (no latents), Squad, Pitch, Referee, Match, CauseTrace | B/C | `pcfm-core` |
+| `pcfm-model` | Minimal entities: Player (no latents), Squad, Pitch, Referee, Match | B/C | `pcfm-core` |
 | `pcfm-hidden` | Plane A: GroundTruth, `resolve_*`, `drain_observations` | **A** | `pcfm-core`, `pcfm-model` |
 | `pcfm-stats` | Plane B: MatchEvent, EventChain (append-only, hash chain) | B | `pcfm-core`, `pcfm-model` |
 | `pcfm-match` | Match engine: orchestrator `simulate_match`, `TextMatchEngine`, save/load, narrative | — | `pcfm-core`, `pcfm-model`, `pcfm-hidden`, `pcfm-stats` |
