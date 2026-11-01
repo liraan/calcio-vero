@@ -77,7 +77,7 @@ At the end of L0, you can:
 4. Get a final score, per-player ratings, and a statistics bundle
 5. Save the match to disk
 6. Reload the match and get **exactly the same result**
-7. Read why each event happened (cause trace)
+7. Understand why each event happened (`event_type` + observed `fields`; no `CauseTrace` at L0, ADR-024)
 
 If any of those seven fails, L0 is not done.
 
@@ -167,7 +167,7 @@ Golden test: `same_seed → same MatchResult` bit-for-bit, across 1,000 randomly
 - [ ] Two squads can play a match from a seed
 - [ ] The match produces `MatchEvent`s, ratings, statistics, narrative
 - [ ] The match is saveable and reloadable, same seed → same result
-- [ ] Each event has a consultable cause trace
+- [ ] Each event's cause is consultable (`event_type` + `fields`; no `CauseTrace`, ADR-024)
 - [ ] No ratings computed from latents (test passes)
 - [ ] No module outside `pcfm-hidden`, `10-ground-truth`, `04-match-engine`, and `08-random-events` reads Plane A (test passes)
 - [ ] `GroundTruth` is not `Serialize`, has no public fields, and has a custom `Debug` that does not leak
@@ -185,7 +185,7 @@ The specification half of the DoD is done. The implementation half begins with t
 | Match engine becomes a monolith | High | Cell boundaries enforced; `04-match-engine` has a hard API; random events, context modifiers, and ground truth are separate cells |
 | Ratings leak Plane A | Critical | Type system + test of violation (`06-match-output` has no access to `pcfm-hidden`) |
 | Determinism drifts | Critical | Named streams + golden test + `SIM_VERSION` |
-| Random events feel "cheap" | High | Every event has a cause trace; distribution tested |
+| Random events feel "cheap" | High | Every event's cause is observable (`event_type` + `fields`); distribution tested |
 | `pcfm-hidden` leaks a latent getter | Critical | `10-ground-truth` API is the only surface; review + grep in CI |
 | Performance insufficient | Medium | Profiling, tick budget, benchmarks in CI |
 | Implementation drifts from spec | Medium | Every PR against L0.04, L0.08, L0.10 is checked against the cell spec; a drift is a bug in the code, not in the spec |

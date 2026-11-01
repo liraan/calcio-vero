@@ -121,22 +121,7 @@ The `resolve_*` calls are made once per player per tick, not once per event, to 
 
 ### 2.4 Cause trace
 
-Every random event has a `CauseTrace`:
-
-```rust
-CauseTrace {
-    primary_cause: "muscle_injury_mild",
-    contributing_factors: [
-        Factor { name: "fatigue", value: 0.72, weight: 0.45 },
-        Factor { name: "condition", value: 0.55, weight: 0.15 },
-        Factor { name: "pitch_condition", value: 0.55, weight: 0.10 },
-        Factor { name: "injury_risk_modifier", value: 1.30, weight: 0.30 },
-    ],
-    explanation_template: "explanation.injury.mild",
-}
-```
-
-The cause trace is **mandatory**. An event without a cause trace is a bug. `Factor.value` for the latent-derived factor is the **modifier returned by `resolve_*`**, not the raw latent. This is consistent with `L0.05` §2.3 and `L0.10` §2.2.
+**No `CauseTrace` at L0 (ADR-024, 2026-10-31).** A random event carries its cause in `event_type` + `fields`: the event type says what happened, `fields` says the observed result. A `CauseTrace` that could only ever be empty would be ceremony, not transparency. See `L0.05` §2.3 for the rule.
 
 ### 2.5 Distribution target
 
@@ -162,7 +147,7 @@ This cell is **only** what happens *during* the match, *in* the match context.
 
 ## 3. Data model
 
-`RandomEventDef`, `RandomEventFamily`, `CauseTrace`, `Factor`. Event kinds are the `RandomEvent` variant of `MatchEvent` (see `L0.05`).
+`RandomEventDef`, `RandomEventFamily`. Event kinds are the `RandomEvent` variant of `MatchEvent` (see `L0.05`). No `CauseTrace`, no `Factor` (ADR-024).
 
 The `resolve_*` contexts and outcomes (`InjuryContext`, `InjuryOutcome`, etc.) are defined in `L0.10` §2.2, not here.
 
@@ -186,10 +171,9 @@ The `resolve_*` contexts and outcomes (`InjuryContext`, `InjuryOutcome`, etc.) a
 - [ ] Sampling uses dedicated stream
 - [ ] Latents accessed only via `resolve_*` (API in `L0.10`), never read directly
 - [ ] `resolve_*` outcome cached per player per tick (not recomputed per event)
-- [ ] Every event has a cause trace
+- [ ] Every event's cause is observable (`event_type` + `fields`; no `CauseTrace`, ADR-024)
 - [ ] Distribution targets tested (10,000 matches)
 - [ ] No event decides the match on its own (statistical check)
-- [ ] No event without a cause trace
 - [ ] Events are deterministic (same seed → same event)
 
 ## 6. Risks and Mitigations
