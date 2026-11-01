@@ -1,15 +1,14 @@
-//! The in-progress state of a match.
-//!
-//! `MatchState` is mutated by the tick loop. At the end of the match, it
-//! produces a `MatchResult` via `finish`.
-
 use pcfm_core::ids::{EventId, PlayerId};
 use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
 use pcfm_stats::{EventChain, EventType, MatchEvent};
 
 use crate::context::MatchContext;
-use crate::result::{MatchResult, MatchStatistics, Score};
+use crate::result::{MatchResult, MatchStatistics, Score, TickSnapshot};
+use crate::tactics::{
+    LineHeight, PhaseKind, PhaseState, PressureLevel, TacticalCommand,
+    TeamIntent, TeamSide, TeamTacticState, WidthMode,
+};
 
 /// Which team has the ball.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -26,6 +25,11 @@ pub struct MatchState {
     away_possession_ticks: u64,
     shots: (u16, u16),
     next_event_slot: u32,
+    phase_state: PhaseState,
+    home_tactic: TeamTacticState,
+    away_tactic: TeamTacticState,
+    pending_commands: Vec<TacticalCommand>,
+    snapshots: Vec<TickSnapshot>,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
     // match.
@@ -36,14 +40,40 @@ pub struct MatchState {
 
 impl MatchState {
     /// Creates the initial state: kickoff, home possession.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the literal stream names used internally are empty. They
-    /// are compile-time constants (`"match:actions"`, `"match:action_kind"`,
-    /// `"match:player_pick"`), so this panic is unreachable in practice.
     #[must_use]
     pub fn new() -> Self {
+        let home_tactic = TeamTacticState {
+            team: TeamSide::Home,
+            pressing_intensity: PressureLevel::Normal,
+            width: 1.0,
+            line_height: 1.0,
+            compactness: 1.0,
+            aggressiveness: 0.5,
+            wing_bias: 0.0,
+            central_density: 0.5,
+            defensive_line_depth: 0.5,
+            counterpress_enabled: false,
+            high_press_allowed: true,
+            wide_channel_control: 0.5,
+            fifths_inversion_enabled: false,
+            role_overrides: Vec::new(),
+        };
+        let away_tactic = TeamTacticState {
+            team: TeamSide::Away,
+            pressing_intensity: PressureLevel::Normal,
+            width: 1.0,
+            line_height: 1.0,
+            compactness: 1.0,
+            aggressiveness: 0.5,
+            wing_bias: 0.0,
+            central_density: 0.5,
+            defensive_line_depth: 0.5,
+            counterpress_enabled: false,
+            high_press_allowed: true,
+            wide_channel_control: 0.5,
+            fifths_inversion_enabled: false,
+            role_overrides: Vec::new(),
+        };
         Self {
             score: Score { home: 0, away: 0 },
             possession: Possession::Home,
@@ -51,6 +81,21 @@ impl MatchState {
             away_possession_ticks: 0,
             shots: (0, 0),
             next_event_slot: 0,
+            phase_state: PhaseState {
+                kind: PhaseKind::Possession,
+                team_in_possession: Some(TeamSide::Home),
+                primary_intent: TeamIntent::PossessionCircles,
+                pressure_level: PressureLevel::Normal,
+                width_mode: WidthMode::Balanced,
+                line_height: LineHeight::Mid,
+                transition_bias: PressureLevel::Normal,
+                start_tick: 0,
+                end_tick: None,
+            },
+            home_tactic,
+            away_tactic,
+            pending_commands: Vec::new(),
+            snapshots: Vec::new(),
             actions_stream: StreamName::new("match:actions")
                 .expect("literal stream name is non-empty"),
             action_kind_stream: StreamName::new("match:action_kind")
@@ -60,31 +105,128 @@ impl MatchState {
         }
     }
 
+    /// Queues a live tactical command to be applied to the match state.
+    pub fn queue_tactical_command(&mut self, command: TacticalCommand) {
+        self.pending_commands.push(command);
+    }
+
+    /// Applies a queued tactical command to the authoritative match state.
+    pub fn apply_tactical_command(&mut self, command: TacticalCommand) {
+        let target = match command.team {
+            TeamSide::Home => &mut self.home_tactic,
+            TeamSide::Away => &mut self.away_tactic,
+        };
+        match command.kind {
+            crate::tactics::TacticalCommandKind::SetPressingIntensity => {
+                target.pressing_intensity = match target.pressing_intensity {
+                    PressureLevel::Low => PressureLevel::Normal,
+                    PressureLevel::Normal => PressureLevel::High,
+                    PressureLevel::High => PressureLevel::Aggressive,
+                    PressureLevel::Aggressive => PressureLevel::Aggressive,
+                };
+            }
+            crate::tactics::TacticalCommandKind::InvertFifths => {
+                target.fifths_inversion_enabled = !target.fifths_inversion_enabled;
+            }
+            crate::tactics::TacticalCommandKind::PushWings => {
+                target.wing_bias = 1.0;
+                target.wide_channel_control = 1.0;
+            }
+            crate::tactics::TacticalCommandKind::DropLine => {
+                target.defensive_line_depth = 1.0;
+                target.line_height = 0.5;
+            }
+            crate::tactics::TacticalCommandKind::AggressivePress => {
+                target.pressing_intensity = PressureLevel::Aggressive;
+                target.high_press_allowed = true;
+            }
+            crate::tactics::TacticalCommandKind::CompactMidBlock => {
+                target.compactness = 1.2;
+            }
+            crate::tactics::TacticalCommandKind::CounterPressEnable => {
+                target.counterpress_enabled = true;
+            }
+            crate::tactics::TacticalCommandKind::BuildFromBack => {
+                target.line_height = 0.5;
+                target.wide_channel_control = 0.8;
+            }
+            crate::tactics::TacticalCommandKind::DirectPlay => {
+                target.wing_bias = 0.8;
+                target.aggressiveness = 1.0;
+            }
+            crate::tactics::TacticalCommandKind::SetFormationBias => {
+                target.wing_bias = 0.6;
+            }
+            crate::tactics::TacticalCommandKind::SwitchPhase => {
+                self.phase_state.kind = PhaseKind::Transition;
+            }
+        }
+        self.update_phase_state();
+    }
+
+    fn apply_pending_commands(&mut self) {
+        let pending = std::mem::take(&mut self.pending_commands);
+        for command in pending {
+            self.apply_tactical_command(command);
+        }
+    }
+
+    fn update_phase_state(&mut self) {
+        let team = match self.possession {
+            Possession::Home => TeamSide::Home,
+            Possession::Away => TeamSide::Away,
+        };
+        let tactic = match team {
+            TeamSide::Home => &self.home_tactic,
+            TeamSide::Away => &self.away_tactic,
+        };
+
+        self.phase_state.team_in_possession = Some(team);
+        self.phase_state.pressure_level = tactic.pressing_intensity;
+        self.phase_state.width_mode = if tactic.width < 0.75 {
+            WidthMode::Narrow
+        } else if tactic.width > 1.25 {
+            WidthMode::Wide
+        } else {
+            WidthMode::Balanced
+        };
+        self.phase_state.line_height = if tactic.line_height < 0.6 {
+            LineHeight::Deep
+        } else if tactic.line_height > 1.2 {
+            LineHeight::High
+        } else {
+            LineHeight::Mid
+        };
+
+        self.phase_state.kind = match tactic.pressing_intensity {
+            PressureLevel::Aggressive if tactic.counterpress_enabled => PhaseKind::Transition,
+            PressureLevel::Aggressive => PhaseKind::PressingPhase,
+            PressureLevel::High => PhaseKind::Transition,
+            _ => {
+                if self.possession == Possession::Home {
+                    PhaseKind::Possession
+                } else {
+                    PhaseKind::NonPossession
+                }
+            }
+        };
+        self.phase_state.primary_intent = if tactic.counterpress_enabled {
+            TeamIntent::CounterPress
+        } else if tactic.high_press_allowed {
+            TeamIntent::HighPress
+        } else if tactic.width > 1.1 {
+            TeamIntent::PushWide
+        } else {
+            TeamIntent::PossessionCircles
+        };
+    }
+
     /// Advances the state by one tick.
-    ///
-    /// # The prototype model
-    ///
-    /// Every tick, with probability `action_probability` (default `0.0005`),
-    /// one of four actions happens. The split is a **placeholder**, not a
-    /// design decision:
-    ///
-    /// | Roll range | Action | Why this split |
-    /// |------------|--------|----------------|
-    /// | `[0.00, 0.60)` | Pass | The most common action in football |
-    /// | `[0.60, 0.85)` | Shot | Less common, higher impact |
-    /// | `[0.85, 0.97)` | Duel | Medium frequency |
-    /// | `[0.97, 1.00)` | Foul | Rare |
-    ///
-    /// All players are "midfielder" in the demo, and the formation is
-    /// always `4-4-2`. A realistic engine would model role, formation,
-    /// position on the pitch, and per-player action probabilities.
-    ///
-    /// The `noise` term in `resolve_*` (`pcfm-hidden`) is also a
-    /// placeholder: it adds variance to the outcome, but it is not
-    /// calibrated to real football data. See `docs/CODE_TOUR.md` "A note
-    /// on the current simulation".
     #[allow(clippy::too_many_lines)]
     pub fn tick(&mut self, tick: u64, ctx: &mut MatchContext<'_>) {
+        self.apply_pending_commands();
+        self.update_phase_state();
+
         match self.possession {
             Possession::Home => self.home_possession_ticks += 1,
             Possession::Away => self.away_possession_ticks += 1,
@@ -92,11 +234,11 @@ impl MatchState {
 
         let action_roll = pcfm_core::rng::next_unit(ctx.rng.stream(&self.actions_stream));
         if action_roll >= ctx.config.action_probability {
+            self.record_snapshot(tick, ctx);
             return;
         }
 
         let (attacker, defender) = self.pick_players(ctx);
-
         let action_kind_roll = pcfm_core::rng::next_unit(ctx.rng.stream(&self.action_kind_stream));
 
         if action_kind_roll < 0.6 {
@@ -158,6 +300,9 @@ impl MatchState {
             self.emit_event(ctx, tick, defender, EventType::Foul, serde_json::json!({}));
             self.flip_possession();
         }
+
+        self.update_phase_state();
+        self.record_snapshot(tick, ctx);
     }
 
     /// Produces the final result.
@@ -184,7 +329,19 @@ impl MatchState {
             },
             state_hash,
             narrative: Vec::new(),
+            snapshots: self.snapshots.clone(),
         }
+    }
+
+    fn record_snapshot(&mut self, tick: u64, ctx: &MatchContext<'_>) {
+        self.snapshots.push(TickSnapshot {
+            tick,
+            score: self.score,
+            home_possession_ticks: self.home_possession_ticks,
+            away_possession_ticks: self.away_possession_ticks,
+            events_in_chain: ctx.chain.len(),
+            state_hash: ctx.chain.chain_hash(),
+        });
     }
 
     #[allow(
