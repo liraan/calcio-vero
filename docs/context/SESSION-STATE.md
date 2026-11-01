@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `a5a070b` — "Draft the actual preview-release design and the local build checklist for a TUI + 2D field renderer demo without pretending it was compiled in this session"
+**Last commit verified:** `a11d5cd` — "docs(session-state): restore coherence — LCV, step 12, Done, archive 3 reports, OI-22/23/24"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -40,8 +40,7 @@ the rest of the bookmark in the same commit.
 | OI-20 | **Repo hardening: GitHub Actions CI + required checks + workflow evidence** | Nessun workflow GitHub Actions ancora presente; local hook non è un vincolo remoto | Creare `.github/workflows/ci.yml`, attivare required checks in GitHub, documentare installazione hook |
 | OI-21 | **Retention policy for analysis artifacts** | Le review in `docs/context/analysis/` possono essere confuse con documentazione canonica | Definire regola di archiviazione e mantenere solo report attivi |
 | OI-22 | **`review-l0-branch` non compila** (15 errori: 8× E0252 import duplicati in `state.rs:3` e `:485`, 1× E0119 doppio `impl Default` per `FieldRenderer`, 2× E0599 metodi mancanti, 2× lifetime). **Mai compilato**: un solo `cargo check` li avrebbe trovati tutti | Branch di lavoro, non su `main`. Non mergiabile finché non compila | `git worktree add /tmp/pcfm-review origin/review-l0-branch && cd /tmp/pcfm-review && cargo check --workspace` per la lista completa; poi decidere se riparare o scartare |
-| OI-23 | **Tre numerazioni incompatibili di L0–L3 nello stesso repo**: `00-foundations` §9 (L0 match / L1 season / L2 career / L3 meta), `WORKSTREAM-ONBOARDING` (L0 match / L1 spatial / L3 projection), `LAYERED-MATCH-ARCHITECTURE` su `review-l0-branch` (L0 causal / L1 spatial / L2 tactical / L3 presentation) | La dottrina ratificata è `00-foundations` §9; le altre due sono documenti non normativi che la contraddicono. Adottarle richiede un ADR di dottrina | Decidere: (a) riallineare i due documenti a `00-foundations` §9; (b) scrivere un ADR che emenda §9; (c) lasciare i documenti ma marcarli "non normativi, contraddicono §9" |
-| OI-24 | **I tre `workstream/*` sono vuoti** (puntano tutti a `9750cde`, contengono solo 3 `D`: `WORKSTREAM-ONBOARDING`, `12-30`, `12-40`) | Struttura creata prima del contenuto (D3). Non rappresentano lavoro | Cancellare i tre branch remoti (`git push origin --delete workstream/l0-authoritative-match-state workstream/l1-spatial-world-state workstream/l3-field-projection`), oppure lasciarli marcati "vuoti" |
+| OI-23 | **Due numerazioni L0–L3 in conflitto**: `00-foundations` §9 (L0 match / L1 season / L2 career / L3 meta) vs `LAYERED-MATCH-ARCHITECTURE` su `review-l0-branch` (L0 causal / L1 spatial / L2 tactical / L3 presentation). `WORKSTREAM-ONBOARDING` (terza variante) cancellato 2026-11-01 | La dottrina ratificata è `00-foundations` §9. Il documento su `review-l0-branch` contraddice la dottrina | Cancellare `LAYERED-MATCH-ARCHITECTURE.md` da `review-l0-branch` quando si ripara il codice (stessa sessione) |
 
 **Da fare (in dependency order):**
 
@@ -101,7 +100,7 @@ the rest of the bookmark in the same commit.
 | 20  | Creare `.github/workflows/ci.yml`, documentare `git config core.hooksPath .githooks`, e impostare required checks in GitHub |
 | 21  | Archiviare la review storica in `docs/context/analysis/archive/` se non più operativa |
 
-**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. **Sessione 2026-11-01 (closing `0f86a1b`):** OI-16 misurato, 17a riformatto §F (218→82 righe), B1-bis lesson (`git add` multi-path), ADR-025 `proposed` installato, OI-19 (enforcement view model). **Tracciato, non fatto:** 17b, 20, 21 (nel Plan).
+**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. **Sessione 2026-11-01 (closing `0f86a1b`):** OI-16 misurato, 17a riformatto §F (218→82 righe), B1-bis lesson (`git add` multi-path), ADR-025 `proposed` installato, OI-19 (enforcement view model). **Tracciato, non fatto:** 17b, 20, 21 (nel Plan). **2026-11-01 (consolidamento):** 3 workstream vuoti cancellati (OI-24), `WORKSTREAM-ONBOARDING.md` cancellato, OI-23 ristretto a `LAYERED-MATCH-ARCHITECTURE` su `review-l0-branch`.
 
 **Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; revisionato mapping OI-17) |
 **Files touched this session (2026-11-01, review of 12-42 + archival):** `docs/context/analysis/2026-10-31-12-42-review.md` (amended: status header, table H and L, §3a H/L split, Verdict, footer; workflow note) |
@@ -109,3 +108,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, ADR-025 installation):** `docs/adr/025-tui-board-renderer.md` (NEW, `proposed`); `STRUCTURE.md` §5 (row 025); `specs/_index.md` (row 025); `docs/context/SESSION-STATE.md` (linked in todo) |
 **Files touched this session (2026-11-01, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Last commit verified → 44cf487, Done storico riscritto con la sessione 2026-11-01, this entry updated) |
 **Files touched this session (2026-11-01, repair — E3c):** `docs/context/SESSION-STATE.md` (LCV `44cf487`→`a5a070b` — era sbagliato a monte; step 12 `render.rs`→`--board` in Plan e Prime azioni; Done 2026-11-01 corretto — 17b/20/21 non fatti; sezione "Archiviati il 2026-11-01"; OI-22/23/24 aggiunti; blocco "Organizzazione futura"; this entry); `docs/context/analysis/2026-11-01-09-50-review.md` → `archive/` (superato da `10-25`); `2026-11-01-12-30-branch-test-matrix.md` → `archive/` (premessa decaduta); `2026-11-01-12-40-demo-preview-release.md` → `archive/` (richiede dati spaziali inesistenti).
+**Files touched this session (2026-11-01, consolidation — E3c):** `docs/context/WORKSTREAM-ONBOARDING.md` (deleted — third L0-L3 numbering, contradicted `00-foundations` §9); 3 remote branches `workstream/*` deleted (empty, pointed at `9750cde`); `docs/context/SESSION-STATE.md` (OI-24 closed, OI-23 restricted, Done updated, LCV → `a11d5cd`, this entry).
