@@ -339,7 +339,7 @@
 
 - **Status:** sketch
 - **Category:** Tactics
-- **Source:** session 2026-11-01 (extracted from `review-l0-branch`, `crates/pcfm-match/src/tactics.rs`, draft never compiled).
+- **Source:** session 2026-11-01 (extracted from `draft/layered-match-2026-11-01`, `crates/pcfm-match/src/tactics.rs`, draft never compiled).
 - **Idea:** a vocabulary for tactical state and tactical commands, useful when L2-tactics opens:
     - **Phase model:** `PhaseKind`, `PhaseState` (in possession / out / transition, with sub-states)
     - **Team intent:** `TeamIntent`, `LineHeight`, `WidthMode`, `PressureLevel`
@@ -349,7 +349,7 @@
 - **Relationship with IDEA-TACT-001:** TACT-001 says "tactics are per-state functions". TACT-002 is the **type vocabulary** those functions would take and return. They are complementary, not duplicate: 001 is the concept, 002 is the shape.
 - **What is not imported:** the file as written (never compiled; contains `RoleOverride.role: &'static str` which is not `Deserialize`-able without `#[serde(borrow)]` or `String`). Step L2-tactics designs the module; these names are a starting point.
 - **When:** L2-tactics. Not now (D3: no consumer).
-- **Reference:** `review-l0-branch` at `4613797`. Kept as reference, not merged.
+- **Reference:** `draft/layered-match-2026-11-01` at `4613797`. Kept as reference, not merged.
 
 
 ### IDEA-INFRA-007 — In-match intervention (manual pause, engine hints)
@@ -520,26 +520,26 @@
 
 - **Status:** sketch
 - **Category:** Infra
-- **Source:** session 2026-11-01 (extracted from `review-l0-branch`, file `TICK-TEMPORAL-STATE.md`, draft non compilato e non normativo).
+- **Source:** session 2026-11-01 (extracted from `draft/layered-match-2026-11-01`, file `TICK-TEMPORAL-STATE.md`, draft non compilato e non normativo).
 - **Idea:** the durable unit of truth is the **tick**, not the frame. Each tick should emit a snapshot record with at least: `tick_id`, `score`, `possession counters`, `event_count` / chain length, `state_hash`. A frame (text, HTML, 2D, 3D) is a projection of a snapshot; it is not a source of temporal semantics.
 - **Why it matters:** with static frames alone, the same action looks different depending on the frame; temporal variance is confused with semantic variance; causality between events becomes hard to verify; the simulation cannot be reconstructed from static views. The tick record fixes all four.
 - **What it is not:** not a replacement for `chain_hash` or `state_hash` (both exist). It is an **index** over them: "at tick N, the state hash was H, the score was S, the chain had C events". It is what allows a renderer to show a timeline without inventing it.
 - **Where it lives:** inside L0 (the tick loop owns it). Not a separate level. It is Plane B output, not Plane A.
 - **When:** when step 18 (L0 positional) opens. Not now (D3). The snapshot exists conceptually already (`state_hash`, `chain_hash`); the record makes it explicit and per-tick.
-- **Reference:** `review-l0-branch` at `4613797`, `docs/context/TICK-TEMPORAL-STATE.md`. The file is a draft, never compiled; the *idea* is kept here, the *file* is not imported.
+- **Reference:** `draft/layered-match-2026-11-01` at `4613797`, `docs/context/TICK-TEMPORAL-STATE.md`. The file is a draft, never compiled; the *idea* is kept here, the *file* is not imported.
 
 ### IDEA-INFRA-019 — Spatial primitives as step-18 foundation (duplicate BallState to resolve)
 
 - **Status:** sketch
 - **Category:** Infra
-- **Source:** session 2026-11-01 (extracted from `review-l0-branch`, files `crates/pcfm-model/src/spatial.rs` and `crates/pcfm-match/src/spatial.rs`, draft never compiled: 15 errors).
+- **Source:** session 2026-11-01 (extracted from `draft/layered-match-2026-11-01`, files `crates/pcfm-model/src/spatial.rs` and `crates/pcfm-match/src/spatial.rs`, draft never compiled: 15 errors).
 - **Idea:** the two `spatial.rs` drafts contain a usable vocabulary for step 18 (L0 positional with coordinates):
     - **`pcfm-model`**: `Position2D` (with `try_new` validation, `distance_to`), `Velocity2D`, `Heading`, `FieldSide`, `FieldZone`, `PlayerPose`, `BallState`, `PitchBounds` — geometric primitives, validated.
     - **`pcfm-match`**: `Vec2`, `BallState`, `PlayerSpatialState`, `TeamShapeState`, `PressurePoint`, `PressureMap`, `SpatialState` — per-tick match state.
 - **Duplicate to resolve:** there are **two `BallState`** (one in each crate, different fields). Step 18 must pick one. Recommendation: `pcfm-model::BallState` (validated) is the data type; `pcfm-match` owns the per-tick `SpatialState` that *uses* it, plus the match-context fields (`owner`, `last_touch`). Also `Vec2` vs `Position2D` — one must win.
 - **What is not imported:** the code as written (never compiled, 15 errors, deprecated by `00-foundations` §9 numbering). It is a **vocabulary**, not a ready module. Step 18 designs the module; these names are a starting point.
 - **When:** step 18. Not now (D3: L2 does not exist as a concrete consumer).
-- **Reference:** `review-l0-branch` at `4613797`. Kept as reference, not merged.
+- **Reference:** `draft/layered-match-2026-11-01` at `4613797`. Kept as reference, not merged.
 
 
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode

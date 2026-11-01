@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `cd7d5e2` — "docs(context): consolidate — delete WORKSTREAM-ONBOARDING, close OI-24"
+**Last commit verified:** `fe7ceeb` — "docs(context): extract ideas from review-l0-branch; do not repair the code"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -19,7 +19,7 @@ the rest of the bookmark in the same commit.
 
 - `docs/context/analysis/2026-10-31-22-28-review.md` — L0 operational census; OI-17. Snapshot at `246f64b`; archive when L0 changes, do not update in place.
 - `docs/context/analysis/2026-11-01-10-25-review.md` — repo hygiene and workflow audit; snapshot of repo hardening status. Archive when the workflow and follow-up actions are either implemented or superseded.
-- `docs/context/analysis/2026-11-01-L0-verification-checklist.md` — 13-item checklist (D1–D13) for L0 draft stability; grounds OI-13. Kept as reference (draft from `review-l0-branch` `4613797`).
+- `docs/context/analysis/2026-11-01-L0-verification-checklist.md` — 13-item checklist (D1–D13) for L0 draft stability; grounds OI-13. Kept as reference (draft from `draft/layered-match-2026-11-01`, `4613797`).
 
 
 **Archiviati il 2026-11-01:** `09-50` (superato da `10-25`, stesso audit v1.1→v1.2); `12-30` (protocollo per workstream che stanno per essere cancellati — premessa decaduta); `12-40` (piano preview con `--tui`/`--field`, richiede dati spaziali inesistenti; scope corretto in step 12).
@@ -40,7 +40,7 @@ the rest of the bookmark in the same commit.
 | OI-19 | **View model separation: enforcement compile-time deferred** (ADR-025) | ADR-022 §3 rende normativa la separazione, ma il prototipo in `pcfm-demo` la impone solo via un test strutturale | Decidere se rendere la separazione un vincolo in build/test o lasciarla come policy documentale |
 | OI-20 | **Repo hardening: GitHub Actions CI + required checks + workflow evidence** | Nessun workflow GitHub Actions ancora presente; local hook non è un vincolo remoto | Creare `.github/workflows/ci.yml`, attivare required checks in GitHub, documentare installazione hook |
 | OI-21 | **Retention policy for analysis artifacts** | Le review in `docs/context/analysis/` possono essere confuse con documentazione canonica | Definire regola di archiviazione e mantenere solo report attivi |
-| OI-22 | **`review-l0-branch` non compila** (15 errori). **Decisione 2026-11-01: non riparare.** Le idee estratte in `IDEAS.md` (INFRA-018, INFRA-019, TACT-002) + la checklist; il codice resta come riferimento non normativo sul remoto | Il branch è un draft mai compilato, su un'architettura che contraddice `00-foundations` §9 (OI-23). Ripararlo produrrebbe codice inerte: non esiste consumatore (D3, step 18 dipende da L2). Riparare ora sarebbe sunk-cost | `git worktree remove /tmp/pcfm-review --force`; tenere il branch remoto come riferimento; chiudere OI-22 quando step 18 apre |
+| OI-22 | **Draft `draft/layered-match-2026-11-01` (ex `review-l0-branch`) non compila** (15 errori). **Decisione 2026-11-01: non riparare.** Idee estratte in `IDEAS.md` (INFRA-018, INFRA-019, TACT-002) + checklist; il commit `4613797` resta raggiungibile via tag | Il draft è codice mai compilato, su un'architettura che contraddice `00-foundations` §9. Ripararlo produrrebbe codice inerte: non esiste consumatore (D3, step 18 dipende da L2) | Chiudere OI-22 quando step 18 apre: al momento del bisogno, ripartire dal tag `draft/layered-match-2026-11-01` |
 
 **Da fare (in dependency order):**
 
@@ -65,7 +65,7 @@ the rest of the bookmark in the same commit.
 
 - **Branch per area di lavoro, non per livello architetturale.** Una feature attraversa i livelli (es. "fuorigioco" tocca engine + spatial + view): con branch di livello servono 3 PR e merge incrociati. Con branch di area (Engine / Data-world / Design-spec / Presentation) la feature tocca 1 area principale e al massimo 1 secondaria.
 - **I livelli si esprimono nei crate, non nei branch.** Un branch è un albero di file, non un grafo di dipendenze: non impedisce a `pcfm-presentation` di importare `pcfm-hidden`. Un crate sì.
-- **Prerequisito del parallelismo: CI + branch protection (OI-20).** Senza un gate remoto, i branch divergono e nessuno se ne accorge: è esattamente quello che è successo con `review-l0-branch` (15 errori, mai intercettati). Ordine: CI → consolidamento su `main` → branch per area, quando ci sono le persone.
+- **Prerequisito del parallelismo: CI + branch protection (OI-20).** Senza un gate remoto, i branch divergono e nessuno se ne accorge: è esattamente quello che è successo con il draft spaziale (15 errori, mai intercettati). Ordine: CI → consolidamento su `main` → branch per area, quando ci sono le persone.
 - **Prova empirica:** i tre `workstream/*` sono vuoti (OI-24) perché non c'era lavoro da metterci che non fosse anche di un altro livello. La struttura ha preceduto il contenuto (D3).
 
 **Dettagli (solo dove servono):**
@@ -110,3 +110,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, repair — E3c):** `docs/context/SESSION-STATE.md` (LCV `44cf487`→`a5a070b` — era sbagliato a monte; step 12 `render.rs`→`--board` in Plan e Prime azioni; Done 2026-11-01 corretto — 17b/20/21 non fatti; sezione "Archiviati il 2026-11-01"; OI-22/23/24 aggiunti; blocco "Organizzazione futura"; this entry); `docs/context/analysis/2026-11-01-09-50-review.md` → `archive/` (superato da `10-25`); `2026-11-01-12-30-branch-test-matrix.md` → `archive/` (premessa decaduta); `2026-11-01-12-40-demo-preview-release.md` → `archive/` (richiede dati spaziali inesistenti).
 **Files touched this session (2026-11-01, consolidation — E3c):** `docs/context/WORKSTREAM-ONBOARDING.md` (deleted — third L0-L3 numbering, contradicted `00-foundations` §9); 3 remote branches `workstream/*` deleted (empty, pointed at `9750cde`); `docs/context/SESSION-STATE.md` (OI-24 closed, OI-23 restricted, Done updated, LCV → `a11d5cd`, this entry).
 **Files touched this session (2026-11-01, extraction from review-l0-branch — E3c):** `docs/context/IDEAS.md` (3 nuove idee: INFRA-018 tick snapshot, INFRA-019 spatial primitives + duplicate BallState, TACT-002 tactical types); `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (NEW — copiata da `review-l0-branch` `4613797`, 13 item D1–D13); `docs/context/SESSION-STATE.md` (OI-22 deciso non riparare, OI-23 chiuso, Done aggiornato, checklist citata in "Analysis reports (vivi)", LCV → `cd7d5e2`, this entry).
+**Files touched this session (2026-11-01, tag+delete del draft — E3c):** tag `draft/layered-match-2026-11-01` → `4613797` (creato e pushato); branch remoto `review-l0-branch` cancellato; `docs/context/IDEAS.md` (riferimenti aggiornati al tag); `docs/context/SESSION-STATE.md` (OI-22 riscritto con azione "ripartire dal tag"; checklist cita il tag; "Organizzazione futura" senza nome branch; LCV → `fe7ceeb`; this entry).
