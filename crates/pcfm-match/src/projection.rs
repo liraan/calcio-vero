@@ -43,7 +43,7 @@ pub struct FieldRenderer {
 impl FieldRenderer {
     /// Creates a projection renderer with a conventional pitch size.
     #[must_use]
-    pub fn new() -> Self {
+pub fn new() -> Self {
         Self {
             width: 40,
             height: 22,
@@ -149,7 +149,7 @@ fn project_player(player: &PlayerSpatialState, width: usize, height: usize) -> P
         'P'
     };
 
-    let team = if player.player_id.0 % 2 == 0 {
+    let team = if player.player_id.slot() % 2 == 0 {
         TeamSide::Home
     } else {
         TeamSide::Away
@@ -179,7 +179,10 @@ fn to_col(value: f32, width: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spatial::{BallState, PlayerSpatialState, SpatialState, TeamShapeState, PressureMap, PressurePoint, Vec2};
+    use crate::spatial::{
+        BallState, PlayerSpatialState, PressureMap, PressurePoint, SpatialState, TeamShapeState,
+        Vec2,
+    };
 
     #[test]
     fn field_projection_renders_without_panicking() {
@@ -229,8 +232,14 @@ mod tests {
                 press_line: 0.4,
             },
             pressure: PressureMap {
-                home: vec![PressurePoint { position: Vec2 { x: 0.0, y: 0.0 }, intensity: 0.5 }],
-                away: vec![PressurePoint { position: Vec2 { x: 0.0, y: 0.0 }, intensity: 0.5 }],
+                home: vec![PressurePoint {
+                    position: Vec2 { x: 0.0, y: 0.0 },
+                    intensity: 0.5,
+                }],
+                away: vec![PressurePoint {
+                    position: Vec2 { x: 0.0, y: 0.0 },
+                    intensity: 0.5,
+                }],
             },
         };
 
