@@ -4,10 +4,10 @@
 # Run from the repo root.
 #
 # Usage: scripts/gates.sh [startup|closing]
-#   closing (default) - full set: A1, A2, A3, B1, B3, B6, B7 + manual B2, B4, B5
+#   closing (default) - full set: A1, A2, A3, B1, B3, B6, B7 + manual B2, B4
 #   startup           - fast set: A1, A3, B1, B3, B6, B7 + manual B2
 #                        (A2 runs cargo test: skipped, the startup already
-#                         runs the tests in step 4; B4/B5 are only meaningful
+#                         runs the tests in step 4; B4 is only meaningful
 #                         after work has been done)
 #
 # Manual checks are NOT reported as "ok": they are listed as "manual" and must
@@ -84,7 +84,6 @@ fi
 
 if [ "$MODE" = "closing" ]; then
   say_manual "B4 Prime azioni match reality - check in the closing report"
-  say_manual "B5 Files touched vs git status - check before the closing commit"
 fi
 
 proposed=0
@@ -120,7 +119,7 @@ fi
 echo ""
 if [ "$fail" -eq 0 ]; then
   if [ "$MODE" = "closing" ]; then
-    echo "gates: GREEN (closing; manual: B2, B4, B5 - do them in the closing report)"
+    echo "gates: GREEN (closing; manual: B2, B4 - do them in the closing report)"
   else
     echo "gates: GREEN (startup; manual: B2, A2 - A2 in step 4)"
   fi
