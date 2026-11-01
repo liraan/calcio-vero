@@ -1,6 +1,6 @@
 # ADR-025 — TUI board renderer for `pcfm-demo`
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-01
 - **Supersedes:** —
 - **Superseded by:** —

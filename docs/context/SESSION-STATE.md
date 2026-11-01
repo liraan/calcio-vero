@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `fe7ceeb` — "docs(context): extract ideas from review-l0-branch; do not repair the code"
+**Last commit verified:** `6c7dc60` — "docs(context): tag the layered-match draft, delete the remote branch"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -41,7 +41,7 @@ the rest of the bookmark in the same commit.
 | OI-20 | **Repo hardening: GitHub Actions CI + required checks + workflow evidence** | Nessun workflow GitHub Actions ancora presente; local hook non è un vincolo remoto | Creare `.github/workflows/ci.yml`, attivare required checks in GitHub, documentare installazione hook |
 | OI-21 | **Retention policy for analysis artifacts** | Le review in `docs/context/analysis/` possono essere confuse con documentazione canonica | Definire regola di archiviazione e mantenere solo report attivi |
 | OI-22 | **Draft `draft/layered-match-2026-11-01` (ex `review-l0-branch`) non compila** (15 errori). **Decisione 2026-11-01: non riparare.** Idee estratte in `IDEAS.md` (INFRA-018, INFRA-019, TACT-002) + checklist; il commit `4613797` resta raggiungibile via tag | Il draft è codice mai compilato, su un'architettura che contraddice `00-foundations` §9. Ripararlo produrrebbe codice inerte: non esiste consumatore (D3, step 18 dipende da L2) | Chiudere OI-22 quando step 18 apre: al momento del bisogno, ripartire dal tag `draft/layered-match-2026-11-01` |
-
+| 🔵  | 12  | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). **ADR-025 accepted (2026-11-01).** Scrivere `viewmodel.rs` + `board.rs` + `--board` in `pcfm-demo`. Demo interna, non pubblica (deciso 2026-11-01) | — |
 **Da fare (in dependency order):**
 
 | Pr. | #   | Cosa | Dipende da |
@@ -70,7 +70,7 @@ the rest of the bookmark in the same commit.
 
 **Dettagli (solo dove servono):**
 
-**12. TUI demo (IDEA-INFRA-006)** — **scope (2026-10-31): board + events, not pitch.** Validate the split renderer/engine (ADR-022): a second renderer reads `MatchResult` without touching the engine internals. This is the current session priority.
+**12. TUI demo (IDEA-INFRA-006)** — **scope (2026-10-31): board + events, not pitch.** Validate the split renderer/engine (ADR-022): a second renderer reads `MatchResult` without touching the engine internals. **ADR-025 accepted (2026-11-01).** This is an **internal demo** (validates the split, for us), not a public demo of the game (decided 2026-11-01). Board content: score, possession, shots, goals, event list (4 types today), narrative, state hash. No pitch (requires positional L0, step 18, D3). No engine change, no `SIM_VERSION` bump. Structural enforcement of the view model is manual today (OI-22 was the draft; OI-19 the enforcement gap).
 
 **2. Fix ADR-003** — ADR-003 still names `pcfm-debug` and `demo.rs`; `pcfm-demo` reads Plane A without authorization. ADR-023 exists (2026-10-31, observed cause traces) and does not cover ADR-003 fully. Must be resolved.
 
@@ -94,7 +94,7 @@ the rest of the bookmark in the same commit.
 | 9   | Leggere ADR-017, decidere: ratificare o rinviare |
 | 10  | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
 | 11  | Decisione del maintainer: attivare o no il ruleset |
-| 12  | Ratificare ADR-025 (`docs/adr/025-tui-board-renderer.md`, `proposed`): leggere, decidere, `Status: accepted`. Poi aprire `crates/pcfm-demo/src/` e scrivere `viewmodel.rs` + `board.rs` + `--board`. |
+| 12  | Scrivere `crates/pcfm-demo/src/viewmodel.rs` (MatchViewModel da `&MatchResult`, test strutturale no `pcfm-hidden`/`MatchState`), poi `board.rs` (`print_board`), poi `--board` in `main.rs` (mutuamente esclusivo con `--json`/`--html`). Test: snapshot JSON, 4 EventType emessi, parse CLI. |
 | 13  | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
 | 17b | Aprire `scripts/gates.sh` blocco B1 (righe 67-74) e il testo closing Gate B in `NEW-SESSION-PROMPT.md`; decidere la forma della colonna "first action" nel Plan |
 | 20  | Creare `.github/workflows/ci.yml`, documentare `git config core.hooksPath .githooks`, e impostare required checks in GitHub |
@@ -111,3 +111,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, consolidation — E3c):** `docs/context/WORKSTREAM-ONBOARDING.md` (deleted — third L0-L3 numbering, contradicted `00-foundations` §9); 3 remote branches `workstream/*` deleted (empty, pointed at `9750cde`); `docs/context/SESSION-STATE.md` (OI-24 closed, OI-23 restricted, Done updated, LCV → `a11d5cd`, this entry).
 **Files touched this session (2026-11-01, extraction from review-l0-branch — E3c):** `docs/context/IDEAS.md` (3 nuove idee: INFRA-018 tick snapshot, INFRA-019 spatial primitives + duplicate BallState, TACT-002 tactical types); `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (NEW — copiata da `review-l0-branch` `4613797`, 13 item D1–D13); `docs/context/SESSION-STATE.md` (OI-22 deciso non riparare, OI-23 chiuso, Done aggiornato, checklist citata in "Analysis reports (vivi)", LCV → `cd7d5e2`, this entry).
 **Files touched this session (2026-11-01, tag+delete del draft — E3c):** tag `draft/layered-match-2026-11-01` → `4613797` (creato e pushato); branch remoto `review-l0-branch` cancellato; `docs/context/IDEAS.md` (riferimenti aggiornati al tag); `docs/context/SESSION-STATE.md` (OI-22 riscritto con azione "ripartire dal tag"; checklist cita il tag; "Organizzazione futura" senza nome branch; LCV → `fe7ceeb`; this entry).
+**Files touched this session (2026-11-01, ADR-025 ratification — E3c):** `docs/adr/025-tui-board-renderer.md` (`Status: proposed` → `accepted`); `STRUCTURE.md` §5 (row 025 🟡→✅); `specs/_index.md` (row 025 🟡→✅); `docs/context/SESSION-STATE.md` (step 12 plan + Prime azioni + Detail: ADR-025 accepted, demo interna, LCV → `6c7dc60`, this entry).
