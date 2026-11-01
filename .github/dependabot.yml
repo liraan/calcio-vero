@@ -1,0 +1,26 @@
+# Dependabot — weekly Cargo updates and GitHub Actions updates (OI-20).
+#
+# This replaces part of OI-13 (cargo-audit / cargo-deny pre-release) with
+# the native tool: security alerts and version updates without a local
+# scanner. Alert settings live in the repository settings, not in this file.
+#
+# One PR per ecosystem, grouped: a weekly PR with all minor/patch Cargo
+# updates, plus one for the GitHub Actions used by the workflow.
+
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      cargo:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3

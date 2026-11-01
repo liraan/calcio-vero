@@ -142,7 +142,7 @@ If an ADR is `proposed` and touches an area, **no code is written in that area u
 
 ## Code
 
-The L0 specification is complete and ratified, and L0 is implemented (9 crates, 103 tests). Code contributions are welcome, but they must follow `docs/PLUGIN_DEVELOPER_GUIDE.md`.
+The L0 specification is complete and ratified, and L0 is implemented (9 crates, 122 tests). Code contributions are welcome, but they must follow `docs/PLUGIN_DEVELOPER_GUIDE.md`.
 
 When you write code:
 
@@ -160,6 +160,28 @@ When you write code:
 
 ---
 
+---
+
+## Local hooks and CI
+
+Two layers, both required.
+
+**Local (one-off install per clone).**
+
+    git config core.hooksPath .githooks
+    git config commit.template .gitmessage
+
+- `.githooks/pre-commit`: runs `fmt`, `clippy`, `test` when Rust files are staged.
+- `.githooks/commit-msg`: validates the closing-commit trailers (`Verified`, and `Rules-Audit` only if `docs/context/NEW-SESSION-PROMPT.md` is staged).
+- `.githooks/pre-push`: runs `scripts/gates.sh` and blocks a red push.
+
+Bypass is `--no-verify`: documented, not recommended, a protocol violation in this project.
+
+**Remote (GitHub Actions, `.github/workflows/ci.yml`).**
+
+Every push to `main` and every pull request runs the full C2 gate (fmt, clippy, build, test, test-runner) plus `scripts/gates.sh startup` (A1, A3, B1, B3, B6, B7). The job is named `CI`: it is the check to require in the ruleset when Phase 2 starts (see `docs/context/AGENT-POLICY.md`).
+
+Dependabot (`.github/dependabot.yml`) opens a weekly grouped PR for Cargo and for the GitHub Actions used by the workflow. Security alerts are enabled in the repository settings, not in the file.
 ## Commit messages
 
 Imperative mood, one line ≤ 72 chars, then a body if needed.

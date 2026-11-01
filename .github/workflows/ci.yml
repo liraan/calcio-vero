@@ -1,0 +1,61 @@
+# CI — runs the full C2 gate on every push and pull request (OI-20).
+#
+# This is the remote enforcement layer. The local hook (.githooks/pre-commit)
+# is a convenience; this workflow is the contract. It cannot be bypassed with
+# --no-verify: a red check blocks the merge when the ruleset requires it.
+#
+# C2 is a sequence, not a graph: one job, one check. The ruleset requires
+# the context `CI` (the job's `name:`), not `workflow / job`.
+#
+# `scripts/gates.sh` is mode 100644 in git: it must be invoked with `bash`,
+# not `./`.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # rust-toolchain.toml pins the channel (stable) and the components.
+      # The action installs it; `components` here is explicit, not needed.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo fmt --check
+        run: cargo fmt --check
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: cargo build --release
+        run: cargo build --release
+
+      - name: cargo test
+        run: cargo test --workspace
+
+      - name: pcfm-test-runner --check
+        run: cargo run --release --bin pcfm-test-runner -- --check --seed 42
+
+      # A1, A3, B1, B3, B6, B7: documentation coherence, fast. A2 is
+      # skipped in startup mode (cargo test already ran above).
+      - name: gates.sh startup
+        run: bash scripts/gates.sh startup
