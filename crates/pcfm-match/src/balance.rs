@@ -1,0 +1,139 @@
+//! Stoppage-time balance values (ADR-026).
+//!
+//! The contributions live in `balance/stoppage_time.json` (doctrine §5: no
+//! hardcoded balance values). The file is embedded at compile time with
+//! `include_str!`: the engine performs no I/O, and the simulation stays
+//! deterministic. Editing the file requires a rebuild, which is correct: a
+//! balance change is a `SIM_VERSION` bump.
+
+use pcfm_stats::EventType;
+use serde::Deserialize;
+
+/// The embedded balance file.
+const STOPPAGE_TIME_JSON: &str = include_str!("../../../balance/stoppage_time.json");
+
+/// Stoppage-time contributions, in seconds, per event type.
+#[derive(Debug, Clone, Deserialize)]
+pub struct StoppageTime {
+    /// Base contribution, in seconds (added once per half).
+    pub base: u32,
+    /// Per-goal contribution, in seconds.
+    pub goal: u32,
+    /// Per-foul contribution, in seconds.
+    pub foul: u32,
+    /// Per-duel contribution, in seconds.
+    pub duel: u32,
+}
+
+impl Default for StoppageTime {
+    fn default() -> Self {
+        // Parsing the embedded literal cannot fail: it is a compile-time
+        // constant validated by the test below.
+        serde_json::from_str(STOPPAGE_TIME_JSON).expect("embedded balance file is valid JSON")
+    }
+}
+
+impl StoppageTime {
+    /// Loads the embedded balance table.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the embedded JSON is invalid. The test
+    /// `embedded_balance_is_valid` catches this at test time.
+    #[must_use]
+    pub fn load() -> Self {
+        Self::default()
+    }
+
+    /// Returns the contribution of an event type, in seconds.
+    #[must_use]
+    pub const fn contribution(&self, kind: EventType) -> u32 {
+        match kind {
+            EventType::Goal => self.goal,
+            EventType::Foul => self.foul,
+            EventType::Duel => self.duel,
+            _ => 0,
+        }
+    }
+
+    /// Sums the contributions of a slice of event types, plus the base.
+    #[must_use]
+    pub fn total(&self, kinds: impl IntoIterator<Item = EventType>) -> u32 {
+        let mut total = self.base;
+        for kind in kinds {
+            total = total.saturating_add(self.contribution(kind));
+        }
+        total
+    }
+}
+
+/// Stoppage time for a slice of events, in seconds.
+///
+/// The base is added once. Each event adds its contribution (0 for types
+/// not in the table). No cap: the fixed point loop in `orchestrator` stops
+/// when the contribution is zero (ADR-026 §2).
+#[must_use]
+pub fn stoppage_for(events: &[pcfm_stats::MatchEvent], table: &StoppageTime) -> u32 {
+    let mut total = table.base;
+    for event in events {
+        total = total.saturating_add(table.contribution(event.event_type));
+    }
+    total
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn embedded_balance_is_valid() {
+        let table = StoppageTime::load();
+        assert_eq!(table.base, 0);
+        assert_eq!(table.goal, 30);
+        assert_eq!(table.foul, 30);
+        assert_eq!(table.duel, 10);
+    }
+
+    #[test]
+    fn contribution_maps_event_types() {
+        let table = StoppageTime::load();
+        assert_eq!(table.contribution(EventType::Goal), 30);
+        assert_eq!(table.contribution(EventType::Foul), 30);
+        assert_eq!(table.contribution(EventType::Duel), 10);
+        assert_eq!(table.contribution(EventType::Shot), 0);
+        assert_eq!(table.contribution(EventType::KickOff), 0);
+    }
+
+    #[test]
+    fn total_sums_base_and_events() {
+        let table = StoppageTime::load();
+        let total = table.total([EventType::Goal, EventType::Goal, EventType::Foul]);
+        assert_eq!(total, 90); // 30 + 30 + 30
+    }
+
+    #[test]
+    fn stoppage_for_sums_events() {
+        let table = StoppageTime::load();
+        let events = vec![
+            make_event(EventType::Goal),
+            make_event(EventType::Goal),
+            make_event(EventType::Foul),
+        ];
+        assert_eq!(stoppage_for(&events, &table), 90);
+    }
+
+    fn make_event(kind: EventType) -> pcfm_stats::MatchEvent {
+        pcfm_stats::MatchEvent {
+            event_id: pcfm_core::ids::EventId::new(0, 0),
+            match_id: pcfm_core::ids::MatchId::new(1, 0),
+            actor: None,
+            half: pcfm_stats::Half::First,
+            timestamp_minute: 0,
+            timestamp_second: 0,
+            minutes_played_cumulative: 0,
+            event_type: kind,
+            fields: serde_json::json!({}),
+            created_at: pcfm_core::time::GameInstant::from_raw(0),
+        }
+    }
+}

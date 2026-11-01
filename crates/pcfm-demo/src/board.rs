@@ -11,7 +11,7 @@
 
 use std::fmt::Write as _;
 
-use crate::viewmodel::{MatchViewModel, team_label};
+use crate::viewmodel::{EventRow, MatchViewModel, team_label};
 
 /// Renders the match board as a plain string.
 ///
@@ -71,9 +71,8 @@ pub fn render_board(vm: &MatchViewModel) -> Result<String, std::fmt::Error> {
         for event in &vm.events {
             writeln!(
                 out,
-                "  {:>3}'{:02}\"  {:<20}  {} {}",
-                event.minute,
-                event.second,
+                "  {:<12}  {:<20}  {} {}",
+                format_time(event),
                 event.kind,
                 team_label(event.team),
                 event.number
@@ -116,6 +115,19 @@ pub fn print_board(vm: &MatchViewModel) -> std::fmt::Result {
     Ok(())
 }
 
+/// Formats an event time: `1T 12'34"` inside regulation, `1T 45'+2'` for
+/// stoppage. The half is explicit (ADR-026): the second half restarts from 0.
+fn format_time(event: &EventRow) -> String {
+    let label = match event.half {
+        pcfm_stats::Half::First => "1T",
+        pcfm_stats::Half::Second => "2T",
+    };
+    if event.minute > 45 {
+        format!("{label} 45'+{}'", event.minute - 45)
+    } else {
+        format!("{label} {}'{:02}\"", event.minute, event.second)
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,6 +162,7 @@ mod tests {
             minute: 12,
             second: 34,
             kind: "GOAL",
+            half: pcfm_stats::Half::First,
             team: Team::Away,
             number: 9,
         });

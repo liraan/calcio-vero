@@ -79,6 +79,18 @@ pub enum EventType {
     MatchAbandoned,
 }
 
+/// The half of the match an event belongs to (ADR-026).
+///
+/// The match is two halves with separate clocks: `timestamp` is relative
+/// to the half. A future extension (extra time) adds variants here; the
+/// exhaustive matches in consumers force them to handle the new variants.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Half {
+    /// First half.
+    First,
+    /// Second half.
+    Second,
+}
 /// A `MatchEvent` — the atomic unit of Plane B.
 ///
 /// The event is **append-only**: once created, it is never modified or
@@ -91,7 +103,9 @@ pub struct MatchEvent {
     pub match_id: MatchId,
     /// The actor who performed the action, or `None` for a match boundary.
     pub actor: Option<ActorId>,
-    /// The minute of the match, 0–120.
+    /// Which half this event belongs to.
+    pub half: Half,
+    /// The minute within the half, 0–120.
     pub timestamp_minute: u8,
     /// The second of the match, 0–59.
     pub timestamp_second: u8,
@@ -129,6 +143,7 @@ mod tests {
         MatchEvent {
             event_id: EventId::new(1, 0),
             match_id: MatchId::new(1, 0),
+            half: Half::First,
             actor: Some(ActorId::Player(PlayerId::new(1, 0))),
             timestamp_minute: 45,
             timestamp_second: 30,

@@ -219,6 +219,7 @@ mod tests {
             event_id: EventId::new(slot, 0),
             match_id: MatchId::new(1, 0),
             actor: Some(pcfm_core::ids::ActorId::Player(player_id)),
+            half: pcfm_stats::Half::First,
             timestamp_minute: minute,
             timestamp_second: 0,
             minutes_played_cumulative: u16::from(minute),

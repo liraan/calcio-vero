@@ -6,7 +6,7 @@
 use pcfm_core::ids::{ActorId, EventId, PlayerId};
 use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
-use pcfm_stats::{EventChain, EventType, MatchEvent};
+use pcfm_stats::{EventChain, EventType, Half, MatchEvent};
 
 use crate::context::MatchContext;
 use crate::result::{MatchResult, MatchStatistics, Score};
@@ -26,6 +26,10 @@ pub struct MatchState {
     away_possession_ticks: u64,
     shots: (u16, u16),
     next_event_slot: u32,
+    /// Which half is currently being played (ADR-026).
+    half: Half,
+    /// The absolute tick at which the current half started.
+    half_start_tick: u64,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
     // match.
@@ -51,6 +55,8 @@ impl MatchState {
             away_possession_ticks: 0,
             shots: (0, 0),
             next_event_slot: 0,
+            half: Half::First,
+            half_start_tick: 0,
             actions_stream: StreamName::new("match:actions")
                 .expect("literal stream name is non-empty"),
             action_kind_stream: StreamName::new("match:action_kind")
@@ -60,6 +66,16 @@ impl MatchState {
         }
     }
 
+    /// Switches the current half and records the absolute tick at which it
+    /// started (ADR-026).
+    ///
+    /// The timestamp of an event is relative to its half. The tick loop is
+    /// continuous (the absolute tick keeps growing); this method is the
+    /// only place the two are reconciled.
+    pub const fn begin_half(&mut self, half: Half, start_tick: u64) {
+        self.half = half;
+        self.half_start_tick = start_tick;
+    }
     /// Advances the state by one tick.
     ///
     /// # The prototype model
@@ -172,6 +188,11 @@ impl MatchState {
         }
     }
 
+    /// Emits a match-boundary event (`KickOff`, `HalfTime`, `SecondHalf`,
+    /// `FullTime`). Boundary events have `actor = None` (ADR-026 §4).
+    pub fn emit_boundary(&mut self, ctx: &mut MatchContext<'_>, tick: u64, event_type: EventType) {
+        self.emit_event(ctx, tick, None, event_type, serde_json::json!({}));
+    }
     /// Produces the final result.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
@@ -237,14 +258,16 @@ impl MatchState {
     ) {
         let ticks_per_sec = u64::from(ctx.config.ticks_per_second).max(1);
         let total_secs = tick / ticks_per_sec;
-        let minute = clamp_u8(total_secs / 60, 120);
-        let second = clamp_u8(total_secs % 60, 60);
+        let half_secs = (tick.saturating_sub(self.half_start_tick)) / ticks_per_sec;
+        let minute = clamp_u8(half_secs / 60, 120);
+        let second = clamp_u8(half_secs % 60, 60);
         let minutes_played = clamp_u16(total_secs / 60);
 
         let event = MatchEvent {
             event_id: EventId::new(self.next_event_slot, 0),
             match_id: ctx.match_.id,
             actor,
+            half: self.half,
             timestamp_minute: minute,
             timestamp_second: second,
             minutes_played_cumulative: minutes_played,

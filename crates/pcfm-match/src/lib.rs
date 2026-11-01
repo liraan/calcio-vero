@@ -24,6 +24,7 @@
 
 #![deny(missing_docs)]
 
+pub mod balance;
 pub mod context;
 pub mod engine;
 pub mod narrative;

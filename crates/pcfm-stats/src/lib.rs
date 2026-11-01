@@ -28,7 +28,7 @@ pub mod event;
 
 pub use chain::EventChain;
 pub use error::StatsError;
-pub use event::{EventType, MatchEvent};
+pub use event::{EventType, Half, MatchEvent};
 
 /// Returns the version of `pcfm-stats`, as declared in `Cargo.toml`.
 #[must_use]

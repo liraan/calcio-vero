@@ -11,10 +11,10 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 5
+SIM_VERSION = 6
 ```
 
-`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). The current value is the reference against which all future bumps are measured.
+`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). 6: two halves with separate clocks, `Half` field, four-phase loop, fixed-point stoppage time, boundary events emitted (ADR-026 phase 2). The current value is the reference against which all future bumps are measured.
 
 **Known gap (OI-14):** no golden hash exists yet — the 10-season golden test is not implemented. The bump procedure below notes this explicitly.
 
@@ -90,6 +90,36 @@ match), say so and give the distribution delta.
 ---
 
 ## History
+
+## [SIM_VERSION 6] — 2026-11-01
+
+### Why the bump
+
+ADR-026 phase 2: two halves with separate clocks, `Half` field on every
+event, four-phase tick loop, fixed-point stoppage time, boundary events
+(`KickOff`, `HalfTime`, `SecondHalf`, `FullTime`) emitted.
+
+### What changes for the same seed
+
+Events carry `half: Half`; `timestamp_minute`/`timestamp_second` are
+relative to the half. The match runs two halves of 45' plus a fixed-point
+stoppage time each. `FullTime` is at `(Second, 45+rec2)`.
+
+### Saves affected
+
+Breaking: `half` added to every event. A v5 save does not load under v6.
+
+### Golden hash
+
+- Before: not recorded. OI-14 tracks the missing golden test.
+- After: not recorded. OI-14 still open.
+
+### Related changes
+
+- ADR-026 (Match boundaries and stoppage time), amended 2026-11-01.
+- `balance/stoppage_time.json` (new, embedded with `include_str!`).
+- `pcfm-match::orchestrator`: four-phase loop.
+- `pcfm-demo`: board shows `1T`/`2T` and `45'+X'`.
 
 ## [SIM_VERSION 5] — 2026-11-01
 

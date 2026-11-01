@@ -45,6 +45,8 @@ pub struct EventRow {
     pub second: u8,
     /// Event kind, as a stable display string.
     pub kind: &'static str,
+    /// Which half the event belongs to.
+    pub half: pcfm_stats::Half,
     /// Which side the event belongs to.
     pub team: Team,
     /// Shirt number within the side (`slot % 100`).
@@ -147,6 +149,7 @@ fn event_row(event: &MatchEvent) -> EventRow {
         minute: event.timestamp_minute,
         second: event.timestamp_second,
         kind: event_kind(event.event_type),
+        half: event.half,
         team,
         number,
     }
@@ -300,6 +303,7 @@ mod tests {
             actor: Some(pcfm_core::ids::ActorId::Player(
                 pcfm_core::ids::PlayerId::new(9, 0),
             )),
+            half: pcfm_stats::Half::First,
             timestamp_minute: 1,
             timestamp_second: 0,
             minutes_played_cumulative: 1,

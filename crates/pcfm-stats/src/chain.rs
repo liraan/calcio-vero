@@ -104,7 +104,7 @@ impl Default for EventChain {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event::{EventType, MatchEvent};
+    use crate::event::{EventType, Half, MatchEvent};
     use pcfm_core::ids::{ActorId, EventId, MatchId, PlayerId};
     use pcfm_core::time::GameInstant;
 
@@ -112,6 +112,7 @@ mod tests {
         MatchEvent {
             event_id: EventId::new(slot, 0),
             match_id: MatchId::new(1, 0),
+            half: Half::First,
             actor: Some(ActorId::Player(PlayerId::new(1, 0))),
             timestamp_minute: minute,
             timestamp_second: 0,
