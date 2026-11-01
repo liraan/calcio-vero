@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `ad83167` — "fix(gates): remove A2 and B4 (OI-15)"
+**Last commit verified:** `a973117` — "feat(hooks): reject Files touched / Done in the bookmark (redundancy guard)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 

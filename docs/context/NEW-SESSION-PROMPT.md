@@ -203,11 +203,11 @@ For each report in `docs/context/analysis/` (not `analysis/archive/`), read the 
 
     scripts/gates.sh startup
 
-Runs the fast subset of the gates: A1, A3, B1, B3, B6, B7 (and reports B2 as manual; A2 is skipped because step 4 runs the tests). It reads the bookmark you just read, so run it **after** step 2 and **before** step 3: if it is red, the bookmark is internally inconsistent and the session starts on a false base.
+Runs the fast subset of the gates: A1, A3, A4, B1, B3, B6, B7 (and reports B2 as manual). It reads the bookmark you just read, so run it **after** step 2 and **before** step 3: if it is red, the bookmark is internally inconsistent and the session starts on a false base.
 
 If red: report it to the maintainer **before** proceeding. Do not fix it silently: a broken bookmark is worse than an incomplete one, and the maintainer must decide whether to reopen the previous session (E3a) or proceed with a declared caveat.
 
-**Why these checks run twice.** A1, A3, B1, B3, B6, B7 run here and again at closing step 3, on purpose: here they catch a stale bookmark *before it is used*; at closing they confirm the bookmark is still true *after the session's edits*. The two runs cost under 0.1 s together and catch different failures. A2 is skipped here because step 4 runs the tests.
+**Why these checks run twice.** A1, A3, A4, B1, B3, B6, B7 run here and again at closing step 3, on purpose: here they catch a stale bookmark *before it is used*; at closing they confirm the bookmark is still true *after the session's edits*. The two runs cost under 0.1 s together and catch different failures. 
 ### 3. Read foundations (doctrine, rules)
 
 Two reads, in this order, both required.

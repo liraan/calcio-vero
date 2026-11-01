@@ -52,6 +52,31 @@ else
   printf '%s\n' "$a3"
 fi
 
+# A4 (2026-11-01): crates and ADRs cited in the 4 main docs must match the
+# filesystem. Tests are NOT checked here: the real count comes from
+# `cargo test` in C2 (closing step 1), and the README badge is the declared
+# value, not a second source. Checking the badge against itself is circular.
+# Excluded: lines with "as of" (historical).
+a4_real_crates=$(ls crates/ 2>/dev/null | grep -c '^pcfm-')
+a4_real_adrs=$(ls docs/adr/*.md 2>/dev/null | grep -v '000-template' | wc -l | tr -d ' ')
+a4_bad=""
+for a4_f in README.md specs/_index.md STRUCTURE.md CONTRIBUTING.md; do
+  [ -f "$a4_f" ] || continue
+  for a4_p in crates ADRs; do
+    case "$a4_p" in
+      crates) a4_n=$a4_real_crates ;;
+      ADRs) a4_n=$a4_real_adrs ;;
+    esac
+    a4_hit=$(grep -nE "[0-9]+ ${a4_p}" "$a4_f" 2>/dev/null | grep -v 'as of' | grep -vE "(^|[^0-9])${a4_n} ${a4_p}" | head -2)
+    [ -n "$a4_hit" ] && a4_bad="${a4_bad}${a4_f}(${a4_p}=${a4_n}): ${a4_hit}; "
+  done
+done
+if [ -z "$a4_bad" ]; then
+  say_ok "A4 crates and ADRs in docs match reality (crates=$a4_real_crates, ADRs=$a4_real_adrs); tests verified in C2"
+else
+  say_fail "A4 numbers diverge: $a4_bad"
+fi
+
 # ---------- Gate B: fresh-session simulation (mechanical subset) ----------
 echo "Gate B - fresh-session simulation (mechanical subset)"
 

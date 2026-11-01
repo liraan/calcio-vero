@@ -86,7 +86,7 @@ The rules that make this possible are non-negotiable:
 
 | Level | Specification | Code |
 |:-----:|:-------------:|:----:|
-| **L0** — Match   | 🟢 11 cells, ratified | 🟢 6 crates, 122 tests, 6 test scenarios |
+| **L0** — Match   | 🟢 11 cells, ratified | 🟢 9 crates, 122 tests, 6 test scenarios |
 | **L1** — Season  | ⚪ 12 cells planned   | ⚪ not started |
 | **L2** — Career  | ⚪ 9 cells planned    | ⚪ not started |
 | **L3** — Meta    | ⚪ 8 cells planned    | ⚪ not started |
@@ -102,7 +102,7 @@ The rules that make this possible are non-negotiable:
 | **Doctrine** | 🟢 Settled | `specs/00-foundations.md` v2.0, ratified. The Three Planes and the bans are not under discussion. |
 | **L0 specification** | 🟢 Ratified | 11 cells, ratified. The contract is stable; the implementation evolves under it. |
 | **L0 implementation** | 🟡 Prototype | It compiles, it is deterministic, it is tested — but it is a *prototype model*: no positions, 4 event types out of 27, formulas marked as placeholders. |
-| **ADRs** | 🟡 Evolving | 21 ADRs: 19 accepted, 1 proposed (017), 1 superseded (023 → 024). The set changes as the project learns. |
+| **ADRs** | 🟡 Evolving | 23 ADRs: 21 accepted, 1 proposed (017), 1 superseded (023 → 024). The set changes as the project learns. |
 | **Tests** | 🟢 Green | 122 tests, 6 test scenarios, `cargo fmt`/`clippy`/`test` clean. Green means "the contract holds", not "the game is finished". |
 | **L1–L3** | ⚪ Not started | Specifications only. No code. |
 
