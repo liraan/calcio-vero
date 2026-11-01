@@ -11,10 +11,10 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 6
+SIM_VERSION = 7
 ```
 
-`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). 6: two halves with separate clocks, `Half` field, four-phase loop, fixed-point stoppage time, boundary events emitted (ADR-026 phase 2). The current value is the reference against which all future bumps are measured.
+`SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). 6: two halves with separate clocks, `Half` field, four-phase loop, fixed-point stoppage time, boundary events emitted (ADR-026 phase 2). 7: stoppage contributions calibrated (goal 60s, foul 20s, duel 10s). The current value is the reference against which all future bumps are measured.
 
 **Known gap (OI-14):** no golden hash exists yet — the 10-season golden test is not implemented. The bump procedure below notes this explicitly.
 
@@ -90,6 +90,36 @@ match), say so and give the distribution delta.
 ---
 
 ## History
+
+## [SIM_VERSION 7] — 2026-11-01
+
+### Why the bump
+
+ADR-026 phase 2 calibration. The initial stoppage-time contributions
+(goal 30s, foul 30s) were a first proposal, not a calibrated value. The
+match recovery was ~2'50" for a half with 4 goals, low against the real
+game. New values: goal 60s, foul 20s, duel 10s, base 0.
+
+### What changes for the same seed
+
+The recovery (and therefore the timestamp of the boundary events) changes.
+Seed 42: first half 45'+2' -> 45'+4', second half 45'+1' -> 45'+2'.
+
+### Saves affected
+
+No schema change. The `SIM_VERSION` bump is for the simulation behaviour,
+not the save format. A v6 save loads under v7, but the timestamps of a
+re-simulation differ.
+
+### Golden hash
+
+- Before: not recorded. OI-14 tracks the missing golden test.
+- After: not recorded. OI-14 still open.
+
+### Related changes
+
+- `balance/stoppage_time.json`: goal 60, foul 20, duel 10, base 0.
+- `pcfm-match::balance` tests updated.
 
 ## [SIM_VERSION 6] — 2026-11-01
 

@@ -89,16 +89,16 @@ mod tests {
     fn embedded_balance_is_valid() {
         let table = StoppageTime::load();
         assert_eq!(table.base, 0);
-        assert_eq!(table.goal, 30);
-        assert_eq!(table.foul, 30);
+        assert_eq!(table.goal, 60);
+        assert_eq!(table.foul, 20);
         assert_eq!(table.duel, 10);
     }
 
     #[test]
     fn contribution_maps_event_types() {
         let table = StoppageTime::load();
-        assert_eq!(table.contribution(EventType::Goal), 30);
-        assert_eq!(table.contribution(EventType::Foul), 30);
+        assert_eq!(table.contribution(EventType::Goal), 60);
+        assert_eq!(table.contribution(EventType::Foul), 20);
         assert_eq!(table.contribution(EventType::Duel), 10);
         assert_eq!(table.contribution(EventType::Shot), 0);
         assert_eq!(table.contribution(EventType::KickOff), 0);
@@ -108,7 +108,7 @@ mod tests {
     fn total_sums_base_and_events() {
         let table = StoppageTime::load();
         let total = table.total([EventType::Goal, EventType::Goal, EventType::Foul]);
-        assert_eq!(total, 90); // 30 + 30 + 30
+        assert_eq!(total, 140); // 60 + 60 + 20
     }
 
     #[test]
@@ -119,7 +119,7 @@ mod tests {
             make_event(EventType::Goal),
             make_event(EventType::Foul),
         ];
-        assert_eq!(stoppage_for(&events, &table), 90);
+        assert_eq!(stoppage_for(&events, &table), 140);
     }
 
     fn make_event(kind: EventType) -> pcfm_stats::MatchEvent {

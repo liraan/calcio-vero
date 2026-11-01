@@ -1,6 +1,6 @@
 {
   "base": 0,
-  "goal": 30,
-  "foul": 30,
+  "goal": 60,
+  "foul": 20,
   "duel": 10
 }

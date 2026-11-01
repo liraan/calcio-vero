@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `efd7f14` — "docs(adr): amend ADR-026 — two halves, fixed point, Half field, JSON balance"
+**Last commit verified:** `c7ced20` — "feat(l0): two halves, fixed-point stoppage, boundary events (ADR-026 phase 2)"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -118,3 +118,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, ADR-026 install — E3c):** `docs/adr/026-match-boundaries-stoppage-time.md` (NEW, `proposed`, 145 righe, zero open question); `STRUCTURE.md` §5 (row 026 🟡 proposed); `specs/_index.md` (row 026 🟡 proposed); `docs/context/SESSION-STATE.md` (OI-25 added — ADR-026 ratify+implement; nota "Board testuale e step 18"; LCV → `83c293f`; this entry).
 **Files touched this session (2026-11-01, ADR-026 ratification — E3c):** `docs/adr/026-match-boundaries-stoppage-time.md` (`proposed` → `accepted`); `STRUCTURE.md` §5 (row 026 ✅); `specs/_index.md` (row 026 ✅); `docs/context/SESSION-STATE.md` (OI-25: ratify+implement → implement only; LCV → `f195510`; this entry).
 **Files touched this session (2026-11-01, ADR-026 phase 2 — E3c):** `crates/pcfm-stats/src/event.rs` (`Half` enum, `MatchEvent.half`); `crates/pcfm-match/src/state.rs` (`half`/`half_start_tick` fields, `begin_half`, `emit_boundary`, timestamp relativo al tempo); `crates/pcfm-match/src/balance.rs` (NEW — `StoppageTime`, `include_str!` del file JSON, `stoppage_for`); `balance/stoppage_time.json` (NEW); `crates/pcfm-match/src/orchestrator.rs` (quattro fasi, punto fisso, guard 45'); `crates/pcfm-demo/src/viewmodel.rs` (`EventRow.half`); `crates/pcfm-demo/src/board.rs` (`format_time`, `1T`/`2T`, `45'+X'`); `crates/pcfm-match/src/save.rs` (`SIM_VERSION` 6); `CHANGELOG-SIM.md` (entry 6, Current); `README.md` (122 test); `docs/context/SESSION-STATE.md` (OI-25 aggiornato, LCV → `efd7f14`, this entry).
+**Files touched this session (2026-11-01, ADR-026 calibration — E3c):** `balance/stoppage_time.json` (goal 60, foul 20, duel 10, base 0); `crates/pcfm-match/src/balance.rs` (test aggiornati); `crates/pcfm-match/src/save.rs` (`SIM_VERSION` 7); `CHANGELOG-SIM.md` (entry 7); `docs/context/SESSION-STATE.md` (LCV → `c7ced20`, this entry).
