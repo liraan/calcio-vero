@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `24174e2` — "docs(adr): ratify ADR-025 (TUI board renderer, proposed -> accepted)"
+**Last commit verified:** `b631144` — "feat(demo): board renderer (ADR-025) — view model, board, --board flag"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -109,3 +109,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, tag+delete del draft — E3c):** tag `draft/layered-match-2026-11-01` → `4613797` (creato e pushato); branch remoto `review-l0-branch` cancellato; `docs/context/IDEAS.md` (riferimenti aggiornati al tag); `docs/context/SESSION-STATE.md` (OI-22 riscritto con azione "ripartire dal tag"; checklist cita il tag; "Organizzazione futura" senza nome branch; LCV → `fe7ceeb`; this entry).
 **Files touched this session (2026-11-01, ADR-025 ratification — E3c):** `docs/adr/025-tui-board-renderer.md` (`Status: proposed` → `accepted`); `STRUCTURE.md` §5 (row 025 🟡→✅); `specs/_index.md` (row 025 🟡→✅); `docs/context/SESSION-STATE.md` (step 12 plan + Prime azioni + Detail: ADR-025 accepted, demo interna, LCV → `6c7dc60`, this entry).
 **Files touched this session (2026-11-01, step 12 — board demo — E3c):** `docs/adr/025-tui-board-renderer.md` (`proposed` → `accepted`); `STRUCTURE.md` §5, `specs/_index.md` (row 025 ✅); `crates/pcfm-demo/Cargo.toml` (`serde` added); `crates/pcfm-demo/src/viewmodel.rs` (NEW — `MatchViewModel`, `EventRow`, `NarrativeRow`, exhaustive `EventType`→str, structural test); `crates/pcfm-demo/src/board.rs` (NEW — `render_board` + `print_board`, 4 test); `crates/pcfm-demo/src/main.rs` (`--board`, `parse_args_from` testabile, 5 CLI test); `README.md` (badge + 2 righe: 105→117); `Cargo.lock`; `docs/context/SESSION-STATE.md` (step 12 chiuso, LCV → `24174e2`, this entry).
+**Files touched this session (2026-11-01, board improvements — E3c):** `crates/pcfm-demo/src/viewmodel.rs` (`Team` enum, `EventRow` with `team`+`number` instead of opaque slot, `is_goal_shot` filter on events only, narrative unfiltered, `try_from` casts, `team_label` const); `crates/pcfm-demo/src/board.rs` (events render `Home 9`/`Away 9`, `GOAL` uppercase, test updated); `README.md` (118 tests); `docs/context/SESSION-STATE.md` (LCV → `b631144`, this entry).

@@ -14,6 +14,25 @@ use pcfm_match::{Importance, MatchResult, NarrativeEntry};
 use pcfm_stats::{EventType, MatchEvent};
 use serde::Serialize;
 
+/// Which side an event belongs to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum Team {
+    /// Home side.
+    Home,
+    /// Away side.
+    Away,
+}
+
+impl Team {
+    /// Stable display string.
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Home => "Home",
+            Self::Away => "Away",
+        }
+    }
+}
+
 /// A single row of the event list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct EventRow {
@@ -23,8 +42,10 @@ pub struct EventRow {
     pub second: u8,
     /// Event kind, as a stable display string.
     pub kind: &'static str,
-    /// Player slot.
-    pub player_slot: u32,
+    /// Which side the event belongs to.
+    pub team: Team,
+    /// Shirt number within the side (`slot % 100`).
+    pub number: u8,
 }
 
 /// A single row of the narrative list.
@@ -61,10 +82,23 @@ impl MatchViewModel {
     /// Projects a `MatchResult` into a view model.
     ///
     /// Pure: no I/O, no RNG, no mutation of the source.
+    ///
+    /// Two presentation filters, both mechanical, both documented here:
+    /// - a `Shot` whose `fields.goal` is `true` is suppressed: the engine
+    ///   emits a separate `Goal` event for it (census G5, `ShotAttempted`
+    ///   missing), so showing both would duplicate the goal;
+    /// - a narrative entry `X shoots in the N'` immediately followed by
+    ///   `GOAL! X scores in the N'` is suppressed for the same reason.
     #[must_use]
     pub fn from_result(result: &MatchResult) -> Self {
-        let events = result.events.events().iter().map(event_row).collect();
-        let narrative = result.narrative.iter().map(narrative_row).collect();
+        let events: Vec<EventRow> = result
+            .events
+            .events()
+            .iter()
+            .filter(|e| !is_goal_shot(e))
+            .map(event_row)
+            .collect();
+        let narrative: Vec<NarrativeRow> = result.narrative.iter().map(narrative_row).collect();
         Self {
             score: (result.score.home, result.score.away),
             possession_pct: (
@@ -80,13 +114,29 @@ impl MatchViewModel {
     }
 }
 
+/// True if this event is a `Shot` that the engine also records as a `Goal`.
+fn is_goal_shot(event: &MatchEvent) -> bool {
+    event.event_type == EventType::Shot
+        && event
+            .fields
+            .get("goal")
+            .and_then(serde_json::Value::as_bool)
+            == Some(true)
+}
+
 /// Projects one `MatchEvent` into an `EventRow`.
-const fn event_row(event: &MatchEvent) -> EventRow {
+fn event_row(event: &MatchEvent) -> EventRow {
+    let slot = event.player_id.slot();
+    // Slot encoding: <100 = home, >=100 = away. The modulo brings
+    // the shirt number into 0..=99, which always fits in u8.
+    let number = u8::try_from(slot % 100).unwrap_or(0);
+    let team = if slot >= 100 { Team::Away } else { Team::Home };
     EventRow {
         minute: event.timestamp_minute,
         second: event.timestamp_second,
         kind: event_kind(event.event_type),
-        player_slot: event.player_id.slot(),
+        team,
+        number,
     }
 }
 
@@ -102,8 +152,7 @@ fn narrative_row(entry: &NarrativeEntry) -> NarrativeRow {
 /// A stable display string for every `EventType`.
 ///
 /// Exhaustive: no `_ =>` arm. When a new variant is added to `EventType`,
-/// this function stops compiling until the mapping is updated. That is the
-/// intended behaviour: the board must know every event kind.
+/// this function stops compiling until the mapping is updated.
 const fn event_kind(kind: EventType) -> &'static str {
     match kind {
         EventType::Shot => "shot",
@@ -124,7 +173,7 @@ const fn event_kind(kind: EventType) -> &'static str {
         EventType::Penalty => "penalty",
         EventType::Substitution => "substitution",
         EventType::Injury => "injury",
-        EventType::Goal => "goal",
+        EventType::Goal => "GOAL",
         EventType::Assist => "assist",
         EventType::ProgressiveCarry => "progressive_carry",
         EventType::ProgressivePass => "progressive_pass",
@@ -154,6 +203,11 @@ fn hex(bytes: &[u8]) -> String {
         let _ = write!(s, "{b:02x}");
     }
     s
+}
+
+/// Display label for a team, used by the board.
+pub const fn team_label(team: Team) -> &'static str {
+    team.label()
 }
 
 #[cfg(test)]
@@ -221,5 +275,32 @@ mod tests {
     #[test]
     fn hex_is_lowercase() {
         assert_eq!(hex(&[0xDE, 0xAD, 0xBE, 0xEF]), "deadbeef");
+    }
+
+    /// `slot >= 100` is the away side, `slot % 100` is the shirt number.
+    #[test]
+    fn slot_to_team_and_number() {
+        let home = MatchEvent {
+            event_id: pcfm_core::ids::EventId::new(0, 0),
+            match_id: pcfm_core::ids::MatchId::new(1, 0),
+            player_id: pcfm_core::ids::PlayerId::new(9, 0),
+            timestamp_minute: 1,
+            timestamp_second: 0,
+            minutes_played_cumulative: 1,
+            event_type: EventType::Pass,
+            fields: serde_json::json!({}),
+            created_at: pcfm_core::time::GameInstant::from_raw(0),
+        };
+        let row = event_row(&home);
+        assert_eq!(row.team, Team::Home);
+        assert_eq!(row.number, 9);
+
+        let away = MatchEvent {
+            player_id: pcfm_core::ids::PlayerId::new(109, 0),
+            ..home
+        };
+        let row = event_row(&away);
+        assert_eq!(row.team, Team::Away);
+        assert_eq!(row.number, 9);
     }
 }

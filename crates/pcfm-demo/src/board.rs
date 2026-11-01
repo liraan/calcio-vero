@@ -1,9 +1,9 @@
 //! Board renderer for `pcfm-demo` (ADR-025).
 //!
 //! Fixed-width ASCII, no ANSI colour codes, no external dependencies.
-//! Reads a [`MatchViewModel`] only: never `MatchResult`, `MatchState`, or
-//! `pcfm_hidden`. The board is a *consumer* of the view model, not a second
-//! simulation.
+//! Reads a [`MatchViewModel`] only: never `MatchResult`, the engine's
+//! internal match state, or Plane A. The board is a *consumer* of the view
+//! model, not a second simulation.
 //!
 //! Two functions, one body:
 //! - [`render_board`] returns the board as a `String` (testable, pure).
@@ -11,16 +11,13 @@
 
 use std::fmt::Write as _;
 
-use crate::viewmodel::MatchViewModel;
+use crate::viewmodel::{MatchViewModel, team_label};
 
 /// Renders the match board as a plain string.
 ///
 /// # Errors
 ///
-/// Propagates the `fmt::Error` of the inner `String` writes. By
-/// construction they cannot fail, so the function is infallible in
-/// practice; the `Result` is kept for symmetry with `print_text` and
-/// `print_json`.
+/// Propagates the `fmt::Error` of the inner `String` writes.
 pub fn render_board(vm: &MatchViewModel) -> Result<String, std::fmt::Error> {
     let mut out = String::new();
 
@@ -74,8 +71,12 @@ pub fn render_board(vm: &MatchViewModel) -> Result<String, std::fmt::Error> {
         for event in &vm.events {
             writeln!(
                 out,
-                "  {:>3}'{:02}\"  {:<20}  slot {}",
-                event.minute, event.second, event.kind, event.player_slot
+                "  {:>3}'{:02}\"  {:<20}  {} {}",
+                event.minute,
+                event.second,
+                event.kind,
+                team_label(event.team),
+                event.number
             )?;
         }
     }
@@ -118,7 +119,7 @@ pub fn print_board(vm: &MatchViewModel) -> std::fmt::Result {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::viewmodel::{EventRow, NarrativeRow};
+    use crate::viewmodel::{EventRow, NarrativeRow, Team};
 
     fn empty_vm() -> MatchViewModel {
         MatchViewModel {
@@ -148,14 +149,15 @@ mod tests {
         vm.events.push(EventRow {
             minute: 12,
             second: 34,
-            kind: "goal",
-            player_slot: 9,
+            kind: "GOAL",
+            team: Team::Away,
+            number: 9,
         });
         let rendered = render_board(&vm).expect("render");
         assert!(rendered.contains("2  -  1"));
-        assert!(rendered.contains("goal"));
+        assert!(rendered.contains("GOAL"));
         assert!(rendered.contains("12'34"));
-        assert!(rendered.contains("slot 9"));
+        assert!(rendered.contains("Away 9"));
     }
 
     #[test]
