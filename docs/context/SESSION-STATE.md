@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `cc81406` — "docs(analysis): archive 10-25, fuse OI-13 into OI-17 (OI-21, OI-13 closed)"
+**Last commit verified:** `ad83167` — "fix(gates): remove A2 and B4 (OI-15)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -21,7 +21,6 @@
 | OI-8 | `ScoutReport.DeclaredBias` senza formula (Gap C) | Decidere quando apre `L2-scouting` |
 | OI-14 | Golden test 10 stagioni non esiste (`CHANGELOG-SIM:42`, `00-foundations` §4) | Decidere forma (L1 o N partite) e priorità |
 | OI-17 | **Censimento L0 (ex OI-13 fuso qui): 12 divergenze spec↔code** (`analysis/2026-10-31-22-28`), più i finding dei report archiviati non assegnati a step. G11 migliorato (4→8 eventi su 31 con ADR-026), non chiuso | Leggere §5 "Verdict" e classificare i 12 G: obbligatorio per L1/L2, o "target design, non current". I secondi si dichiarano in `specs/L0-match/00-overview.md` (una riga) e si chiudono. I primi diventano step |
-| OI-19 | View model separation: enforcement compile-time deferred | Decidere se vincolo di build o policy documentale |
 
 ## Plan (in dependency order)
 
