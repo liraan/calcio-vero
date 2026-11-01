@@ -26,6 +26,28 @@ pub struct MatchStatistics {
     pub goals: (u8, u8),
 }
 
+/// A per-tick snapshot of the simulation state.
+///
+/// This is the canonical temporal record of the match: a rendering engine or
+/// viewer can reconstruct a near-instant record from these snapshots, but the
+/// simulation itself is defined by the tick loop and the event chain. In other
+/// words, the frame is merely a projection of the tick state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TickSnapshot {
+    /// The simulation tick.
+    pub tick: u64,
+    /// Score at this tick.
+    pub score: Score,
+    /// Home possession ticks accumulated by this point.
+    pub home_possession_ticks: u64,
+    /// Away possession ticks accumulated by this point.
+    pub away_possession_ticks: u64,
+    /// Number of events currently in the chain.
+    pub events_in_chain: usize,
+    /// The chain hash for this tick.
+    pub state_hash: Hash,
+}
+
 /// The result of a match simulation.
 ///
 /// The `narrative` field is **data**, not a rendered string. It is filled by
@@ -43,4 +65,6 @@ pub struct MatchResult {
     pub state_hash: Hash,
     /// The narrative entries. Empty if no renderer has filled them.
     pub narrative: Vec<NarrativeEntry>,
+    /// The simulated state at each tick.
+    pub snapshots: Vec<TickSnapshot>,
 }
