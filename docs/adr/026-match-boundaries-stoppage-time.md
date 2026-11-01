@@ -1,6 +1,6 @@
 # ADR-026 — Match boundaries and stoppage time
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-01
 - **Supersedes:** —
 - **Superseded by:** —
