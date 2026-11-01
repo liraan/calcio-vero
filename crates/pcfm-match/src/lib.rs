@@ -28,17 +28,27 @@ pub mod context;
 pub mod engine;
 pub mod narrative;
 pub mod orchestrator;
+pub mod projection;
 pub mod result;
 pub mod save;
+pub mod spatial;
 pub mod state;
+pub mod tactics;
 
 pub use context::{MatchConfig, MatchContext};
 pub use engine::{MatchEngine, TextMatchEngine};
 pub use narrative::{Importance, NarrativeEntry, narrate};
 pub use orchestrator::simulate_match;
+pub use projection::{FieldProjection, FieldRenderer, PlayerProjection};
 pub use result::{MatchResult, MatchStatistics, Score};
 pub use save::{MatchSave, SCHEMA_VERSION, SIM_VERSION, SaveError, replay};
+pub use spatial::{BallState, PlayerSpatialState, PressureMap, PressurePoint, SpatialState, TeamShapeState, Vec2};
 pub use state::MatchState;
+pub use tactics::{
+    Direction, LineHeight, PhaseKind, PhaseState, PressureLevel, RoleOverride, SpatialIntent,
+    TacticalCommand, TacticalCommandKind, TacticalReason, TacticalSource, TacticTarget,
+    TeamIntent, TeamSide, TeamTacticState, WidthMode, Zone,
+};
 
 /// Returns the version of `pcfm-match`, as declared in `Cargo.toml`.
 #[must_use]
