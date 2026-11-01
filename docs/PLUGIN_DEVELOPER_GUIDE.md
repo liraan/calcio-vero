@@ -23,7 +23,7 @@ PCFM has two extension mechanisms, and they are deliberately different.
 | Review | Automated validation (`pcfm-pack validate`, planned) | PR review against the doctrine and the ADRs |
 | Distribution | Pack (`mods/`) | Crate (workspace member) or external crate that depends on a `pcfm-*` crate |
 
-The line between the two is **`STRUCTURE.md` §9**: a pack can extend the registry, the assets, the configuration, and the sandboxed scripts. A pack **cannot** add a new module, a new event type, or a new `resolve_*`. Those require a **crate** and a **PR**.
+The line between the two is **`STRUCTURE.md` §9**: a pack can extend the registry, the assets, the configuration, and the sandboxed scripts. A pack **cannot** add a new crate, a new event type, or a new `resolve_*`. Those require a **crate** and a **PR**.
 
 This guide is for the second kind.
 
@@ -49,7 +49,7 @@ Current crates (as of 2026-10-26):
 
 The dependency graph is **inward-only**: a crate at level N depends on crates at level `< N`, never on `> N`. See `STRUCTURE.md` §2.
 
-`pcfm-testkit` is special: it has **no dependency on any other `pcfm-*` crate**. It is the contract that core modules, plugins, and tools all implement. See §11 for how to contribute scenarios.
+`pcfm-testkit` is special: it has **no dependency on any other `pcfm-*` crate**. It is the contract that framework crates, plugins, and tools all implement. See §11 for how to contribute scenarios.
 
 ### Adding a new crate
 
@@ -334,7 +334,7 @@ See §5. Short version: write an ADR, add the context/outcome types, add the met
 
 ## 11. Contributing test scenarios
 
-The project ships a public test harness, `pcfm-testkit`, that lets any crate — core module, plugin, or tool — contribute test scenarios without depending on `pcfm-test-runner` or on the rest of the framework.
+The project ships a public test harness, `pcfm-testkit`, that lets any crate — framework crate, plugin, or tool — contribute test scenarios without depending on `pcfm-test-runner` or on the rest of the framework.
 
 ### The contract
 
@@ -375,7 +375,7 @@ impl Scenario for MyFeatureSmokeTest {
 
 ### Registering it
 
-For core modules, add one line to `crates/pcfm-test-runner/src/features/mod.rs`:
+For framework crates, add one line to `crates/pcfm-test-runner/src/features/mod.rs`:
 
 ```rust
 pub fn register_all(registry: &mut TestRegistry) {
