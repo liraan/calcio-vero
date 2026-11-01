@@ -4,11 +4,9 @@
 # Run from the repo root.
 #
 # Usage: scripts/gates.sh [startup|closing]
-#   closing (default) - full set: A1, A2, A3, B1, B3, B6, B7 + manual B2
+#   closing (default) - full set: A1, A3, B1, B3, B6, B7 + manual B2
 #   startup           - fast set: A1, A3, B1, B3, B6, B7 + manual B2
-#                        (A2 runs cargo test: skipped, the startup already
-#                         runs the tests in step 4; B2 is only meaningful
-#                         after work has been done)
+#                        (B2 is only meaningful after work has been done)
 #
 # Manual checks are NOT reported as "ok": they are listed as "manual" and must
 # be done in the report. Reporting them as "ok" without checking would be a
@@ -41,17 +39,10 @@ else
   say_fail "A1 ADR counts diverge: STRUCTURE=$a_structure, _index=$a_index, files=$a_files"
 fi
 
-if [ "$MODE" = "closing" ]; then
-  r_badge=$(grep -oE 'tests-[0-9]+_passing' README.md 2>/dev/null | grep -oE '[0-9]+' | head -1)
-  r_real=$(cargo test --workspace 2>/dev/null | grep 'test result' | awk -F'[ ;]' '{p+=$4} END{print p+0}')
-  if [ -n "$r_badge" ] && [ "$r_badge" = "$r_real" ]; then
-    say_ok "A2 README badge ($r_badge) = real ($r_real)"
-  else
-    say_fail "A2 README badge (${r_badge:-missing}) != real ($r_real)"
-  fi
-else
-  say_manual "A2 README badge vs real tests - skipped in startup (step 4 runs the tests)"
-fi
+# A2 removed (OI-15). `cargo test` runs in startup step 4 and in C2
+# (closing step 1). A third run to compare the README badge with the real
+# count is a documentation check, not a simulation invariant: the badge is
+# declared in the closing report, where the real output is visible.
 
 a3=$(grep -nE '[0-9]+ (tests?|crates?|ADRs?)\b|(tests?|crates?|ADRs?) [0-9]+' docs/context/NEW-SESSION-PROMPT.md 2>/dev/null | head -5)
 if [ -z "$a3" ]; then
@@ -88,9 +79,6 @@ else
   say_fail "B3 no OI table in SESSION-STATE.md"
 fi
 
-if [ "$MODE" = "closing" ]; then
-  say_manual "B4 Prime azioni match reality - check in the closing report"
-fi
 
 proposed=0
 surfaced=0
@@ -127,7 +115,7 @@ if [ "$fail" -eq 0 ]; then
   if [ "$MODE" = "closing" ]; then
     echo "gates: GREEN (closing; manual: B2 - do it in the closing report)"
   else
-    echo "gates: GREEN (startup; manual: B2, A2 - A2 in step 4)"
+    echo "gates: GREEN (startup; manual: B2)"
   fi
   exit 0
 else
