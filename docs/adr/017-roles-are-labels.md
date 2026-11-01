@@ -1,6 +1,6 @@
 # ADR-017 — Roles are labels, not modifiers
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-27
 - **Supersedes:** none
 - **Superseded by:** none

@@ -260,7 +260,7 @@ These are components that are referenced across modules but are not crates. They
 | [014](../docs/adr/014-mobile-strategy.md) | Mobile strategy | ✅ accepted | Native mobile UI, no plugins, data packs only |
 | [015](../docs/adr/015-v1-scope.md) | v1.0 scope | ✅ accepted | v1.0 content reduction (20 roles, 10 formations, 5 nations, 3 active psyche axes) |
 | [016](../docs/adr/016-v1-content-selections.md) | v1.0 content selections | ✅ accepted | 20 roles (catalogue in L1-roster), 10 formations, 5 nations (real cities), 7 L2 modules (crowd/media to v1.1). Resolves ADR-015. |
-| [017](../docs/adr/017-roles-are-labels.md) | Roles are labels, not modifiers | 🟡 proposed | Role catalogue in L1-roster; the engine is blind to roles |
+| [017](../docs/adr/017-roles-are-labels.md) | Roles are labels, not modifiers | ✅ accepted | Role catalogue in L1-roster; the engine is blind to roles |
 | [018](../docs/adr/018-defer-crowd-media.md) | Defer crowd and media to v1.1 | ✅ accepted | Partially supersedes ADR-015: crowd and media ship in v1.1 |
 | [019](../docs/adr/019-match-engine-contract.md) | Match engine contract | ✅ accepted | Agent-first state in players, integer position, resolution as engine parameter, zone of influence as derived relation |
 | [020](../docs/adr/020-split-test-runner-from-demo.md) | Split the test runner from the demo tool | ✅ accepted | Split `pcfm-debug` into `pcfm-test-runner` (tests) and `pcfm-demo` (demo) |

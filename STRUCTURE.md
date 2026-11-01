@@ -350,7 +350,7 @@ If an ADR is `proposed` and touches an area, **no code may be written in that ar
 | 014 | Mobile strategy | ✅ accepted | — |
 | 015 | v1.0 scope | ✅ accepted | v1.0 content reduction (20 roles, 10 formations, 5 nations, 3 active psyche axes) |
 | 016 | v1.0 content selections | ✅ accepted | Resolves ADR-015: 3 axes, 20 roles (catalogue in L1-roster), 10 formations, 5 nations (real cities), 7 L2 modules (crowd/media to v1.1). |
-| 017 | Roles are labels, not modifiers | 🟡 proposed | Role catalogue in L1-roster; the engine is blind to roles |
+| 017 | Roles are labels, not modifiers | ✅ accepted | Role catalogue in L1-roster; the engine is blind to roles |
 | 018 | Defer crowd and media to v1.1 | ✅ accepted | Partially supersedes ADR-015: crowd and media ship in v1.1 |
 | 019 | Match engine contract | ✅ accepted | Agent-first state in players, integer position, resolution as engine parameter, zone of influence as derived relation |
 | 020 | Split the test runner from the demo tool | ✅ accepted | Split `pcfm-debug` into `pcfm-test-runner` (tests) and `pcfm-demo` (demo) |
