@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `7282c4f` — "docs(rules): B1-bis — a git add with multiple paths fails entirely on a missing pathspec"
+**Last commit verified:** `44cf487` — "docs(adr): ADR-025 — TUI board renderer for pcfm-demo (proposed)"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -77,9 +77,10 @@ the rest of the bookmark in the same commit.
 | 13  | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
 | 17b | Aprire `scripts/gates.sh` blocco B1 (righe 67-74) e il testo closing Gate B in `NEW-SESSION-PROMPT.md`; decidere la forma della colonna "first action" nel Plan |
 
-**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. Report `12-42-review` amended (L reversed) + archived 2026-11-01. Storico dettagliato in `git log --oneline`. Sessione 2026-10-31: A2/E2 exact words, Decisions trailer, S1 on every bookmark update, OI-18, TUI scope, L0 positional (step 18). 105 test, SIM 4.
+**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. **Sessione 2026-11-01:** OI-16 chiuso (misurazione), 17a (riformatto §F 218→82), report `12-42-review` amendato (finding L falso) + archiviato, B1-bis lesson (`git add` multi-path), ADR-025 `proposed` installato, OI-19 (enforcement view model). Storico dettagliato in `git log --oneline`. Sessione 2026-10-31: A2/E2 exact words, Decisions trailer, S1 on every bookmark update, OI-18, TUI scope, L0 positional (step 18). 105 test, SIM 4.
 
 **Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; OI-16 chiuso; OI-18 riformulato; aggiunta sezione `Analysis reports (vivi)`; `Last commit verified` aligned to `d504e0e`; this entry).
 **Files touched this session (2026-11-01, review of 12-42 + archival):** `docs/context/analysis/2026-10-31-12-42-review.md` (amended: status header, table H and L, §3a H/L split, Verdict, footer; then `git mv` to `analysis/archive/`); `docs/context/SESSION-STATE.md` (rimossa entry dalla sezione "Analysis reports (vivi)", aggiunto in `Done` l'entry di amend+archival, `Last commit verified` aligned to `0d605e0`, this entry).
 **Files touched this session (2026-11-01, B1-bis lesson — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (B1-bis: new bullet — `git add` with multiple paths fails entirely if one pathspec is missing; fallback: one path per `git add`, verify with `git status --short`; `Last updated` refreshed); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `b1f6d12`).
 **Files touched this session (2026-11-01, ADR-025 installation):** `docs/adr/025-tui-board-renderer.md` (NEW, `proposed`); `STRUCTURE.md` §5 (row 025); `specs/_index.md` (row 025); `docs/context/SESSION-STATE.md` (step 12 → 🔵, Prime azioni 12 → ratify ADR-025, Detail 12 rewritten, OI-19 added, `Last commit verified` → `7282c4f`, this entry).
+**Files touched this session (2026-11-01, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Last commit verified → 44cf487, Done storico riscritto con la sessione 2026-11-01, this entry). Nessun altro file in questa tornata: i commit `0d605e0`, `b1f6d12`, `7282c4f`, `44cf487` sono già su disco.
