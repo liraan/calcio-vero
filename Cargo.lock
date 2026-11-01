@@ -110,6 +110,7 @@ dependencies = [
  "pcfm-match",
  "pcfm-model",
  "pcfm-stats",
+ "serde",
  "serde_json",
  "thiserror",
 ]
