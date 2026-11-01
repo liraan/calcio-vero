@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `89ea1e9` — "fix(l0): simulate_from_seed keeps Plane A inside pcfm-match (step 2, ADR-003)"
+**Last commit verified:** `7f268e0` — "ci: checkout@v7, ignore rand 0.10 (breaks the deterministic RNG)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -22,10 +22,10 @@
 | OI-8 | `ScoutReport.DeclaredBias` senza formula (Gap C) | Decidere quando apre `L2-scouting` |
 | OI-13 | Finding dei 2 report non assegnati a step (riformulato 2026-10-31) | Decidere: promuovere a step, o dichiararli "target design" e chiudere |
 | OI-14 | Golden test 10 stagioni non esiste (`CHANGELOG-SIM:42`, `00-foundations` §4) | Decidere forma (L1 o N partite) e priorità |
-| OI-15 | A2 esegue `cargo test` una terza volta per sessione | Decidere: saltare A2 in closing, o tenerlo come safety net |
+| OI-15 | A2 esegue `cargo test` **4 volte** per sessione (startup step 4, closing C2, closing `gates.sh` A2, pre-push `gates.sh` A2 — verificato 2026-11-01). Il taglio del rituale non l'ha toccato: è peggiorato da 3 a 4. Fix: rimuovere A2 da `gates.sh` (C2 esegue già `cargo test`; il confronto badge/test è documentazione, non invariante) e dichiararlo nel report. | Fix in sessione dedicata: `gates.sh` è stato toccato 3 volte oggi con 2 errori di offset. Non è urgente, il costo è ~1-2s per esecuzione |
 | OI-17 | Censimento L0: 12 divergenze spec↔code (`analysis/2026-10-31-22-28`) | Leggere §5 "Verdict" e decidere quali gap sono obbligatori |
 | OI-19 | View model separation: enforcement compile-time deferred | Decidere se vincolo di build o policy documentale |
-| OI-21 | Retention policy for analysis artifacts | Definire regola di archiviazione |
+| OI-21 | Retention policy per `analysis/`: definire la regola (quando archiviare un report, cosa resta vivo) e applicarla subito alle review storiche | Leggere `2026-10-31-22-28` e `2026-11-01-10-25`: sono ancora operative? Se no, `git mv` in `analysis/archive/`. Poi scrivere la regola in una riga in `docs/context/README.md` |
 
 ## Plan (in dependency order)
 
@@ -33,7 +33,6 @@
 |---|---|---|---|---|
 | 🟡 | 3 | Terminologia (T1+T2, T3 done) | — | Leggere `PLUGIN_DEVELOPER_GUIDE.md` §1: `sed -n '13,40p'` |
 | 🟡 | 11 | GitHub agent Phase 2 | ruleset attivo | Decisione del maintainer: attivare o no il ruleset |
-| 🟡 | 21 | Archiviazione review in `analysis/` | — | Archiviare la review storica in `analysis/archive/` se non più operativa |
 | ⬜ | 5 | Review sketch ×3 | L2-tactics, input, L2-staff | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
 | ⬜ | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
 | ⬜ | 8 | ADR-019 deferred 4-9 | — | Rileggere ADR-019 §Deferred, decidere quali dei 4-9 chiudere |
