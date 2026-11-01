@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `b1f6d12` — "docs(analysis): amend 12-42-review (L reversed, not applied); archive it"
+**Last commit verified:** `7282c4f` — "docs(rules): B1-bis — a git add with multiple paths fails entirely on a missing pathspec"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -32,12 +32,13 @@ the rest of the bookmark in the same commit.
 | OI-15 | **A2 esegue `cargo test` una terza volta per sessione** (startup step 4, closing C2, closing gates A2) | Mai deciso: tenere come safety net o rimuovere? | Decidere: (a) saltare A2 in closing e dichiarare "A2 = closing step 1"; (b) tenerlo e dichiararlo safety net esplicito |
 | OI-17 | **Censimento operativo L0: 12 divergenze spec↔code** (`analysis/2026-10-31-22-28-review.md`) | Fotografia; nessuna decisione su quali gap chiudere prima di L1/L2 | Leggere §5 "Verdict"; decidere quali gap (probabilmente nessuno prima di L1) |
 | OI-18 | **Ottimizzazione dei rituali: R1–R6** (startup step 3 rilegge prompt; "unexpected observation" doppia in 2a/step 4; `cargo test` doppio = OI-15; startup step 1 ambiguo sotto S1; startup 2-bis esegue A1/A3 che non cambiano in sessione; step 4 duplica A1) | OI-16 misurato 2026-11-01: `Decisions:` usato (11/20), `Rules-Audit:` verde (10/10), `Deferred:` mai usato (0/20), ~1 commit su 2 tocca il bookmark. **Decisione C:** step 17 prima; semplificazione dei rituali dopo, con dati aggiornati | Step 17b come primo item; poi valutare R1–R6 con i dati OI-16 |
+| OI-19 | **View model separation: enforcement compile-time deferred** (ADR-025) | ADR-022 §3 rende normativa la separazione, ma il prototipo in `pcfm-demo` la impone solo via un test strutturale manuale (`grep` sul modulo). D5: il fallback visibile è debole. Diventa enforcement reale solo quando esiste un secondo consumatore (crate boundary) | Quando il view model viene promosso a crate: valutare `pcfm-viewmodel` con dipendenze ristrette, o un test compile-fail; decidere in quell'ADR |
 
 **Da fare (in dependency order):**
 
 | Pr. | #   | Cosa                    | Dipende da                   |
 |-----|-----|-------------------------|------------------------------|
-| 🟡  | 12  | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR breve + codice in `pcfm-demo`. Il campo con 22 giocatori richiede L0 posizionale (step 18). Leggere prima il censimento (OI-17) | — |
+| 🔵  | 12  | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR-025 (proposed) scritto e installato — **ratificare ADR-025**, poi scrivere `viewmodel.rs` + `board.rs` + `--board`. Il pitch con 22 giocatori richiede L0 posizionale (step 18). Leggere prima il censimento (OI-17) | ADR-025 ratificato |
 | 🟡  | 2   | Fix ADR-003 (nota rename fatta `a391b85`; restano `demo.rs`, autorizzazione `pcfm-demo`) | — |
 | 🟡  | 3   | Terminologia (T1+T2, T3 done) | — |
 | 🟡  | 11  | GitHub agent Phase 2    | ruleset attivo               |
@@ -52,7 +53,7 @@ the rest of the bookmark in the same commit.
 
 **Dettagli (solo dove servono):**
 
-**12. TUI demo (IDEA-INFRA-006)** — **scope (2026-10-31): board + events, not pitch.** Validate the split renderer/engine (ADR-022): a second renderer reads `MatchResult` without touching the engine. Board content: score, possession, shots, event list (today 4 types), narrative, state hash. The pitch with 22 players requires L0 positional (step 18), which requires L2 (D3). **First step: read the L0 census (`analysis/2026-10-31-22-28-review.md`, 4 events out of 27, no positions) and `crates/pcfm-demo/src/`; then decide the board content.** A short ADR is required (second renderer touches `simulation_is_shared_and_renderer_agnostic`). The ADR says: validation prototype, not L3-ui, no engine change.
+**12. TUI demo (IDEA-INFRA-006)** — **scope (2026-10-31): board + events, not pitch.** Validate the split renderer/engine (ADR-022): a second renderer reads `MatchResult` without touching the engine. **ADR-025 (proposed, written 2026-11-01) covers this step:** view model in `src/viewmodel.rs` of `pcfm-demo`, board in `src/board.rs`, `--board` flag in `main.rs`; JSON serialisation; no engine change, no `SIM_VERSION` bump. Board content: score, possession, shots, goals, event list (today 4 types), narrative, state hash. The pitch with 22 players requires L0 positional (step 18), which requires L2 (D3). **First step: ratify ADR-025 (`Status: accepted`), then write `viewmodel.rs` + `board.rs` + `--board`; run tests.** Structural enforcement of the view model (no `pcfm-hidden`, no `MatchState`) is manual today, tracked as OI-19.
 
 **2. Fix ADR-003** — ADR-003 still names `pcfm-debug` and `demo.rs`; `pcfm-demo` reads Plane A without authorization. ADR-023 exists (2026-10-31, observed cause traces) and does not cover ADR-003. Options: amend ADR-003, or extend ADR-020. Requires explicit confirmation to touch `docs/adr/`.
 
@@ -72,7 +73,7 @@ the rest of the bookmark in the same commit.
 | 9   | Leggere ADR-017, decidere: ratificare o rinviare |
 | 10  | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
 | 11  | Decisione del maintainer: attivare o no il ruleset |
-| 12  | Leggere `docs/context/analysis/2026-10-31-22-28-review.md` e `crates/pcfm-demo/src/`, poi decidere il contenuto del board |
+| 12  | Ratificare ADR-025 (`docs/adr/025-tui-board-renderer.md`, `proposed`): leggere, decidere, `Status: accepted`. Poi aprire `crates/pcfm-demo/src/` e scrivere `viewmodel.rs` + `board.rs` + `--board` in `main.rs`. |
 | 13  | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
 | 17b | Aprire `scripts/gates.sh` blocco B1 (righe 67-74) e il testo closing Gate B in `NEW-SESSION-PROMPT.md`; decidere la forma della colonna "first action" nel Plan |
 
@@ -81,3 +82,4 @@ the rest of the bookmark in the same commit.
 **Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; OI-16 chiuso; OI-18 riformulato; aggiunta sezione `Analysis reports (vivi)`; `Last commit verified` aligned to `d504e0e`; this entry).
 **Files touched this session (2026-11-01, review of 12-42 + archival):** `docs/context/analysis/2026-10-31-12-42-review.md` (amended: status header, table H and L, §3a H/L split, Verdict, footer; then `git mv` to `analysis/archive/`); `docs/context/SESSION-STATE.md` (rimossa entry dalla sezione "Analysis reports (vivi)", aggiunto in `Done` l'entry di amend+archival, `Last commit verified` aligned to `0d605e0`, this entry).
 **Files touched this session (2026-11-01, B1-bis lesson — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (B1-bis: new bullet — `git add` with multiple paths fails entirely if one pathspec is missing; fallback: one path per `git add`, verify with `git status --short`; `Last updated` refreshed); `docs/context/SESSION-STATE.md` (this entry, `Last commit verified` aligned to `b1f6d12`).
+**Files touched this session (2026-11-01, ADR-025 installation):** `docs/adr/025-tui-board-renderer.md` (NEW, `proposed`); `STRUCTURE.md` §5 (row 025); `specs/_index.md` (row 025); `docs/context/SESSION-STATE.md` (step 12 → 🔵, Prime azioni 12 → ratify ADR-025, Detail 12 rewritten, OI-19 added, `Last commit verified` → `7282c4f`, this entry).
