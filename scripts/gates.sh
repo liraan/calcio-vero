@@ -4,10 +4,10 @@
 # Run from the repo root.
 #
 # Usage: scripts/gates.sh [startup|closing]
-#   closing (default) - full set: A1, A2, A3, B1, B3, B6, B7 + manual B2, B4
+#   closing (default) - full set: A1, A2, A3, B1, B3, B6, B7 + manual B2
 #   startup           - fast set: A1, A3, B1, B3, B6, B7 + manual B2
 #                        (A2 runs cargo test: skipped, the startup already
-#                         runs the tests in step 4; B4 is only meaningful
+#                         runs the tests in step 4; B2 is only meaningful
 #                         after work has been done)
 #
 # Manual checks are NOT reported as "ok": they are listed as "manual" and must
@@ -66,11 +66,17 @@ echo "Gate B - fresh-session simulation (mechanical subset)"
 
 SS=docs/context/SESSION-STATE.md
 
-first_step=$(awk -F'|' 'NF>=6 && $3 ~ /^[[:space:]]*[0-9]+[ab]?[[:space:]]*$/ {gsub(/[[:space:]]/,"",$3); print $3; exit}' "$SS" 2>/dev/null)
-if [ -n "$first_step" ] && grep -qE "^\\| $first_step[[:space:]]+\\|" "$SS"; then
-  say_ok "B1 first open step ($first_step) has a Prime azioni entry"
+first_line=$(awk -F'|' 'NF>=7 && $3 ~ /^[[:space:]]*[0-9]+[ab]?[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
+if [ -z "$first_line" ]; then
+  say_fail "B1 no open step found in the Plan"
 else
-  say_fail "B1 first open step (${first_step:-none}) has no Prime azioni entry"
+  step=$(echo "$first_line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$3); print $3}')
+  action=$(echo "$first_line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$6); print $6}')
+  if [ -n "$action" ]; then
+    say_ok "B1 first open step ($step) has a Prima azione"
+  else
+    say_fail "B1 first open step ($step) has an empty Prima azione"
+  fi
 fi
 
 say_manual "B2 Plan vs Detail order - check in the report"
@@ -119,7 +125,7 @@ fi
 echo ""
 if [ "$fail" -eq 0 ]; then
   if [ "$MODE" = "closing" ]; then
-    echo "gates: GREEN (closing; manual: B2, B4 - do them in the closing report)"
+    echo "gates: GREEN (closing; manual: B2 - do it in the closing report)"
   else
     echo "gates: GREEN (startup; manual: B2, A2 - A2 in step 4)"
   fi

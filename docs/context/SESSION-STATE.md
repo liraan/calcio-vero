@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `23ed159` — "ci: GitHub Actions CI + Dependabot + hook install docs (OI-20)"
+**Last commit verified:** `89ea1e9` — "fix(l0): simulate_from_seed keeps Plane A inside pcfm-match (step 2, ADR-003)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -29,36 +29,20 @@
 
 ## Plan (in dependency order)
 
-| Pr. | # | Cosa | Dipende da |
-|---|---|---|---|
-| 🟡 | 17b | Fusione Prime azioni nel Piano; aggiornare `gates.sh` B1 e closing Gate B | — |
-| 🟡 | 3 | Terminologia (T1+T2, T3 done) | — |
-| 🟡 | 11 | GitHub agent Phase 2 | ruleset attivo |
-| 🟡 | 21 | Archiviazione review in `analysis/` | — |
-| ⬜ | 5 | Review sketch ×3 | L2-tactics, input, L2-staff |
-| ⬜ | 7 | Verification cascade | — |
-| ⬜ | 8 | ADR-019 deferred 4-9 | — |
-| ⬜ | 9 | Ratify ADR-017 | — |
-| ⬜ | 10 | `L1-world/01-nation` | — |
-| ⬜ | 13 | `cargo-audit`/`cargo-deny` pre-release (o Dependabot) | — |
-| ⬜ | 18 | **Motore posizionale (step 18)**: prerequisito L2, non esiste (D3). Fermarsi *prima*, non iniziare in coda a una sessione | L2 |
-
+| Pr. | # | Cosa | Dipende da | Prima azione |
+|---|---|---|---|---|
+| 🟡 | 3 | Terminologia (T1+T2, T3 done) | — | Leggere `PLUGIN_DEVELOPER_GUIDE.md` §1: `sed -n '13,40p'` |
+| 🟡 | 11 | GitHub agent Phase 2 | ruleset attivo | Decisione del maintainer: attivare o no il ruleset |
+| 🟡 | 21 | Archiviazione review in `analysis/` | — | Archiviare la review storica in `analysis/archive/` se non più operativa |
+| ⬜ | 5 | Review sketch ×3 | L2-tactics, input, L2-staff | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
+| ⬜ | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
+| ⬜ | 8 | ADR-019 deferred 4-9 | — | Rileggere ADR-019 §Deferred, decidere quali dei 4-9 chiudere |
+| ⬜ | 9 | Ratify ADR-017 | — | Leggere ADR-017, decidere: ratificare o rinviare |
+| ⬜ | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
+| ⬜ | 13 | `cargo-audit`/`cargo-deny` pre-release (o Dependabot) | — | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) |
+| ⬜ | 18 | **Motore posizionale (step 18)**: prerequisito L2, non esiste (D3). Fermarsi *prima*, non iniziare in coda a una sessione | L2 | Leggere `crates/pcfm-match/src/state.rs` e contare gli `EventType` emessi vs risolti |
 ## Decisioni operative (2026-11-01)
 
 - **Organizzazione futura:** branch per **area di lavoro**, non per livello architetturale. I livelli si esprimono nei crate, non nei branch. Prerequisito del parallelismo: CI + branch protection (OI-20).
 - **Board testuale e step 18:** il board di ADR-025 **non è la base** della demo posizionale. Con step 18 gli eventi diventano tracce di uno stato continuo; il board testuale scade, non si estende. La TUI sarà il veicolo del posizionale. **Non investire in abbellimenti del board.**
 
-## Plan — Prime azioni (tabella temporanea, fusa nel Plan da step 17b)
-
-| # | Prima azione |
-|---|---|
-| 3 | Leggere `PLUGIN_DEVELOPER_GUIDE.md` §1: `sed -n '13,40p'` |
-| 5 | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
-| 7 | Decidere da quale file parte la cascade (candidato: `README.md`) |
-| 8 | Rileggere ADR-019 §Deferred, decidere quali dei 4-9 chiudere |
-| 9 | Leggere ADR-017, decidere: ratificare o rinviare |
-| 10 | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
-| 11 | Decisione del maintainer: attivare o no il ruleset |
-| 13 | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) |
-| 17b | Aprire `scripts/gates.sh` blocco B1 e il closing Gate B; decidere la forma |
-| 21 | Archiviare la review storica in `analysis/archive/` se non più operativa |
