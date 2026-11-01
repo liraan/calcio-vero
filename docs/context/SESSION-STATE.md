@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `87dbe82` — "docs(session-state): OI-15 measured (4 runs), OI-21 deduped"
+**Last commit verified:** `f5a1714` — "docs(readme): mark pcfm-gen as future, ADR range 012-026 (OI-4)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -37,7 +37,7 @@
 | ⬜ | 8 | ADR-019 deferred 4-9 | — | Rileggere ADR-019 §Deferred, decidere quali dei 4-9 chiudere |
 | ⬜ | 9 | Ratify ADR-017 | — | Leggere ADR-017, decidere: ratificare o rinviare |
 | ⬜ | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
-| ⬜ | 13 | `cargo-audit`/`cargo-deny` pre-release (o Dependabot) | — | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) |
+| ✅ | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
 | ⬜ | 18 | **Motore posizionale (step 18)**: prerequisito L2, non esiste (D3). Fermarsi *prima*, non iniziare in coda a una sessione | L2 | Leggere `crates/pcfm-match/src/state.rs` e contare gli `EventType` emessi vs risolti |
 ## Decisioni operative (2026-11-01)
 
