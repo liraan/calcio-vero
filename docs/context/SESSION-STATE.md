@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `d504e0e` — "docs(session-state): closing 2026-10-31 — S1 hook, OI-18, Gate integrity, TUI scope"
+**Last commit verified:** `0d605e0` — "docs(session-state): reformat §F — 17a (Stato lavoro → Done, Dettagli compact, 17b traced)"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -17,7 +17,6 @@ the rest of the bookmark in the same commit.
 
 **Analysis reports (vivi):**
 
-- `docs/context/analysis/2026-10-31-12-42-review.md` — rules hardening (D4/D5 weaknesses); fixes landed in `d4304f9`. Candidates for archival (per the report's own §4, "archived after the closing commit", which is now true).
 - `docs/context/analysis/2026-10-31-22-28-review.md` — L0 operational census; OI-17. Snapshot at `246f64b`; archive when L0 changes, do not update in place.
 
 **Open items (what is not decided or verified yet):**
@@ -77,6 +76,7 @@ the rest of the bookmark in the same commit.
 | 13  | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
 | 17b | Aprire `scripts/gates.sh` blocco B1 (righe 67-74) e il testo closing Gate B in `NEW-SESSION-PROMPT.md`; decidere la forma della colonna "first action" nel Plan |
 
-**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. Storico dettagliato in `git log --oneline`. Sessione 2026-10-31: A2/E2 exact words, Decisions trailer, S1 on every bookmark update, OI-18, TUI scope, L0 positional (step 18). 105 test, SIM 4.
+**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. Report `12-42-review` amended (L reversed) + archived 2026-11-01. Storico dettagliato in `git log --oneline`. Sessione 2026-10-31: A2/E2 exact words, Decisions trailer, S1 on every bookmark update, OI-18, TUI scope, L0 positional (step 18). 105 test, SIM 4.
 
 **Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; OI-16 chiuso; OI-18 riformulato; aggiunta sezione `Analysis reports (vivi)`; `Last commit verified` aligned to `d504e0e`; this entry).
+**Files touched this session (2026-11-01, review of 12-42 + archival):** `docs/context/analysis/2026-10-31-12-42-review.md` (amended: status header, table H and L, §3a H/L split, Verdict, footer; then `git mv` to `analysis/archive/`); `docs/context/SESSION-STATE.md` (rimossa entry dalla sezione "Analysis reports (vivi)", aggiunto in `Done` l'entry di amend+archival, `Last commit verified` aligned to `0d605e0`, this entry).
