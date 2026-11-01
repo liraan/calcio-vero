@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `f5a1714` — "docs(readme): mark pcfm-gen as future, ADR range 012-026 (OI-4)"
+**Last commit verified:** `e260aea` — "docs(session-state): close step 13 (Dependabot alerts enabled)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -10,7 +10,7 @@
 
 **Legenda:** 🔵 in corso · 🟡 prossimo · ⬜ aperto · 🔴 urgente
 
-**Analysis reports (vivi):** `docs/context/analysis/2026-10-31-22-28-review.md` (censimento L0, OI-17), `docs/context/analysis/2026-11-01-10-25-review.md` (audit repo, OI-20/21), `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item, OI-13). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`.
+**Analysis reports (vivi):** `docs/context/analysis/2026-10-31-22-28-review.md` (censimento L0, OI-17 — resta vivo: è la base del censimento), `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item, OI-13 fuso in OI-17). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25` (3/6 finding chiusi, 2 assorbiti da G2/OI-14, 1 era OI-21).
 
 ## Open items (what is not decided or verified yet)
 
@@ -19,12 +19,10 @@
 | OI-6 | `docs/performance.md` e `docs/save-security.md` mancanti | Decidere se crearli pre-release (con step 13) |
 | OI-7 | `ProjectionProfile` senza metodo di calcolo (Gap B) | Decidere quando apre `L2-scouting` |
 | OI-8 | `ScoutReport.DeclaredBias` senza formula (Gap C) | Decidere quando apre `L2-scouting` |
-| OI-13 | Finding dei 2 report non assegnati a step (riformulato 2026-10-31) | Decidere: promuovere a step, o dichiararli "target design" e chiudere |
 | OI-14 | Golden test 10 stagioni non esiste (`CHANGELOG-SIM:42`, `00-foundations` §4) | Decidere forma (L1 o N partite) e priorità |
 | OI-15 | A2 esegue `cargo test` **4 volte** per sessione (startup step 4, closing C2, closing `gates.sh` A2, pre-push `gates.sh` A2 — verificato 2026-11-01). Il taglio del rituale non l'ha toccato: è peggiorato da 3 a 4. Fix: rimuovere A2 da `gates.sh` (C2 esegue già `cargo test`; il confronto badge/test è documentazione, non invariante) e dichiararlo nel report. | Fix in sessione dedicata: `gates.sh` è stato toccato 3 volte oggi con 2 errori di offset. Non è urgente, il costo è ~1-2s per esecuzione |
-| OI-17 | Censimento L0: 12 divergenze spec↔code (`analysis/2026-10-31-22-28`) | Leggere §5 "Verdict" e decidere quali gap sono obbligatori |
+| OI-17 | **Censimento L0 (ex OI-13 fuso qui): 12 divergenze spec↔code** (`analysis/2026-10-31-22-28`), più i finding dei report archiviati non assegnati a step. G11 migliorato (4→8 eventi su 31 con ADR-026), non chiuso | Leggere §5 "Verdict" e classificare i 12 G: obbligatorio per L1/L2, o "target design, non current". I secondi si dichiarano in `specs/L0-match/00-overview.md` (una riga) e si chiudono. I primi diventano step |
 | OI-19 | View model separation: enforcement compile-time deferred | Decidere se vincolo di build o policy documentale |
-| OI-21 | Retention policy per `analysis/`: definire la regola (quando archiviare un report, cosa resta vivo) e applicarla subito alle review storiche | Leggere `2026-10-31-22-28` e `2026-11-01-10-25`: sono ancora operative? Se no, `git mv` in `analysis/archive/`. Poi scrivere la regola in una riga in `docs/context/README.md` |
 
 ## Plan (in dependency order)
 
