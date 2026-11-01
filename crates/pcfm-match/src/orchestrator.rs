@@ -36,7 +36,7 @@ pub fn simulate_match(ctx: &mut MatchContext<'_>) -> MatchResult {
     let tps = u64::from(ctx.config.ticks_per_second).max(1);
     let table = StoppageTime::load();
 
-    let mut state = MatchState::new();
+    let mut state = MatchState::new(ctx.match_);
 
     // --- First half ---
     state.begin_half(Half::First, 0);

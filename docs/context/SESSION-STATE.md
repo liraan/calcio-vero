@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `ec86eed` — "docs(context): §For the new agent — self-contained note for a fresh agent"
+**Last commit verified:** `c639804` — "docs(session-state): LCV to ec86eed"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -32,7 +32,6 @@ paradigm, not planned.
 | OI-6 | `docs/performance.md` e `docs/save-security.md` mancanti | Decidere se crearli pre-release (con step 13) |
 | OI-7 | `ProjectionProfile` senza metodo di calcolo (Gap B) | Decidere quando apre `L2-scouting` |
 | OI-8 | `ScoutReport.DeclaredBias` senza formula (Gap C) | Decidere quando apre `L2-scouting` |
-| OI-22 | **G1 — stream RNG senza `match_id`**: `"match:actions"`, `"match:action_kind"`, `"match:player_pick"` (`state.rs:60-64`). Due partite con lo stesso seed producono stream identici. Il census `22-28` lo segnala come "deterministico ma non per-match" | Prefissare gli stream con `match_.id` in `MatchState::new`. Richiede `SIM_VERSION` bump (cambia la sequenza RNG). Sessione dedicata |
 | OI-23 | **G2 — panic nel bus non isolato**: un handler che panica propaga e perde gli eventi in coda (`event_bus.rs:80-85`, documentato come "known limitation"). ADR-004 prevede `catch_unwind` al boundary | Decidere: `catch_unwind` al boundary o lasciare la limitazione. Tocca D2 (panic nelle path di simulazione). Sessione dedicata |
 | OI-24 | **G10 — getter pubblici su `GroundTruth`**: `world_seed()` e `match_id()` (`pcfm-hidden/src/lib.rs:81,87`). Non sono latenti (identificatori), ma ADR-003 dice "no public getters". Contratto dichiarato vs API reale | Decidere: rimuovere i getter, o emendare ADR-003 per dichiararli non-latenti. Sessione dedicata |
 
@@ -48,7 +47,7 @@ paradigm, not planned.
 | ✅ | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
 | ✅ | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
 | ✅ | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |
-| 🟡 | B2 | **Slice B parte 2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space` (attaccante = più vicino alla palla, difensore = avversario più vicino); duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto azzera il carrier; `SIM_VERSION` 7→8, golden rigenerato, OI-22. Test: attaccante = più vicino, difensore = più vicino all'attaccante, `Tackle` con due slot, determinismo. C2 verde | B1 | Leggere `docs/context/L0-POSITIONAL-SLICE.md` §2, §3.4, §7. Poi `state.rs` |
+| ✅ | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
 | ⬜ | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §6-ter, poi aprire `balance/` |
 ## Decisioni operative (2026-11-01)
 

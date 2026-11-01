@@ -6,10 +6,13 @@
 use pcfm_core::ids::{ActorId, EventId, PlayerId};
 use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
+use pcfm_model::Squad;
 use pcfm_stats::{EventChain, EventType, Half, MatchEvent};
 
 use crate::context::MatchContext;
+use crate::perception::distance_squared;
 use crate::result::{MatchResult, MatchStatistics, Score};
+use crate::spatial::SpatialState;
 
 /// Which team has the ball.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,12 +33,13 @@ pub struct MatchState {
     half: Half,
     /// The absolute tick at which the current half started.
     half_start_tick: u64,
+    /// The spatial state: positions, ball, carrier (slice B2).
+    spatial: SpatialState,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
     // match.
     actions_stream: StreamName,
     action_kind_stream: StreamName,
-    player_pick_stream: StreamName,
 }
 
 impl MatchState {
@@ -47,7 +51,7 @@ impl MatchState {
     /// are compile-time constants (`"match:actions"`, `"match:action_kind"`,
     /// `"match:player_pick"`), so this panic is unreachable in practice.
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(match_: &pcfm_model::Match) -> Self {
         Self {
             score: Score { home: 0, away: 0 },
             possession: Possession::Home,
@@ -57,12 +61,11 @@ impl MatchState {
             next_event_slot: 0,
             half: Half::First,
             half_start_tick: 0,
-            actions_stream: StreamName::new("match:actions")
-                .expect("literal stream name is non-empty"),
-            action_kind_stream: StreamName::new("match:action_kind")
-                .expect("literal stream name is non-empty"),
-            player_pick_stream: StreamName::new("match:player_pick")
-                .expect("literal stream name is non-empty"),
+            spatial: SpatialState::from_squads(&match_.pitch, &match_.home, &match_.away),
+            actions_stream: StreamName::new(format!("match:{}:actions", match_.id.slot()))
+                .expect("stream name is non-empty"),
+            action_kind_stream: StreamName::new(format!("match:{}:action_kind", match_.id.slot()))
+                .expect("stream name is non-empty"),
         }
     }
 
@@ -111,15 +114,19 @@ impl MatchState {
             return;
         }
 
-        let (attacker, defender) = self.pick_players(ctx);
+        let (attacker, defender) = self.pick_from_space(ctx);
 
         let action_kind_roll = pcfm_core::rng::next_unit(ctx.rng.stream(&self.action_kind_stream));
+
+        // The action belongs to the nearest agent; the ball follows.
+        self.spatial.set_carrier(Some(attacker));
 
         if action_kind_roll < 0.6 {
             let ctx_pass = pcfm_hidden::PassContext { passer: attacker };
             let outcome = ctx.hidden.resolve_pass(&ctx_pass);
             if !outcome.complete {
                 self.flip_possession();
+                self.spatial.set_carrier(None);
             }
         } else if action_kind_roll < 0.85 {
             let ctx_shot = pcfm_hidden::ShotContext { shooter: attacker };
@@ -169,6 +176,14 @@ impl MatchState {
             );
             if outcome.winner == defender {
                 self.flip_possession();
+                self.spatial.set_carrier(Some(defender));
+                self.emit_event(
+                    ctx,
+                    tick,
+                    Some(ActorId::Player(defender)),
+                    EventType::Tackle,
+                    serde_json::json!({ "from": attacker.slot(), "to": defender.slot() }),
+                );
             }
         } else {
             let ctx_duel = pcfm_hidden::DuelContext {
@@ -185,6 +200,7 @@ impl MatchState {
                 serde_json::json!({}),
             );
             self.flip_possession();
+            self.spatial.set_carrier(None);
         }
     }
 
@@ -220,32 +236,32 @@ impl MatchState {
         }
     }
 
-    #[allow(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        clippy::cast_precision_loss
-    )]
-    fn pick_players(&self, ctx: &mut MatchContext<'_>) -> (PlayerId, PlayerId) {
-        let (attacker_squad, defender_squad) = match self.possession {
-            Possession::Home => (&ctx.match_.home, &ctx.match_.away),
-            Possession::Away => (&ctx.match_.away, &ctx.match_.home),
-        };
-        let roll = pcfm_core::rng::next_unit(ctx.rng.stream(&self.player_pick_stream));
-        let idx_attacker = ((roll * attacker_squad.players.len() as f32) as usize)
-            .min(attacker_squad.players.len() - 1);
-        let idx_defender = ((roll * defender_squad.players.len() as f32) as usize)
-            .min(defender_squad.players.len() - 1);
-        (
-            attacker_squad.players[idx_attacker].id,
-            defender_squad.players[idx_defender].id,
-        )
-    }
-
     const fn flip_possession(&mut self) {
         self.possession = match self.possession {
             Possession::Home => Possession::Away,
             Possession::Away => Possession::Home,
         };
+    }
+
+    /// The attacker and defender of the next action, from space (slice B2).
+    ///
+    /// The attacker is the agent of the possessing team nearest to the
+    /// ball; the defender is the nearest opponent to the attacker. Ties
+    /// are broken by `PlayerId` (deterministic).
+    fn pick_from_space(&self, ctx: &MatchContext<'_>) -> (PlayerId, PlayerId) {
+        let (attacker_squad, defender_squad) = self.squads(ctx);
+        let ball = self.spatial.ball();
+        let attacker = nearest_in_squad(&self.spatial, attacker_squad, ball);
+        let attacker_pos = self.spatial.agent(attacker).map_or(ball, |a| a.position);
+        let defender = nearest_in_squad(&self.spatial, defender_squad, attacker_pos);
+        (attacker, defender)
+    }
+
+    const fn squads<'a>(&self, ctx: &'a MatchContext<'_>) -> (&'a Squad, &'a Squad) {
+        match self.possession {
+            Possession::Home => (&ctx.match_.home, &ctx.match_.away),
+            Possession::Away => (&ctx.match_.away, &ctx.match_.home),
+        }
     }
 
     fn emit_event(
@@ -284,6 +300,26 @@ impl MatchState {
     }
 }
 
+/// The player of `squad` nearest to `point`, tie-broken by `PlayerId`.
+///
+/// # Panics
+///
+/// Panics if the squad has no agent in `spatial`. `Squad` has 11 players
+/// and `SpatialState` places all of them, so this is unreachable.
+fn nearest_in_squad(spatial: &SpatialState, squad: &Squad, point: (i32, i32)) -> PlayerId {
+    squad
+        .players
+        .iter()
+        .filter_map(|p| {
+            spatial
+                .agent(p.id)
+                .map(|a| (distance_squared(point, a.position), p.id))
+        })
+        .min_by(|x, y| x.0.cmp(&y.0).then(x.1.slot().cmp(&y.1.slot())))
+        .map(|(_, id)| id)
+        .expect("spatial state contains every starter")
+}
+
 /// Clamps a `u64` to a `u8`, with a hard upper bound of `max`.
 fn clamp_u8(value: u64, max: u8) -> u8 {
     u8::try_from(value.min(u64::from(max))).unwrap_or(max)
@@ -292,10 +328,4 @@ fn clamp_u8(value: u64, max: u8) -> u8 {
 /// Clamps a `u64` to a `u16`.
 fn clamp_u16(value: u64) -> u16 {
     u16::try_from(value).unwrap_or(u16::MAX)
-}
-
-impl Default for MatchState {
-    fn default() -> Self {
-        Self::new()
-    }
 }
