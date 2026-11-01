@@ -1,13 +1,7 @@
-use pcfm_core::ids::{EventId, PlayerId};
-use pcfm_core::rng::StreamName;
-use pcfm_core::time::GameInstant;
-use pcfm_stats::{EventChain, EventType, MatchEvent};
-
-use crate::context::MatchContext;
-use crate::result::{MatchResult, MatchStatistics, Score, TickSnapshot};
+use crate::spatial::{SpatialState, TeamShapeState, PressureMap, PressurePoint, Vec2};
 use crate::tactics::{
-    LineHeight, PhaseKind, PhaseState, PressureLevel, TacticalCommand,
-    TeamIntent, TeamSide, TeamTacticState, WidthMode,
+    LineHeight, PhaseKind, PhaseState, PressureLevel, TeamIntent, TeamSide, TeamTacticState,
+    WidthMode,
 };
 
 /// Which team has the ball.
@@ -28,11 +22,9 @@ pub struct MatchState {
     phase_state: PhaseState,
     home_tactic: TeamTacticState,
     away_tactic: TeamTacticState,
+    spatial: SpatialState,
     pending_commands: Vec<TacticalCommand>,
     snapshots: Vec<TickSnapshot>,
-    // Stream names are built once and reused. They are deterministic by
-    // construction (literal non-empty strings) and do not change during a
-    // match.
     actions_stream: StreamName,
     action_kind_stream: StreamName,
     player_pick_stream: StreamName,
@@ -42,38 +34,9 @@ impl MatchState {
     /// Creates the initial state: kickoff, home possession.
     #[must_use]
     pub fn new() -> Self {
-        let home_tactic = TeamTacticState {
-            team: TeamSide::Home,
-            pressing_intensity: PressureLevel::Normal,
-            width: 1.0,
-            line_height: 1.0,
-            compactness: 1.0,
-            aggressiveness: 0.5,
-            wing_bias: 0.0,
-            central_density: 0.5,
-            defensive_line_depth: 0.5,
-            counterpress_enabled: false,
-            high_press_allowed: true,
-            wide_channel_control: 0.5,
-            fifths_inversion_enabled: false,
-            role_overrides: Vec::new(),
-        };
-        let away_tactic = TeamTacticState {
-            team: TeamSide::Away,
-            pressing_intensity: PressureLevel::Normal,
-            width: 1.0,
-            line_height: 1.0,
-            compactness: 1.0,
-            aggressiveness: 0.5,
-            wing_bias: 0.0,
-            central_density: 0.5,
-            defensive_line_depth: 0.5,
-            counterpress_enabled: false,
-            high_press_allowed: true,
-            wide_channel_control: 0.5,
-            fifths_inversion_enabled: false,
-            role_overrides: Vec::new(),
-        };
+        let home_tactic = TeamTacticState::default();
+        let away_tactic = TeamTacticState::default();
+
         Self {
             score: Score { home: 0, away: 0 },
             possession: Possession::Home,
@@ -94,14 +57,12 @@ impl MatchState {
             },
             home_tactic,
             away_tactic,
+            spatial: SpatialState::default(),
             pending_commands: Vec::new(),
             snapshots: Vec::new(),
-            actions_stream: StreamName::new("match:actions")
-                .expect("literal stream name is non-empty"),
-            action_kind_stream: StreamName::new("match:action_kind")
-                .expect("literal stream name is non-empty"),
-            player_pick_stream: StreamName::new("match:player_pick")
-                .expect("literal stream name is non-empty"),
+            actions_stream: StreamName::new("match:actions").expect("literal stream name is non-empty"),
+            action_kind_stream: StreamName::new("match:action_kind").expect("literal stream name is non-empty"),
+            player_pick_stream: StreamName::new("match:player_pick").expect("literal stream name is non-empty"),
         }
     }
 
@@ -221,6 +182,95 @@ impl MatchState {
         };
     }
 
+    /// Derives the world-space spatial state from the authoritative match state.
+    ///
+    /// This is intentionally a lightweight rendering-prep step, not a new rules
+    /// engine. It keeps the match engine and the renderer separate while still
+    /// exposing a consistent field view for later TUI/2D projections.
+    fn update_spatial_state(&mut self) {
+        let ball_x = match self.possession {
+            Possession::Home => 0.15,
+            Possession::Away => -0.15,
+        };
+        let ball_y = match self.phase_state.line_height {
+            LineHeight::Deep => -0.1,
+            LineHeight::Mid => 0.0,
+            LineHeight::High => 0.1,
+        };
+
+        self.spatial = SpatialState {
+            ball: crate::spatial::BallState {
+                position: Vec2 { x: ball_x, y: ball_y },
+                velocity: Vec2 { x: 0.0, y: 0.0 },
+                owner: None,
+                last_touch: None,
+            },
+            players: vec![
+                crate::spatial::PlayerSpatialState {
+                    player_id: 1,
+                    position: Vec2 { x: -0.35, y: 0.15 },
+                    velocity: Vec2 { x: 0.0, y: 0.0 },
+                    heading: 0.0,
+                    role: "midfielder",
+                    zone: "middle",
+                    spacing_bias: self.home_tactic.width,
+                },
+                crate::spatial::PlayerSpatialState {
+                    player_id: 2,
+                    position: Vec2 { x: 0.35, y: -0.15 },
+                    velocity: Vec2 { x: 0.0, y: 0.0 },
+                    heading: 0.0,
+                    role: "defender",
+                    zone: "left",
+                    spacing_bias: self.away_tactic.width,
+                },
+            ],
+            home_shape: TeamShapeState {
+                width: self.home_tactic.width,
+                depth: self.home_tactic.line_height,
+                compactness: self.home_tactic.compactness,
+                line_height: self.home_tactic.line_height,
+                left_anchor: -0.5,
+                right_anchor: 0.5,
+                press_line: self.home_tactic.defensive_line_depth,
+            },
+            away_shape: TeamShapeState {
+                width: self.away_tactic.width,
+                depth: self.away_tactic.line_height,
+                compactness: self.away_tactic.compactness,
+                line_height: self.away_tactic.line_height,
+                left_anchor: -0.5,
+                right_anchor: 0.5,
+                press_line: self.away_tactic.defensive_line_depth,
+            },
+            pressure: PressureMap {
+                home: vec![PressurePoint {
+                    position: Vec2 { x: 0.0, y: 0.0 },
+                    intensity: self.home_tactic.pressing_intensity as i32 as f32 / 3.0,
+                }],
+                away: vec![PressurePoint {
+                    position: Vec2 { x: 0.0, y: 0.0 },
+                    intensity: self.away_tactic.pressing_intensity as i32 as f32 / 3.0,
+                }],
+            },
+        };
+    }
+
+    /// Produces a renderable field projection from the authoritative match state.
+    #[must_use]
+    pub fn render_field(&self) -> crate::projection::FieldProjection {
+        use crate::projection::FieldRenderer;
+        let renderer = FieldRenderer::new();
+        renderer.project(
+            &self.spatial,
+            Some(self.phase_state),
+            Some(match self.possession {
+                Possession::Home => TeamSide::Home,
+                Possession::Away => TeamSide::Away,
+            }),
+        )
+    }
+
     /// Advances the state by one tick.
     #[allow(clippy::too_many_lines)]
     pub fn tick(&mut self, tick: u64, ctx: &mut MatchContext<'_>) {
@@ -235,6 +285,7 @@ impl MatchState {
         let action_roll = pcfm_core::rng::next_unit(ctx.rng.stream(&self.actions_stream));
         if action_roll >= ctx.config.action_probability {
             self.record_snapshot(tick, ctx);
+            self.update_spatial_state();
             return;
         }
 
@@ -254,7 +305,7 @@ impl MatchState {
                 ctx,
                 tick,
                 attacker,
-                EventType::Shot,
+                pcfm_stats::EventType::Shot,
                 serde_json::json!({ "goal": outcome.goal }),
             );
             match self.possession {
@@ -270,7 +321,7 @@ impl MatchState {
                     Possession::Home => self.score.home += 1,
                     Possession::Away => self.score.away += 1,
                 }
-                self.emit_event(ctx, tick, attacker, EventType::Goal, serde_json::json!({}));
+                self.emit_event(ctx, tick, attacker, pcfm_stats::EventType::Goal, serde_json::json!({}));
             }
             self.flip_possession();
         } else if action_kind_roll < 0.97 {
@@ -284,7 +335,7 @@ impl MatchState {
                 ctx,
                 tick,
                 attacker,
-                EventType::Duel,
+                pcfm_stats::EventType::Duel,
                 serde_json::json!({ "winner_slot": outcome.winner.slot() }),
             );
             if outcome.winner == defender {
@@ -297,18 +348,19 @@ impl MatchState {
                 duel_type: pcfm_hidden::DuelType::Ground,
             };
             let _outcome = ctx.hidden.resolve_duel(&ctx_duel);
-            self.emit_event(ctx, tick, defender, EventType::Foul, serde_json::json!({}));
+            self.emit_event(ctx, tick, defender, pcfm_stats::EventType::Foul, serde_json::json!({}));
             self.flip_possession();
         }
 
         self.update_phase_state();
+        self.update_spatial_state();
         self.record_snapshot(tick, ctx);
     }
 
     /// Produces the final result.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
-    pub fn finish(&self, chain: EventChain) -> MatchResult {
+    pub fn finish(&self, chain: pcfm_stats::EventChain) -> crate::result::MatchResult {
         let total = self.home_possession_ticks + self.away_possession_ticks;
         let possession = if total == 0 {
             (0.5, 0.5)
@@ -319,10 +371,10 @@ impl MatchState {
 
         let state_hash = chain.chain_hash();
 
-        MatchResult {
+        crate::result::MatchResult {
             score: self.score,
             events: chain,
-            stats: MatchStatistics {
+            stats: crate::result::MatchStatistics {
                 possession,
                 shots: self.shots,
                 goals: (self.score.home, self.score.away),
@@ -334,7 +386,7 @@ impl MatchState {
     }
 
     fn record_snapshot(&mut self, tick: u64, ctx: &MatchContext<'_>) {
-        self.snapshots.push(TickSnapshot {
+        self.snapshots.push(crate::result::TickSnapshot {
             tick,
             score: self.score,
             home_possession_ticks: self.home_possession_ticks,
@@ -349,7 +401,7 @@ impl MatchState {
         clippy::cast_sign_loss,
         clippy::cast_precision_loss
     )]
-    fn pick_players(&self, ctx: &mut MatchContext<'_>) -> (PlayerId, PlayerId) {
+    fn pick_players(&self, ctx: &mut MatchContext<'_>) -> (pcfm_core::ids::PlayerId, pcfm_core::ids::PlayerId) {
         let (attacker_squad, defender_squad) = match self.possession {
             Possession::Home => (&ctx.match_.home, &ctx.match_.away),
             Possession::Away => (&ctx.match_.away, &ctx.match_.home),
@@ -376,8 +428,8 @@ impl MatchState {
         &mut self,
         ctx: &mut MatchContext<'_>,
         tick: u64,
-        player_id: PlayerId,
-        event_type: EventType,
+        player_id: pcfm_core::ids::PlayerId,
+        event_type: pcfm_stats::EventType,
         fields: serde_json::Value,
     ) {
         let ticks_per_sec = u64::from(ctx.config.ticks_per_second).max(1);
@@ -386,8 +438,8 @@ impl MatchState {
         let second = clamp_u8(total_secs % 60, 60);
         let minutes_played = clamp_u16(total_secs / 60);
 
-        let event = MatchEvent {
-            event_id: EventId::new(self.next_event_slot, 0),
+        let event = pcfm_stats::MatchEvent {
+            event_id: pcfm_core::ids::EventId::new(self.next_event_slot, 0),
             match_id: ctx.match_.id,
             player_id,
             timestamp_minute: minute,
@@ -395,7 +447,7 @@ impl MatchState {
             minutes_played_cumulative: minutes_played,
             event_type,
             fields,
-            created_at: GameInstant::from_raw(tick),
+            created_at: pcfm_core::time::GameInstant::from_raw(tick),
         };
         self.next_event_slot += 1;
         let result = ctx.chain.try_append(event);
@@ -421,3 +473,18 @@ impl Default for MatchState {
         Self::new()
     }
 }
+
+use pcfm_core::ids::{EventId, PlayerId};
+use pcfm_core::rng::StreamName;
+use pcfm_core::time::GameInstant;
+use pcfm_stats::{EventChain, EventType, MatchEvent};
+
+use crate::context::MatchContext;
+use crate::result::{MatchResult, MatchStatistics, Score, TickSnapshot};
+use crate::tactics::{
+    LineHeight, PhaseKind, PhaseState, PressureLevel, TacticalCommand, TeamIntent, TeamSide,
+    TeamTacticState, WidthMode,
+};
+
+// Re-export the type alias used in the file for convenience.
+pub(crate) use crate::tactics::TacticalCommandKind;
