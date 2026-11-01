@@ -15,51 +15,56 @@ The board (ADR-025) shows what the engine emits. It cannot show a match boundary
 
 ## Decision
 
-### 1. Continuous clock (decided 2026-11-01)
+### 1. Two halves, separate clocks (decided 2026-11-01)
 
-Timestamps do not stop at 45' and 90'. The clock is continuous:
+The match is two halves with **separate clocks**. Each event carries
+`half: Half` (`First | Second`) and a `timestamp` relative to its half:
 
-- `KickOff` at 0'00"
-- first half runs to `45 + rec1`
-- `HalfTime` at `45 + rec1`
-- `SecondHalf` at the same timestamp as `HalfTime`
-- second half runs to `90 + rec1 + rec2`
-- `FullTime` at `90 + rec1 + rec2`
+- first half: `timestamp` 0 → `45 + rec1`
+- second half: `timestamp` 0 → `45 + rec2`
 
-`rec1` and `rec2` are the total stoppage time of the first and second half.
+`rec1` and `rec2` are the stoppage time of the first and second half.
 
-Why: an event at 93'12" is at 93'12", not "90' plus a field". The timestamp is the observation; stoppage time is derived from it. Because the timestamps change with `rec1`/`rec2`, `chain_hash` covers them: two matches with different stoppage times have different hashes. A separate `stoppage` field would not be covered by the hash.
+Why separate clocks: with a continuous clock, the recovery of the first half
+shifts the start of the second, and an event at 46' is ambiguous (stoppage
+of the first half, or first minute of the second?). With `half` explicit,
+the pair `(half, timestamp)` is unambiguous, the second half starts at 0,
+and the recovery is still covered by `chain_hash` because it is in the
+timestamps.
 
-**Two display contexts, both correct:**
-- **During the match**, the board shows `45'+X'` and `90'+Y'`: the reader expects regulation + excess.
-- **After the match**, the board shows the real total (`94'20"`): the match lasted that long.
+A 90' view (if a future UI wants it) is a **presentation transform**, not a
+model change: `display = if half == First { ts } else { 45 + rec1 + ts }`.
+It is possible only because `half` is explicit.
 
-These are two views of the same timestamp, not two models. The first subtracts the regulation boundary; the second does not.
+### 2. Stoppage time: fixed point, no cap (decided 2026-11-01)
 
-### 2. Stoppage time: additive, per half, two passes (decided 2026-11-01)
+Per half:
 
-    rec_base(half) = base + Σ (contribution[type] × count[type] in [0, 45])
-    rec_base(half) = min(rec_base(half), cap_base)
+    contributions(events in [0, 45]) -> rec
+    loop:
+        contributions(events in (45, 45 + rec]) -> delta
+        rec += delta
+        until delta == 0
+    guard: if rec > 45, the engine is divergent (panic in debug, error in release)
 
-    rec_extra(half) = Σ (contribution[type] × count[type] in (45, 45 + rec_base])
-    rec_extra(half) = min(rec_extra(half), cap_extra)
+No cap. The recovery is what the engine generated: if it is 8', it is 8'.
+The loop terminates because the contribution rate is below 1 (with
+`action_probability = 0.0005`, ~0.9" of recovery per minute of play). It
+converges in 1-2 iterations, almost always the first.
 
-    rec_total(half) = rec_base(half) + rec_extra(half)
+**Why not a cap:** a cap is an arbitrary number chosen by the designer. The
+fixed point is the number the engine produced. A divergent loop is a bug of
+the engine (probability or contributions too high), not a case to silence
+with a cap. The 45' guard catches it.
 
-Two independent computations, one per half. The second half does not inherit the first half's stoppage time.
+**Why not two passes:** `simulate_match` receives a one-use `MatchContext`
+(`&mut GroundTruth`, `&mut RngRegistry`, `&mut EventChain`). It cannot
+restart: two passes require changing the signature of `simulate_match` and
+the `MatchEngine` trait. The fixed-point loop runs inside one continuous
+tick loop, per half. No restart, no RNG drift.
 
-**Why two passes, not a fixpoint.** Events inside stoppage time can extend stoppage time. A fixpoint (`simulate → count → simulate → count → …`) risks non-termination and consumes RNG differently per iteration, making calibration fragile. Two passes are exact and terminate:
-
-1. Simulate 90', compute `rec_base`.
-2. Simulate `90 + rec_base`, look only at events in `(45, 45 + rec_base]`, compute `rec_extra` (cap 2').
-3. `rec_total = rec_base + rec_extra`.
-
-Each pass restarts from the same seed, so the RNG sequence is reproducible. The event set of pass 2 contains pass 1 plus the stoppage-time events; the extra contributions are exactly those, capped.
-
-**Caps are fixed, not dynamic.** `cap_base = 5'`, `cap_extra = 2'`, both halves. A dynamic cap (fatigue, late-game slowing) is a *simulation* property: it belongs to an engine that models fatigue. Today it does not (`action_probability` is constant). A dynamic cap now would encode a behaviour the simulation does not have. When fatigue exists, a dedicated ADR changes the cap.
-
-**Extensibility.** Adding a contributing event type is one row in the balance table plus a `SIM_VERSION` bump. The formula does not change.
-
+**Extensibility.** Adding a contributing event type is one row in the
+balance table plus a `SIM_VERSION` bump. The formula does not change.
 ### 3. `ActorId` (decided 2026-11-01)
 
 `MatchEvent` currently has `player_id: PlayerId`, mandatory. Match-boundary events (`KickOff`, `HalfTime`, `SecondHalf`, `FullTime`) do not belong to a player.
@@ -76,34 +81,52 @@ Each pass restarts from the same seed, so the RNG sequence is reproducible. The 
 
 **Cost, accepted deliberately:** this is a breaking change on every event, on `chain_hash`, and on the save format. It is bundled with the `SIM_VERSION` bump this ADR already requires. Doing it now, once, is cheaper than doing it later on top of more consumers.
 
-### 4. Two new `EventType` variants, two emitted
+### 4. `Half` field and boundary events
 
-- `KickOff` — new. At 0'00", `actor = None`.
-- `SecondHalf` — new. At `45 + rec1`, `actor = None`.
-- `HalfTime` — exists, now emitted. At `45 + rec1`, `actor = None`.
-- `FullTime` — exists, now emitted. At `90 + rec1 + rec2`, `actor = None`.
+`MatchEvent` gains `half: Half` (`First | Second`). The `timestamp` is
+relative to the half. Boundary events:
+
+| Event | `half` | `timestamp` | `actor` |
+|---|---|---|---|
+| `KickOff` (new) | `First` | 0 | `None` |
+| `HalfTime` (emitted) | `First` | `45 + rec1` | `None` |
+| `SecondHalf` (new) | `Second` | 0 | `None` |
+| `FullTime` (emitted) | `Second` | `45 + rec2` | `None` |
+
+`minutes_played_cumulative` stays cumulative (a player at 10' of the second
+half with 45+rec1 minutes in the first has `55 + rec1 + 10`).
 
 ### 5. The balance table lives in `balance/` (decided 2026-11-01)
 
-The contributions are balance values, not code. Doctrine §5: "No hardcoded rules, names, colours, or balance values. Everything lives in files." They live in `balance/stoppage_time.toml`.
+The contributions are balance values, not code. Doctrine §5: "No hardcoded
+rules, names, colours, or balance values. Everything lives in files." They
+live in `balance/stoppage_time.json`.
+
+Format: **JSON**, via the existing `serde_json` (already a workspace
+dependency). No new dependency. If the file grows beyond a key-value table,
+a future ADR moves it to TOML.
 
 Initial table (proposed, modify freely):
 
-| Event type | Contribution | Applies to |
-|---|---|---|
-| goal | 30 s | rec_base, rec_extra |
-| foul | 30 s | rec_base, rec_extra |
-| duel | 10 s | rec_base, rec_extra |
-| base | 0 s | rec_base only |
-| cap_base | 300 s (5 min) | rec_base |
-| cap_extra | 120 s (2 min) | rec_extra |
+| Event type | Contribution |
+|---|---|
+| goal | 30 s |
+| foul | 30 s |
+| duel | 10 s |
+| base | 0 s |
 
-`balance/` does not exist today (census G8). This ADR creates it for this one file. D3 says a structure is added when concrete content requires it: the content is this table, the requirement is the extensibility chosen on 2026-11-01.
+No cap. The fixed point (see §2) is the actual recovery.
 
-### 6. `SIM_VERSION` 4 → 5
+`balance/` does not exist today (census G8). This ADR creates it for this
+one file. D3: the content is this table, the requirement is extensibility.
 
-Four new events, a changed match end time, and `player_id: PlayerId` → `actor: Option<ActorId>` are all simulation-visible changes. The five-step procedure in `CHANGELOG-SIM.md` applies.
+### 6. `SIM_VERSION` 5 → 6
 
+Phase 1 (already merged, `b37759a`) bumped 4 → 5 for the `ActorId` change.
+Phase 2 changes the tick loop (four phases: first half, recovery, second
+half, recovery), emits four boundary events, and changes the match end
+time. A second bump, 5 → 6, is required: the simulation behaviour changed
+again. Two bumps in one day is honest: they are two distinct changes.
 ## Consequences
 
 ### Easier
@@ -111,32 +134,48 @@ Four new events, a changed match end time, and `player_id: PlayerId` → `actor:
 - `HalfTime` and `FullTime` are emitted: G11 moves from 4 to 8 event types emitted.
 - The stoppage-time table is extensible without touching the formula.
 - `ActorId` gives future actors (VAR, fourth official) a home that is not `RefereeId` and not a sentinel.
+- `half` makes the `(half, timestamp)` pair unambiguous, so a 90' view is a presentation transform, not a model change.
 
 ### Harder
-- `SIM_VERSION` 5. Saves from version 4 are not compatible (per the bump procedure).
-- Every consumer of `MatchEvent.player_id` changes to `MatchEvent.actor`.
+- `SIM_VERSION` 6 (5 was the `ActorId` bump, phase 1). Saves from version 5 and earlier are not compatible.
+- Every consumer of `MatchEvent.player_id` changes to `MatchEvent.actor`; every consumer of the timestamp changes to `(half, timestamp)`.
 - `balance/` exists for one file. The next balance value should go there, not in code.
-- Two-pass simulation: pass 2 re-simulates from the same seed. Cost is roughly double, not exponential.
+- The fixed-point loop runs inside the tick loop; a divergent engine (contribution rate above 1) is a bug that the 45' guard catches, not a case to silence.
 
 ### Locked in
-- Continuous clock. No "regulation time + separate stoppage field".
-- Two-pass stoppage time, not a fixpoint.
-- Fixed caps (5' base, 2' extra), not dynamic.
+- Two halves, separate clocks, `half: Half` on every event. No continuous clock.
+- Stoppage time is a fixed point, not a cap and not two passes.
 - `actor: Option<ActorId>`, not a sentinel and not `RefereeId` for players.
-
+- The balance file is JSON (`serde_json`), not TOML.
 ## Implementation notes
 
-1. `pcfm-core`: define `ActorId` (`Player` | `Referee`), `Serialize`/`Deserialize`.
-2. `pcfm-stats::MatchEvent`: `player_id: PlayerId` → `actor: Option<ActorId>`.
-3. `pcfm-stats::EventType`: add `KickOff`, `SecondHalf`.
-4. `balance/stoppage_time.toml` + a parser in `pcfm-match` (or a `pcfm-balance` crate when a second balance file appears; D3: not now).
-5. `orchestrator.rs`: pass 1 simulates 90', computes `rec_base`; pass 2 simulates `90 + rec_base`, computes `rec_extra`; final simulation runs `90 + rec_base + rec_extra` and emits the boundaries.
-6. `save.rs`: `SIM_VERSION` 4 → 5; the save schema carries `actor`.
-7. `viewmodel.rs`: `event_kind` match gains `KickOff` and `SecondHalf` (exhaustive match forces it).
-8. `board.rs`: boundaries render as `kick-off`, `half-time`, `second-half`, `full-time`; during the match `45'+X'` / `90'+Y'`; after the match the real total.
-9. Specs: `specs/L0-match/05-match-events.md` §2.2, `00-overview.md` (DoD), `CHANGELOG-SIM.md`.
-10. Tests: determinism (same seed, same timestamps across both passes); `rec_extra` capped at 2'; `FullTime` at `90 + rec1 + rec2`; boundary events have `actor = None`; board renders all boundaries in both display contexts.
+Phase 1 (merged, `b37759a`): `ActorId`, `MatchEvent.actor`, `EventType` gains
+`KickOff`/`SecondHalf`, `SIM_VERSION` 4 → 5.
 
+Phase 2 (this ADR's remaining work):
+
+1. `pcfm-stats::MatchEvent`: add `half: Half` (`First | Second`).
+2. `balance/stoppage_time.json` + a parser in `pcfm-match` (or a
+   `pcfm-balance` crate when a second balance file appears; D3: not now).
+3. `orchestrator.rs`: four-phase loop, one per half. Each phase:
+   - regulation: tick `0 → 45`;
+   - fixed point: `rec = contributions(0..45)`; loop `delta =
+     contributions(45..45+rec)`, `rec += delta`, until `delta == 0`;
+   - guard: `rec > 45` is a divergent engine (panic in debug, error in
+     release).
+   - emit `KickOff` at `(First, 0)`, `HalfTime` at `(First, 45+rec1)`,
+     `SecondHalf` at `(Second, 0)`, `FullTime` at `(Second, 45+rec2)`.
+4. `save.rs`: `SIM_VERSION` 5 → 6; the save schema carries `half`.
+5. `viewmodel.rs`: `EventRow` gains `half`; the board uses it for display.
+6. `board.rs`: boundaries render as `kick-off`, `half-time`,
+   `second-half`, `full-time`; events show `1T X'` or `2T X'`; after the
+   match, the real total `90+rec1+rec2`.
+7. Specs: `specs/L0-match/05-match-events.md` §2.2, `00-overview.md` (DoD),
+   `CHANGELOG-SIM.md`.
+8. Tests: determinism (same seed, same `(half, timestamp)`); fixed point
+   terminates and converges; guard fires on a divergent engine;
+   `FullTime` at `(Second, 45+rec2)`; boundary events have `actor = None`;
+   board renders all boundaries.
 ## References
 
 - Census G8 (`balance/` absent) and G11 (4 of 27 events): `docs/context/analysis/2026-10-31-22-28-review.md`
