@@ -1,15 +1,66 @@
 # L0 positional slice — design note
 
-**Status:** draft, written 2026-11-01. Not an ADR: the contract is ADR-019
+## 0. Vision (read this first)
+
+**What this project is building:** a realistic simulation of a football
+match. Not a video game with a renderer: a **match engine** that
+understands space, physics-as-effects, and interactions between agents.
+The renderer is downstream; the engine is the product.
+
+**The paradigm: phenomenological simulation.** The engine does not
+simulate physics (trajectories, contact forces, biomechanics). It models
+the **observable effects** of physical conditions:
+- rain does not fall: it makes perception noisy and the pitch slippery;
+- wet grass does not have friction coefficients: it raises the probability
+  of a slip event;
+- a strong press does not compute forces: it forces an error, and the
+  error is an event.
+
+The events **emerge** from modelled conditions, tick by tick. They are not
+chosen by a global probability roll.
+
+**Why phenomenological:** it is deterministic (integer coordinates, named
+RNG streams, no platform-dependent floating point), calibratable (each
+model has parameters, in `balance/`), and it produces events that a fan
+recognises ("he slipped because it was raining"). A physical engine would
+require fixed-point physics, months of calibration, and data that does not
+exist publicly. That is a different project, not a later step of this one.
+
+**The success criterion:** the board shows events a fan recognises, and
+every event carries the fields to understand *why* it happened. "He
+slipped" is not enough; "he slipped, at the 67th minute, on the wet grass,
+and lost the ball" is the target.
+
+**The existing work.** The L0 specification (`specs/L0-match/`) is
+ratified and describes an agent-first, positional engine
+(`04-match-engine.md` §2.2). The code is a probability-per-tick prototype
+that does not implement it: `pick_players` (`state.rs:228`) picks an
+attacker and a defender **at random from the whole squad, with the same
+roll**. `MatchEvent` has 31 variants, the engine emits 8. The gap is
+declared, not hidden; this note is the plan to close it.
+
+**Slice A is done** (commit `39c444b`): `crates/pcfm-match/src/spatial.rs`,
+`AgentState` (integer position, velocity, heading), `SpatialState`
+(`BTreeMap<PlayerId, AgentState>` + ball + carrier), 4-4-2 grid. 6 tests.
+Nobody uses it yet: `pick_players` still runs.
+
+**Part 1 of slice B is done** (commit `c231c98`):
+`crates/pcfm-match/src/perception.rs` (squared distance, nearest
+teammates/opponents, nearest to point, 4 tests) and
+`SpatialState.carrier` (who has the ball, if any). Also unused by the
+engine yet.
+
+**Part 2 of slice B is next**, and its shape changed after a discussion
+about realistic events: see §2 and §6-ter.
+
+
 (accepted). This note decides the *order* and the *scope* of the
 implementation, not the doctrine.
 
-**Read with:** `specs/L0-match/04-match-engine.md` §2.2, `05-match-events.md`
 §2.1 and §2.6, `10-ground-truth.md` §2.2, `docs/adr/019-match-engine-contract.md`.
 
 ## 1. The gap this note closes
 
-The L0 specification is ratified and describes a positional, agent-first
 engine. The code is a prototype that does not implement it. This is declared,
 not a discovery:
 
@@ -33,23 +84,61 @@ not a discovery:
 current prototype. Revision expected after ADR-019."* This note is that
 revision, in its first slice.
 
-## 2. What the first slice is, and what it is not
+## 2. What the slices are, and what they are not
 
-**Is:** an agent has a position, a velocity, and a heading. It perceives the
-ball and the nearest opponents (squared distance, no map). It takes **one**
-decision per significant action (move toward the ball, or pass to the nearest
-free teammate). The position is updated every tick. The match still produces
-the same observable output (score, events, narrative) through the same
-`MatchResult`.
+The work is split into slices, each one observable. The slices build the
+**base** of the phenomenological engine; they are not the engine.
 
-**Is not:** 27 event types, attempt/outcome two-phase events,
-`PositionSnapshot` in events, `ContextModifiers`, the event bus in the tick
-loop, the referee as a perceptual agent. Those are later slices, listed in §5.
+**Slice A — spatial state. DONE (`39c444b`).**
+`crates/pcfm-match/src/spatial.rs`: `AgentState` (integer position,
+velocity, heading), `SpatialState` (`BTreeMap<PlayerId, AgentState>`, ball,
+carrier), `from_squads` with the 4-4-2 grid. 6 tests. Unused by the
+engine: `pick_players` still runs.
 
-**Why this slice:** it proves that the engine can decide *from space* instead
-of from a global probability roll. Once that is true, the rest of ADR-019 is
-adding vocabulary, not changing the architecture.
+**Slice B part 1 — perception and carrier. DONE (`c231c98`).**
+`crates/pcfm-match/src/perception.rs`: `distance_squared`,
+`nearest_teammates`, `nearest_opponents`, `nearest_to_point`. 4 tests.
+`SpatialState.carrier: Option<PlayerId>`. Unused by the engine.
 
+**Slice B part 2 — who acts comes from space, and conquest is an event. NEXT.**
+Two changes, one bump:
+- `pick_players` (random, same roll for attacker and defender) becomes
+  `pick_from_space`: the attacker is the agent of the possessing team
+  nearest the ball; the defender is the nearest opponent to the attacker.
+- The conquest becomes an event: when a duel is won by the defender, emit
+  `Tackle` with `fields: { "from": <previous carrier slot>, "to":
+  <defender slot> }`. When a pass is incomplete, `Pass` already carries
+  `complete: false`; the engine also clears the carrier.
+- `SpatialState` is built by `MatchState` (it does not exist outside the
+  match engine).
+- `SIM_VERSION` 7 → 8. The golden hash is regenerated. The save schema
+  does not change.
+
+**Why the conquest event and the space together:** a change in *who acts*
+that nobody can see is not a slice, it is a refactor. The event makes the
+change observable: the board shows who lost the ball and who took it. This
+is the success criterion of §0 applied to the first slice.
+
+**Slice C — the first phenomenological events.** After B part 2, the engine
+can decide from space and record a conquest. Slice C adds the first
+**modelled conditions**:
+- a `Slip` event, driven by `pitch_wear` and `weather` (the parameters
+  live in `balance/`, declared arbitrary until calibration);
+- a `ControlError` event, driven by the same conditions plus pressure;
+- a `Pressure` event, already in the vocabulary, now emitted.
+
+Each event carries the fields to understand why (position, condition,
+intensity). The parameters are arbitrary and declared: the model exists,
+the calibration is a later step with data.
+
+**What none of the slices is:**
+- Not a physics engine. No trajectories, no contact forces, no
+  biomechanics. The effects are modelled, not simulated (§0).
+- Not a renderer. The board is a consumer; it is not the product.
+- Not L1 or L2. No season, no ratings, no market. Those consume the events;
+  they do not produce them.
+- Not `PositionSnapshot` in events. That is a save-breaking change with no
+  consumer yet. It returns when a view needs it (slice D, not planned).
 ## 3. Decisions
 
 
@@ -138,9 +227,11 @@ by the defender sets it to the defender; a foul sets it to `None`.
 
 **Why conservative:** it proves the thesis ("the decision comes from space,
 not from a global roll") with zero regression on the demo, the event types,
-or `MatchResult`. The "pass to the nearest free teammate" rule is slice C,
-when the carrier is exercised.
-
+or `MatchResult`. The conquest event (a duel won by the defender emits
+`Tackle`) is added in the same slice, because a change in *who acts* that
+nobody can see is not observable. The "pass to the nearest free teammate"
+rule and the movement are not in this slice: they are part of slice C,
+with the first phenomenological events (§6-ter).
 **What stays out:** the goalkeeper, the pressing, the formation-aware
 movement, `PositionSnapshot`, attempt/outcome events. Those are §5.
 
@@ -243,13 +334,14 @@ The board keeps working: `MatchResult` does not change.
 - `MatchEvent` has no `position_snapshot`. `MatchResult` is unchanged.
 - The board still works: `cargo run -p pcfm-demo -- --seed 42 --board`.
 
-**The next concrete step (slice B):** in `state.rs`, `MatchState::new`
-takes the match and builds the `SpatialState` (or `simulate_match` builds
-it and passes it). `pick_players` is replaced by "the agent nearest the
-ball acts". `perception.rs` computes squared distance to the 3 nearest
-opponents and teammates. One decision: pass to the nearest free teammate
-(free = no opponent within 3 m), or move toward the goal.
-
+**The next concrete step (slice B part 2):** in `state.rs`,
+`MatchState` builds (or receives) the `SpatialState`; `pick_players` is
+replaced by `pick_from_space`: the attacker is the agent of the
+possessing team nearest the ball, the defender the nearest opponent to
+the attacker. The conquest becomes an event: a duel won by the defender
+emits `Tackle` with `fields: { "from": ..., "to": ... }`; an incomplete
+pass clears the carrier. `SIM_VERSION` 7 → 8, golden hash regenerated.
+See §2 and §7.
 **Reading order for the next agent, before writing any code:**
 
 1. `docs/context/SESSION-STATE.md` (the bookmark: where we are)
@@ -258,28 +350,97 @@ opponents and teammates. One decision: pass to the nearest free teammate
 4. `crates/pcfm-match/src/state.rs`, `pick_players` at `:228` (what slice B
    replaces)
 5. `specs/L0-match/04-match-engine.md` §2.2 (the target tick loop)
-## 7. The three sessions, concretely
+## 6-ter. The phenomenological event vocabulary (the map)
 
-**Session A (morning, design + foundations).**
-Read this note, read `04-match-engine.md` §2.2 and `10-ground-truth.md` §2.2
-again. Write `spatial.rs` (`AgentState`, `SpatialState`, the 4-4-2 grid).
-Tests: the grid is deterministic, the away team mirrors, the 11 starters are
-placed. No change to `state.rs` yet. C2 green.
+The slices above produce **structure** (space, perception, conquest). This
+section is the **map of the events** the engine should eventually produce,
+so the next slices have a target. It is a map, not a commitment: each event
+is implemented when its model exists, not before (D3).
 
-**Session B (afternoon, even partial — perception + decision).**
-`perception.rs`: squared distance, 3 nearest. `state.rs`: `pick_players`
-replaced by "the agent nearest the ball acts". One decision: pass to the
-nearest free teammate, or move toward the goal. Tests: the agent nearest the
-ball is the one that acts; the pass target is the nearest free teammate.
-C2 green.
+### The principle
 
-**Session C (evening — movement, bump, close).**
-Movement every tick (velocity applied to position, integer). OI-22 (stream
-names with `match_id`). `SIM_VERSION` 7 → 8, golden hash regenerated,
-`CHANGELOG-SIM` entry. C2 green, commit, push. If the movement is not done,
-the slice still closes: position + perception + decision is the slice;
-movement is the first item of the next one.
+An event is worth adding when:
+1. a fan recognises it ("he slipped", "he lost control", "he was pressed");
+2. it has a **cause** the engine can model (a condition, a decision, an
+   interaction), not a random draw;
+3. it carries the **fields** to understand why (position, condition,
+   intensity, outcome);
+4. it has a **consumer** today (the board, the narrative) or a declared
+   one in the next slice.
 
+An event that fails any of the four is an idea, not a design (D3).
+
+### The candidates, with their fields
+
+| Event | Cause (modelled) | Fields | Consumer |
+|---|---|---|---|
+| `Tackle` | defender wins a duel | from, to, position | board, narrative |
+| `Interception` | defender anticipates a pass | from, to, position | board, narrative |
+| `Pass` (already) | decision | complete, from, to | board, narrative |
+| `Slip` | `pitch_wear` × `weather` × velocity | position, condition, lost_ball | board, narrative |
+| `ControlError` | `pitch_wear` × pressure × skill (via `resolve_*`) | position, pressure, lost_ball | board, narrative |
+| `Pressure` (in enum) | opponent within R, intent | position, intensity | board, narrative |
+| `Push` | contact, intensity, body part | position, intensity, outcome | board (needs data: deferred) |
+
+`Push` is listed but **deferred**: "which part of the body" has no public
+dataset, and inventing it violates `00-foundations` §5. It returns when a
+calibration source exists.
+
+### The parameters
+
+Every model has parameters (how much `pitch_wear` raises the slip
+probability, how much rain adds to perception noise). They live in
+`balance/`, they are **arbitrary and declared** until calibration. The
+`CHANGELOG-SIM` entry records them as "prototype, not calibrated".
+
+The calibration itself is a later step, with data. It does not block the
+model: a model with arbitrary parameters is still a model, and the board
+shows the events it produces.
+
+### What is not in the map
+
+- Physics (trajectories, forces, biomechanics): §0.
+- "Which part of the body": no data, deferred.
+- Events with no cause the engine can model: a random draw is not a cause.
+- Events with no consumer: an idea, not a design.
+
+## 7. Where we are, and the next sessions
+
+**Done:**
+- Slice A (`39c444b`): `spatial.rs`, `AgentState`, `SpatialState`, 4-4-2
+  grid, 6 tests.
+- Slice B part 1 (`c231c98`): `perception.rs` (4 tests),
+  `SpatialState.carrier`.
+- 133 tests, C2 green, CI green on `main`, gates green.
+
+**The next session (slice B part 2).** Two changes, one `SIM_VERSION` bump:
+1. `MatchState` owns a `SpatialState` (built from `ctx.match_` in
+   `MatchState::new`, or in `simulate_match` and passed in — the second is
+   simpler, decide in the session).
+2. `pick_players` becomes `pick_from_space`: attacker = the agent of the
+   possessing team nearest the ball; defender = the nearest opponent to
+   the attacker.
+3. The conquest is an event: a duel won by the defender emits `Tackle`
+   with `fields: { "from": ..., "to": ... }`; an incomplete pass clears
+   the carrier (`Pass` already carries `complete: false`).
+4. `SIM_VERSION` 7 → 8, golden hash regenerated, `CHANGELOG-SIM`.
+
+Tests: the attacker is the nearest to the ball; the defender is the
+nearest opponent to the attacker; a won duel emits `Tackle` with both
+slots; determinism (same seed → same hash).
+
+**The session after (slice C — first phenomenological events).** `Slip`
+and `ControlError`, driven by `pitch_wear` and `weather` from
+`balance/` (parameters arbitrary, declared). `Pressure` emitted. See
+§6-ter for the map.
+
+**Open, not for the next session:**
+- OI-22 (stream names with `match_id`) — closes in slice B part 2, because
+  the RNG consumption changes anyway.
+- OI-24 (getters on `GroundTruth`) — a maintainer decision (remove or
+  amend ADR-003). Not blocking.
+- `PositionSnapshot` in events — slice D, not planned; needs a consumer.
+- `ContextModifiers` — needs L2 producers.
 ## 8. How to verify the slice worked
 
 Not "the match looks better". Concrete:
@@ -293,12 +454,16 @@ Not "the match looks better". Concrete:
 
 ## 9. What the next agent must not do
 
-- Do not add `PositionSnapshot` to `MatchEvent` in this slice. It is a save
-  breaking change, and there is no consumer. It is slice 2.
-- Do not touch `pcfm-hidden`. The perception reads `SpatialState`, not
-  latents. If a decision needs a latent (finishing, passing), it goes through
+- Do not add `PositionSnapshot` to `MatchEvent`. It is a save-breaking
+  change, and there is no consumer. It returns when a view needs it.
+- Do not touch `pcfm-hidden`. Perception reads `SpatialState`, not latents.
+  If a decision needs a latent (finishing, passing), it goes through
   `resolve_*` as today.
 - Do not introduce `f32` coordinates. Integer, per ADR-019 D1.
 - Do not add `ContextModifiers`. It has no producer (L2 does not exist).
 - Do not add a formation parser. 4-4-2 hardcoded, warning for the rest.
-
+- Do not add an event that has no consumer and no cause the engine can
+  model. §6-ter lists the candidates; an event outside the map is an idea,
+  not a design.
+- Do not calibrate. The parameters in `balance/` are arbitrary and
+  declared. Calibration is a later step with data.
