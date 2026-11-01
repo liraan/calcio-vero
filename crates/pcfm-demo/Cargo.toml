@@ -21,6 +21,8 @@ pcfm-match.workspace = true
 pcfm-fixtures.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+ratatui = "0.29"
+crossterm = "0.28"
 
 [lints]
 workspace = true
