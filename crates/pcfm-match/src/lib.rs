@@ -30,6 +30,7 @@ pub mod driver;
 pub mod engine;
 pub mod narrative;
 pub mod orchestrator;
+pub mod perception;
 pub mod result;
 pub mod save;
 pub mod spatial;
@@ -40,6 +41,9 @@ pub use driver::simulate_from_seed;
 pub use engine::{MatchEngine, TextMatchEngine};
 pub use narrative::{Importance, NarrativeEntry, narrate};
 pub use orchestrator::simulate_match;
+pub use perception::{
+    Neighbour, distance_squared, nearest_opponents, nearest_teammates, nearest_to_point,
+};
 pub use result::{MatchResult, MatchStatistics, Score};
 pub use save::{MatchSave, SCHEMA_VERSION, SIM_VERSION, SaveError, replay};
 pub use spatial::{AgentState, SpatialState};

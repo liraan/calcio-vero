@@ -29,6 +29,8 @@ pub struct AgentState {
 pub struct SpatialState {
     agents: BTreeMap<PlayerId, AgentState>,
     ball: (i32, i32),
+    /// The agent carrying the ball, if any.
+    carrier: Option<PlayerId>,
 }
 
 /// The 4-4-2 grid, as `(x percent, y percent)` per slot.
@@ -90,6 +92,7 @@ impl SpatialState {
         Self {
             agents,
             ball: (length / 2, width / 2),
+            carrier: None,
         }
     }
 
@@ -103,6 +106,17 @@ impl SpatialState {
     #[must_use]
     pub const fn ball(&self) -> (i32, i32) {
         self.ball
+    }
+
+    /// The agent carrying the ball, if any.
+    #[must_use]
+    pub const fn carrier(&self) -> Option<PlayerId> {
+        self.carrier
+    }
+
+    /// Sets the carrier. `None` means the ball is loose.
+    pub const fn set_carrier(&mut self, carrier: Option<PlayerId>) {
+        self.carrier = carrier;
     }
 
     /// The number of agents on the pitch.
