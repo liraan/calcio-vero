@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-11-01 (ritual cut: bookmark contract 5→3 sections, `Files touched` and `Done` removed as redundant with `git log`; closing 6→3 steps; startup 5→3 reads; D4 pre-mortem rules-only; trailers `DPs-Applied` and `Decisions` removed, `Rules-Audit` only when a rule file changes; `gates.sh` B5 removed; `.gitmessage` reduced)
+**Last updated:** 2026-11-01 (CI exists, corrects the "no CI" line; Dependabot on; A4; hook anti-ridondanza; positional slice note; earlier: ritual cut, bookmark 5→3, closing 6→3, startup 5→3, D4 rules-only, trailers reduced)
 
 ---
 
@@ -249,7 +249,7 @@ Say explicitly:
 - Do not assume the status of an ADR from memory: read `STRUCTURE.md` §5 (single source of truth). ADR-012, 013, 015, 016, 018, 019 are **accepted**, not proposed — but verify, do not assume.
 - Do not assume ADR counts: they change. Use `STRUCTURE.md` §5 for the current number.
 - Do not propose Python scripts (Python is not installed). Use Bash/Git Bash.
-- Do not assume CI exists: there is no `.github/workflows/`. Clippy/test/build/fmt/check are **manual**, and must be run after every change (the pre-commit hook helps for Rust).
+- CI exists: `.github/workflows/ci.yml` runs C2 + `gates.sh startup` on every push and PR. It is the remote layer; the local hooks are the fast layer. Do not bypass a red CI. Dependabot alerts are on (2026-11-01); `rand_chacha`/`rand_core` 0.10 are ignored because they break the deterministic RNG.
 - Do not reactivate the ruleset on `main` without explicit instruction. It is disabled in Phase 1.
 
 ## Closing ritual (mandatory — see E2)
