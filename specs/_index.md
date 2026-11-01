@@ -269,6 +269,6 @@ These are components that are referenced across modules but are not crates. They
 | [023](../docs/adr/023-observed-cause-traces.md) | Observed cause traces, not latent-derived causes | ⬜ superseded by ADR-024 | — |
 | [024](../docs/adr/024-remove-cause-trace-l0.md) | Remove `CauseTrace` at L0 | ✅ accepted | Supersedes ADR-023; removes the empty cause trace; R-01 fix |
 | [025](../docs/adr/025-tui-board-renderer.md) | TUI board renderer for `pcfm-demo` | ✅ accepted | Short ADR for IDEA-INFRA-006 step 12 (board + events, no pitch); view model in `pcfm-demo` (D3), no engine change |
-| [026](../docs/adr/026-match-boundaries-stoppage-time.md) | Match boundaries and stoppage time | ✅ accepted | Continuous clock, two-pass stoppage time (cap 5'+2'), `Option<ActorId>`, `balance/stoppage_time.toml`, SIM_VERSION 4→5 |
+| [026](../docs/adr/026-match-boundaries-stoppage-time.md) | Match boundaries and stoppage time | ✅ accepted | Two halves, separate clocks, fixed-point stoppage (no cap), `Half` field, `Option<ActorId>`, `balance/stoppage_time.json`, SIM_VERSION 4→6 |
 
 **Open ADRs:** 017 (proposed). **Accepted:** 001, 002, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 018, 019, 020, 021, 022, 024 (19). **Superseded:** 023 (by ADR-024).
