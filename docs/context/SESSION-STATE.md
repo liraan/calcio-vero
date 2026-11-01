@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. Update at the end of a session, not at the start.
 
-**Last commit verified:** `44cf487` — "docs(adr): ADR-025 — TUI board renderer for pcfm-demo (proposed)"
+**Last commit verified:** `a5a070b` — "Draft the actual preview-release design and the local build checklist for a TUI + 2D field renderer demo without pretending it was compiled in this session"
 
 **Note on the field above:** it points to the last commit *before* this
 bookmark update (semantics S1). It will look "stale" compared to HEAD; that
@@ -20,6 +20,9 @@ the rest of the bookmark in the same commit.
 - `docs/context/analysis/2026-10-31-22-28-review.md` — L0 operational census; OI-17. Snapshot at `246f64b`; archive when L0 changes, do not update in place.
 - `docs/context/analysis/2026-11-01-10-25-review.md` — repo hygiene and workflow audit; snapshot of repo hardening status. Archive when the workflow and follow-up actions are either implemented or superseded.
 
+
+**Archiviati il 2026-11-01:** `09-50` (superato da `10-25`, stesso audit v1.1→v1.2); `12-30` (protocollo per workstream che stanno per essere cancellati — premessa decaduta); `12-40` (piano preview con `--tui`/`--field`, richiede dati spaziali inesistenti; scope corretto in step 12).
+
 **Open items (what is not decided or verified yet):**
 
 | # | Cosa | Perché aperto | Prima azione |
@@ -36,12 +39,15 @@ the rest of the bookmark in the same commit.
 | OI-19 | **View model separation: enforcement compile-time deferred** (ADR-025) | ADR-022 §3 rende normativa la separazione, ma il prototipo in `pcfm-demo` la impone solo via un test strutturale | Decidere se rendere la separazione un vincolo in build/test o lasciarla come policy documentale |
 | OI-20 | **Repo hardening: GitHub Actions CI + required checks + workflow evidence** | Nessun workflow GitHub Actions ancora presente; local hook non è un vincolo remoto | Creare `.github/workflows/ci.yml`, attivare required checks in GitHub, documentare installazione hook |
 | OI-21 | **Retention policy for analysis artifacts** | Le review in `docs/context/analysis/` possono essere confuse con documentazione canonica | Definire regola di archiviazione e mantenere solo report attivi |
+| OI-22 | **`review-l0-branch` non compila** (15 errori: 8× E0252 import duplicati in `state.rs:3` e `:485`, 1× E0119 doppio `impl Default` per `FieldRenderer`, 2× E0599 metodi mancanti, 2× lifetime). **Mai compilato**: un solo `cargo check` li avrebbe trovati tutti | Branch di lavoro, non su `main`. Non mergiabile finché non compila | `git worktree add /tmp/pcfm-review origin/review-l0-branch && cd /tmp/pcfm-review && cargo check --workspace` per la lista completa; poi decidere se riparare o scartare |
+| OI-23 | **Tre numerazioni incompatibili di L0–L3 nello stesso repo**: `00-foundations` §9 (L0 match / L1 season / L2 career / L3 meta), `WORKSTREAM-ONBOARDING` (L0 match / L1 spatial / L3 projection), `LAYERED-MATCH-ARCHITECTURE` su `review-l0-branch` (L0 causal / L1 spatial / L2 tactical / L3 presentation) | La dottrina ratificata è `00-foundations` §9; le altre due sono documenti non normativi che la contraddicono. Adottarle richiede un ADR di dottrina | Decidere: (a) riallineare i due documenti a `00-foundations` §9; (b) scrivere un ADR che emenda §9; (c) lasciare i documenti ma marcarli "non normativi, contraddicono §9" |
+| OI-24 | **I tre `workstream/*` sono vuoti** (puntano tutti a `9750cde`, contengono solo 3 `D`: `WORKSTREAM-ONBOARDING`, `12-30`, `12-40`) | Struttura creata prima del contenuto (D3). Non rappresentano lavoro | Cancellare i tre branch remoti (`git push origin --delete workstream/l0-authoritative-match-state workstream/l1-spatial-world-state workstream/l3-field-projection`), oppure lasciarli marcati "vuoti" |
 
 **Da fare (in dependency order):**
 
 | Pr. | #   | Cosa | Dipende da |
 |-----|-----|------|------------|
-| 🔵  | 12  | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR-025 (proposed) scritto e installato — **ratificare ADR-025**, poi scrivere `viewmodel.rs` + `board.rs` + `render.rs` | — |
+| 🔵  | 12  | TUI demo (IDEA-INFRA-006): **board + events, not pitch** (scope 2026-10-31). ADR-025 (proposed) scritto e installato — **ratificare ADR-025**, poi scrivere `viewmodel.rs` + `board.rs` + `--board` | — |
 | 🟡  | 2   | Fix ADR-003 (nota rename fatta `a391b85`; restano `demo.rs`, autorizzazione `pcfm-demo`) | — |
 | 🟡  | 3   | Terminologia (T1+T2, T3 done) | — |
 | 🟡  | 11  | GitHub agent Phase 2 | ruleset attivo |
@@ -55,6 +61,13 @@ the rest of the bookmark in the same commit.
 | ⬜  | 10  | `L1-world/01-nation` | — |
 | ⬜  | 13  | `cargo-audit`/`cargo-deny` pre-release | — |
 | ⬜  | 18  | **Ristrutturazione e riscrittura di L0 (posizionale con coordinate)** — non aprire ora: L2 non esiste (D3) | L2 (rating/scouting) come consumatore concreto |
+
+**Organizzazione futura (decisione 2026-11-01):**
+
+- **Branch per area di lavoro, non per livello architetturale.** Una feature attraversa i livelli (es. "fuorigioco" tocca engine + spatial + view): con branch di livello servono 3 PR e merge incrociati. Con branch di area (Engine / Data-world / Design-spec / Presentation) la feature tocca 1 area principale e al massimo 1 secondaria.
+- **I livelli si esprimono nei crate, non nei branch.** Un branch è un albero di file, non un grafo di dipendenze: non impedisce a `pcfm-presentation` di importare `pcfm-hidden`. Un crate sì.
+- **Prerequisito del parallelismo: CI + branch protection (OI-20).** Senza un gate remoto, i branch divergono e nessuno se ne accorge: è esattamente quello che è successo con `review-l0-branch` (15 errori, mai intercettati). Ordine: CI → consolidamento su `main` → branch per area, quando ci sono le persone.
+- **Prova empirica:** i tre `workstream/*` sono vuoti (OI-24) perché non c'era lavoro da metterci che non fosse anche di un altro livello. La struttura ha preceduto il contenuto (D3).
 
 **Dettagli (solo dove servono):**
 
@@ -82,16 +95,17 @@ the rest of the bookmark in the same commit.
 | 9   | Leggere ADR-017, decidere: ratificare o rinviare |
 | 10  | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
 | 11  | Decisione del maintainer: attivare o no il ruleset |
-| 12  | Ratificare ADR-025 (`docs/adr/025-tui-board-renderer.md`, `proposed`): leggere, decidere, `Status: accepted`. Poi aprire `crates/pcfm-demo/src/` e scrivere `viewmodel.rs` + `board.rs` + `render.rs`. |
+| 12  | Ratificare ADR-025 (`docs/adr/025-tui-board-renderer.md`, `proposed`): leggere, decidere, `Status: accepted`. Poi aprire `crates/pcfm-demo/src/` e scrivere `viewmodel.rs` + `board.rs` + `--board`. |
 | 13  | Installare `cargo-audit` e `cargo-deny` (o verificarne la disponibilità) e lanciarli sul workspace |
 | 17b | Aprire `scripts/gates.sh` blocco B1 (righe 67-74) e il testo closing Gate B in `NEW-SESSION-PROMPT.md`; decidere la forma della colonna "first action" nel Plan |
 | 20  | Creare `.github/workflows/ci.yml`, documentare `git config core.hooksPath .githooks`, e impostare required checks in GitHub |
 | 21  | Archiviare la review storica in `docs/context/analysis/archive/` se non più operativa |
 
-**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. **Sessione 2026-11-01:** OI-16 (rimozione scatter, non bug), 17a (analisi + state-lifecycle), 17b (merge first actions), 20, 21.
+**Done (storico):** 1, 2, 3(T3), 4, 6, 6a, 6b, 10bis, 10ter, 10quater, 0ter, 15, 16, 17a; OI-1, OI-2, OI-3, OI-12, OI-16 (misurato 2026-11-01, decisione C), step 14. **Sessione 2026-11-01 (closing `0f86a1b`):** OI-16 misurato, 17a riformatto §F (218→82 righe), B1-bis lesson (`git add` multi-path), ADR-025 `proposed` installato, OI-19 (enforcement view model). **Tracciato, non fatto:** 17b, 20, 21 (nel Plan).
 
 **Files touched this session (2026-11-01, 17a — E3c):** `docs/context/SESSION-STATE.md` (riformatto §F: rimosso "Stato lavoro" — contenuto in `git log`; compresso Dettagli; aggiunto step 17b; revisionato mapping OI-17) |
 **Files touched this session (2026-11-01, review of 12-42 + archival):** `docs/context/analysis/2026-10-31-12-42-review.md` (amended: status header, table H and L, §3a H/L split, Verdict, footer; workflow note) |
 **Files touched this session (2026-11-01, B1-bis lesson — E3c):** `docs/context/NEW-SESSION-PROMPT.md` (B1-bis: new bullet — `git add` with multiple paths fails entirely if one pathspec is mis-specified) |
 **Files touched this session (2026-11-01, ADR-025 installation):** `docs/adr/025-tui-board-renderer.md` (NEW, `proposed`); `STRUCTURE.md` §5 (row 025); `specs/_index.md` (row 025); `docs/context/SESSION-STATE.md` (linked in todo) |
 **Files touched this session (2026-11-01, closing — E2 "chiudi"):** `docs/context/SESSION-STATE.md` (Last commit verified → 44cf487, Done storico riscritto con la sessione 2026-11-01, this entry updated) |
+**Files touched this session (2026-11-01, repair — E3c):** `docs/context/SESSION-STATE.md` (LCV `44cf487`→`a5a070b` — era sbagliato a monte; step 12 `render.rs`→`--board` in Plan e Prime azioni; Done 2026-11-01 corretto — 17b/20/21 non fatti; sezione "Archiviati il 2026-11-01"; OI-22/23/24 aggiunti; blocco "Organizzazione futura"; this entry); `docs/context/analysis/2026-11-01-09-50-review.md` → `archive/` (superato da `10-25`); `2026-11-01-12-30-branch-test-matrix.md` → `archive/` (premessa decaduta); `2026-11-01-12-40-demo-preview-release.md` → `archive/` (richiede dati spaziali inesistenti).
