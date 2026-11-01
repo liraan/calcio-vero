@@ -5,12 +5,9 @@
 //! `TestRegistry`. Behaviour is unchanged: the output of `--check` is the
 //! same six lines as before.
 
-use pcfm_core::rng::RngRegistry;
 use pcfm_core::time::GameInstant;
-use pcfm_hidden::GroundTruth;
-use pcfm_match::{MatchConfig, MatchContext, MatchEngine, MatchResult, MatchSave, TextMatchEngine};
+use pcfm_match::{MatchConfig, MatchResult, MatchSave};
 use pcfm_model::Match;
-use pcfm_stats::EventChain;
 use pcfm_testkit::{Feature, Scenario, ScenarioResult, TestContext, TestRegistry};
 
 use pcfm_fixtures::match_fixture;
@@ -51,21 +48,8 @@ pub fn register(registry: &mut TestRegistry) {
 // ── Helper ─────────────────────────────────────────────────────────────
 
 fn simulate(match_: &Match, seed: u64) -> MatchResult {
-    let mut hidden = GroundTruth::new(seed, match_.id);
-    let mut rng = RngRegistry::new(seed);
-    let mut chain = EventChain::new();
-    let config = MatchConfig::default();
-    let ctx = MatchContext {
-        match_,
-        hidden: &mut hidden,
-        rng: &mut rng,
-        chain: &mut chain,
-        config,
-    };
-    let mut engine = TextMatchEngine::new();
-    engine.simulate(ctx)
+    pcfm_match::simulate_from_seed(match_, seed, MatchConfig::default())
 }
-
 // ── Scenario 1: demo team is valid ─────────────────────────────────────
 
 pub struct DemoTeamScenario;

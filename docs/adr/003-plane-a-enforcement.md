@@ -202,6 +202,8 @@ crates/
 - `STRUCTURE.md` §2 — level rules
 
 ## Exception: `pcfm-debug`
+> **Note (2026-11-01):** the exception now covers **`pcfm-test-runner` only**. `pcfm-demo` no longer depends on `pcfm-hidden`: it calls `pcfm_match::simulate_from_seed(match, seed, config)`, which builds `GroundTruth`, `RngRegistry`, `EventChain` and `MatchContext` inside `pcfm-match` and returns a `MatchResult`. Plane A stays in `pcfm-match`; the demo crate never sees the type. Verified: `crates/pcfm-demo/Cargo.toml` has no `pcfm-hidden` dependency, and no `pcfm_hidden` reference in `crates/pcfm-demo/src/`. The test runner keeps the exception because it must exercise the L0 contract at the `MatchContext` level (determinism, save roundtrip, event chain), not only the `MatchResult`. **This supersedes the `pcfm-demo` part of the 2026-10-30 note below**; the `pcfm-test-runner` part still holds.
+
 
 > **Note (2026-10-30):** ADR-020 renamed `pcfm-debug` to `pcfm-test-runner`, and split `pcfm-demo` out of it. Read every `pcfm-debug` below as: `pcfm-test-runner` (the test runner) and `pcfm-demo` (the demo). Both depend on `pcfm-hidden` only to construct a `GroundTruth` for the engine; neither reads latents. Verified: `crates/pcfm-test-runner/src/features/l0_match.rs:10,54`, `crates/pcfm-demo/Cargo.toml:18`.
 

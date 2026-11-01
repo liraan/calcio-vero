@@ -26,6 +26,7 @@
 
 pub mod balance;
 pub mod context;
+pub mod driver;
 pub mod engine;
 pub mod narrative;
 pub mod orchestrator;
@@ -34,6 +35,7 @@ pub mod save;
 pub mod state;
 
 pub use context::{MatchConfig, MatchContext};
+pub use driver::simulate_from_seed;
 pub use engine::{MatchEngine, TextMatchEngine};
 pub use narrative::{Importance, NarrativeEntry, narrate};
 pub use orchestrator::simulate_match;

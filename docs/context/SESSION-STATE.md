@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `7428a6d` — "docs(rules): cut the ritual — bookmark 5→3, closing 6→3, startup 5→3"
+**Last commit verified:** `23ed159` — "ci: GitHub Actions CI + Dependabot + hook install docs (OI-20)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -26,13 +26,11 @@
 | OI-17 | Censimento L0: 12 divergenze spec↔code (`analysis/2026-10-31-22-28`) | Leggere §5 "Verdict" e decidere quali gap sono obbligatori |
 | OI-19 | View model separation: enforcement compile-time deferred | Decidere se vincolo di build o policy documentale |
 | OI-21 | Retention policy for analysis artifacts | Definire regola di archiviazione |
-| OI-22 | Draft `draft/layered-match-2026-11-01` non compila (15 errori), non riparato | Chiudere quando step 18 apre: ripartire dal tag |
 
 ## Plan (in dependency order)
 
 | Pr. | # | Cosa | Dipende da |
 |---|---|---|---|
-| 🟡 | 2 | Fix ADR-003: `pcfm-demo` importa `GroundTruth` (Plane A). Opzione (a): spostare in `pcfm-fixtures`; richiede autorizzazione `docs/adr/` | — |
 | 🟡 | 17b | Fusione Prime azioni nel Piano; aggiornare `gates.sh` B1 e closing Gate B | — |
 | 🟡 | 3 | Terminologia (T1+T2, T3 done) | — |
 | 🟡 | 11 | GitHub agent Phase 2 | ruleset attivo |
@@ -54,7 +52,6 @@
 
 | # | Prima azione |
 |---|---|
-| 2 | Leggere ADR-003 §Exception: `sed -n '204,235p' docs/adr/003-plane-a-enforcement.md` |
 | 3 | Leggere `PLUGIN_DEVELOPER_GUIDE.md` §1: `sed -n '13,40p'` |
 | 5 | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
 | 7 | Decidere da quale file parte la cascade (candidato: `README.md`) |
