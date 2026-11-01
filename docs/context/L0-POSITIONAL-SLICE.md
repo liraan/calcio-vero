@@ -52,6 +52,7 @@ adding vocabulary, not changing the architecture.
 
 ## 3. Decisions
 
+
 ### 3.1 `SpatialState` lives in `pcfm-match`, not `pcfm-model`
 
 The position is **match state**, not player identity. `Player` (in
@@ -59,7 +60,7 @@ The position is **match state**, not player identity. `Player` (in
 not a position on the pitch. If `position` goes into `Player`, every level
 inherits it and overwrites it.
 
-    // pcfm-match/src/spatial.rs (new)
+    // pcfm-match/src/spatial.rs (slice A, merged 39c444b)
     pub struct AgentState {
         pub position: (i32, i32),   // centimetres, integer (ADR-019 D1)
         pub velocity: (i16, i16),   // cm per tick, signed
@@ -69,6 +70,7 @@ inherits it and overwrites it.
     pub struct SpatialState {
         agents: BTreeMap<PlayerId, AgentState>,
         ball: (i32, i32),
+        carrier: Option<PlayerId>,  // slice B: who has the ball, if any
     }
 
 **Why integer coordinates:** ADR-019 D1 (determinism). Floating-point
@@ -77,6 +79,12 @@ centimetres give a 10500 × 6800 grid, which is enough for a prototype and
 exact across platforms.
 
 **Why `BTreeMap`:** D2 bans `HashMap` in simulation paths.
+
+**Why `carrier`:** the first draft of §3.4 said "the agent with the ball",
+but the ball is a point, not a possession. Without a carrier the decision is
+degenerate (the agent nearest the centre always acts). `carrier` is the
+minimum: `None` (ball loose), `Some(id)` (the ball follows `id`). A
+completed pass or a tackle changes it.
 
 ### 3.2 Initial position from the formation
 
@@ -105,24 +113,39 @@ sees what it sees, not where everyone is. The perception is a local
 computation from `SpatialState`, and the result is not stored in the event
 (a later slice adds `PositionSnapshot`).
 
-### 3.4 One decision, one rule
+Slice B implements it in `perception.rs`: `distance_squared`,
+`nearest_teammates`, `nearest_opponents`, `nearest_to_point`. Four tests.
 
-When a significant action triggers (the existing `action_probability` roll
-stays, for now), the agent with the ball:
+### 3.4 Who acts: the agent nearest the ball (conservative method)
 
-1. computes the distance to the nearest free teammate (free = no opponent
-   within 3 metres);
-2. if a free teammate exists within 20 metres, passes (calls
-   `resolve_pass`, emits `Pass` as today);
-3. otherwise, moves toward the goal (updates velocity, no event).
+**The first draft of this section said: "the agent with the ball passes to
+the nearest free teammate, or moves toward the goal". That would have
+removed shots, goals, duels and fouls: the demo would have shown 0-0 and
+no shot events. A regression, not a slice.**
 
-The goalkeeper, the defenders, the pressing: not in this slice. The other 21
-agents move toward their formation slot plus a small offset toward the ball
-(this is "shape", not "decision"). No event is emitted for movement.
+**The slice-B method is conservative.** The action split stays exactly as it
+is (`action_probability` for *when*, `action_kind_roll` for *what*: pass,
+shot, duel, foul). What changes is **who acts**:
+
+    before:  pick_players = random attacker + random defender (same roll)
+    after:   attacker = the agent nearest the ball
+             defender = the nearest opponent to the attacker
+
+`SpatialState.carrier` starts at `None` (ball at the centre); the first
+action sets it to the attacker. A completed pass keeps it (simplification:
+the receiver is not modelled); a failed pass sets it to `None`; a duel won
+by the defender sets it to the defender; a foul sets it to `None`.
+
+**Why conservative:** it proves the thesis ("the decision comes from space,
+not from a global roll") with zero regression on the demo, the event types,
+or `MatchResult`. The "pass to the nearest free teammate" rule is slice C,
+when the carrier is exercised.
+
+**What stays out:** the goalkeeper, the pressing, the formation-aware
+movement, `PositionSnapshot`, attempt/outcome events. Those are §5.
 
 **This is deliberately minimal.** It proves the loop: position → perception →
 decision → movement. Everything else is vocabulary.
-
 ### 3.5 OI-22 (RNG streams without `match_id`) closes here
 
 The streams today are `"match:actions"`, `"match:action_kind"`,
