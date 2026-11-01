@@ -1,18 +1,17 @@
-//! Rendering of a `MatchResult` for human consumption.
-//!
-//! Two renderers:
-//!
-//! - `print_text`: a human-readable text representation (score, statistics,
-//!   events, narrative).
-//! - `print_json`: the `MatchResult` as JSON (for scripting and for
-//!   integration with the future `pcfm-web`).
-//!
-//! Plus `write_html`: a self-contained HTML page (no external assets) that
-//! can be opened in any browser.
-
 use std::fmt::Write as _;
 
+use crossterm::{
+    event::{self, Event, KeyCode, KeyEventKind},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use pcfm_match::{MatchResult, NarrativeEntry};
+use ratatui::{
+    backend::CrosstermBackend,
+    layout::Alignment,
+    widgets::{Paragraph, Wrap},
+    Terminal,
+};
 
 /// Prints the match result as human-readable text.
 ///
@@ -63,6 +62,63 @@ pub fn print_json(result: &MatchResult) -> Result<(), serde_json::Error> {
     Ok(())
 }
 
+/// Runs a minimal real-time terminal interface showing the score and narrative.
+pub fn run_tui(result: &MatchResult) -> Result<(), Box<dyn std::error::Error>> {
+    enable_raw_mode()?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(std::io::stdout()))?;
+    execute!(terminal.backend_mut(), EnterAlternateScreen)?;
+
+    let mut should_quit = false;
+    while !should_quit {
+        terminal.draw(|frame| {
+            let message = render_screen(result);
+            let paragraph = Paragraph::new(message)
+                .wrap(Wrap { trim: true })
+                .alignment(Alignment::Left);
+            frame.render_widget(paragraph, frame.area());
+        })?;
+
+        if let Event::Key(key) = event::read()? {
+            if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
+                should_quit = true;
+            }
+        }
+    }
+
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    Ok(())
+}
+
+fn render_screen(result: &MatchResult) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "=== MATCH RESULT ===");
+    let _ = writeln!(
+        out,
+        "Score: Home {} - {} Away",
+        result.score.home, result.score.away
+    );
+    let _ = writeln!(
+        out,
+        "Possession: {:.1}% - {:.1}%",
+        result.stats.possession.0 * 100.0,
+        result.stats.possession.1 * 100.0
+    );
+    let _ = writeln!(out, "Shots: {} - {}", result.stats.shots.0, result.stats.shots.1);
+    let _ = writeln!(out, "Events: {}", result.events.len());
+    let _ = writeln!(out, "\nPress q to quit");
+
+    if result.narrative.is_empty() {
+        let _ = writeln!(out, "No narrative entries.");
+    } else {
+        let _ = writeln!(out, "\n=== NARRATIVE ===");
+        for entry in &result.narrative {
+            let _ = writeln!(out, "{}", format_narrative(entry));
+        }
+    }
+    out
+}
+
 /// Formats a single narrative entry as `[minute] text`.
 fn format_narrative(entry: &NarrativeEntry) -> String {
     format!("[{:>3}'] {}", entry.minute, entry.text)
@@ -95,41 +151,6 @@ fn hex(bytes: &[u8]) -> String {
 ///
 /// Returns `InvalidInput` for an absolute path or a `..` component, and
 /// `PermissionDenied` if the resolved parent escapes the working directory.
-fn sanitize_output_path(path: &str) -> std::io::Result<std::path::PathBuf> {
-    use std::path::{Component, Path};
-
-    let p = Path::new(path);
-    if p.is_absolute() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "absolute paths are not allowed; use a path relative to the current directory",
-        ));
-    }
-    for comp in p.components() {
-        if matches!(comp, Component::ParentDir) {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "path traversal ('..') is not allowed",
-            ));
-        }
-    }
-    let parent = p
-        .parent()
-        .filter(|d| !d.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-    let file_name = p.file_name().ok_or_else(|| {
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no file name")
-    })?;
-    let canon_parent = std::fs::canonicalize(parent)?;
-    let cwd = std::fs::canonicalize(std::env::current_dir()?)?;
-    if !canon_parent.starts_with(&cwd) {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::PermissionDenied,
-            "output path escapes the current working directory",
-        ));
-    }
-    Ok(canon_parent.join(file_name))
-}
 pub fn write_html(result: &MatchResult, path: &str) -> std::io::Result<()> {
     let mut html = String::new();
     html.push_str("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">");
@@ -205,6 +226,42 @@ fn html_escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
+}
+
+fn sanitize_output_path(path: &str) -> std::io::Result<std::path::PathBuf> {
+    use std::path::{Component, Path};
+
+    let p = Path::new(path);
+    if p.is_absolute() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "absolute paths are not allowed; use a path relative to the current directory",
+        ));
+    }
+    for comp in p.components() {
+        if matches!(comp, Component::ParentDir) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "path traversal ('..') is not allowed",
+            ));
+        }
+    }
+    let parent = p
+        .parent()
+        .filter(|d| !d.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let file_name = p.file_name().ok_or_else(|| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no file name")
+    })?;
+    let canon_parent = std::fs::canonicalize(parent)?;
+    let cwd = std::fs::canonicalize(std::env::current_dir()?)?;
+    if !canon_parent.starts_with(&cwd) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            "output path escapes the current working directory",
+        ));
+    }
+    Ok(canon_parent.join(file_name))
 }
 
 #[cfg(test)]
