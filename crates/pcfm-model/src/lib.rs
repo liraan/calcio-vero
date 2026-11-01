@@ -15,6 +15,14 @@
 //! any struct here. They live in `pcfm-hidden`, indexed by `PlayerId`, and
 //! are accessed only via `GroundTruth::resolve_*` (see ADR-003 and
 //! `specs/L0-match/10-ground-truth.md`).
+//!
+//! # Future-facing spatial foundation
+//!
+//! The crate also exposes a future-proof spatial foundation in [`spatial`].
+//! This is not part of the current L0 match contract, but it provides the
+//! geometry and movement primitives required by FM-style positional play in
+//! later layers. It remains deliberately separated from deterministic engine
+//! state and the hidden state boundary.
 
 #![deny(missing_docs)]
 
@@ -23,6 +31,7 @@ pub mod match_;
 pub mod pitch;
 pub mod player;
 pub mod referee;
+pub mod spatial;
 pub mod squad;
 
 pub use error::ModelError;
@@ -30,6 +39,9 @@ pub use match_::{Match, MatchRules, MatchSeed};
 pub use pitch::{Pitch, Weather};
 pub use player::{Foot, PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
 pub use referee::Referee;
+pub use spatial::{
+    BallState, FieldSide, FieldZone, Heading, PitchBounds, PlayerPose, Position2D, Velocity2D,
+};
 pub use squad::{FormationId, Squad};
 
 /// Returns the version of `pcfm-model`, as declared in `Cargo.toml`.
