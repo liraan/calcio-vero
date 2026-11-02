@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `593be06` — "chore(gates): mechanise E4b (bookmark before push)"
+**Last commit verified:** `ba1bf30` — "chore(gates): re-add E4b (lost to a hard reset during the test)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -54,6 +54,7 @@ engine gets built.
 | OI-34 | **Tensione D2 nel codice esistente.** `state.rs:320` (`expect("spatial state contains every starter")`) e `state.rs:325` (`unwrap_or(max)`) sono in path di simulazione. D2 dice "no `unwrap`/`expect`/`panic!` in simulation paths". Documentati unreachable, ma letteralmente in violazione | Valutare sostituzione con `Option` + gestione esplicita, in una sessione dedicata (non ora: non blocca slice C) |
 | OI-35 | **README — tabelle superate da sostituire.** Level/Code (riga ~89), Axis/Status (~100), Phase/Target (~113), FM vs PCFM (~124) hanno numeri e stato che invecchiano. La nuova sezione "The match engine in one glance" è un primo passo; le vecchie tabelle vanno riscritte o rimosse quando il motore L0 è completo | Riscrivere le tre tabelle con numeri e stato reali (o rimuoverle se ridondanti) quando il debito ADR-019 è chiuso |
 | OI-36 | **ADR-025 cita "step 18" (vecchia numerazione).** Il Plan è ora un albero (T/C/C.1/C.2), "L0 posizionale" si chiama positional slice. ADR è record storico, non si modifica; ma il lettore che lo apre trova un riferimento che non esiste più. README e IDEAS corretti (2026-11-02) | Aggiungere una nota glossario o un emendamento leggero ad ADR-025 quando lo si tocca per altro |
+| OI-37 | **Palla: decisione di design aperta (2026-11-02).** In una partita vera la palla ha sette stati osservabili (posseduta, in volo, contesa, libera, fuori gioco, ferma, morta); ADR-019 deferred 3 ne ratifica quattro (Possessed/InFlight/Contested/Free). `WORLD-MODEL` esclude "physical ball dynamics" da v1.0 (2D) e dice "ball as entity"; ma `03-entities-minimal.md` §2.5 ha `Pitch.condition: f32 // affects ball roll`, che `WORLD-MODEL` elenca come escluso da v1.0: contraddizione. Propensione del maintainer: **stato persistente, ottica realismo** (non fisica). Nodi aperti: (a) palla prima di C.1 o dopo; (b) quattro o sette stati; (c) `InFlight` con o senza movimento intermedio (lineare dichiarato, non fisica); (d) `Pitch.condition` vs `WORLD-MODEL` | Prima azione: decidere il nodo (a) e (d), poi scrivere il piano di slice (tocca i sei file del gate: `Note-Read`, probabile `SIM_VERSION` bump) |
 
 ## Plan (tree: leaves are executable steps, forks expose a decision; see IDEA-DESIGN-001)
 
