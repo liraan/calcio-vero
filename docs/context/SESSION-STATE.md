@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `00fc0f3` — "feat(l0): who acts comes from space; Tackle as a conquest event (slice B2)"
+**Last commit verified:** `f443442` — "docs(rules): Note-Read gate before touching the engine; trailer in .gitmessage"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -10,7 +10,7 @@
 
 **Legenda:** 🔵 in corso · 🟡 prossimo · ⬜ aperto · 🔴 urgente
 
-**Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G1/G2/G10 ora OI-22/23/24). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
+**Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G2/G10 ora OI-23/24; G1/OI-22 chiuso in slice B2). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
 
 **Vision (2026-11-01, read before the Plan):** the project builds a
 **phenomenological** simulation of a football match, not a physics engine
@@ -56,7 +56,7 @@ engine gets built.
 | ✅ | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
 | ✅ | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |
 | ✅ | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
-| ⬜ | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §6-ter, poi aprire `balance/` |
+| ⬜ | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
 ## Decisioni operative (2026-11-01)
 
 - **Organizzazione futura:** branch per **area di lavoro**, non per livello architetturale. I livelli si esprimono nei crate, non nei branch. Prerequisito del parallelismo: CI + branch protection (OI-20).

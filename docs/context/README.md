@@ -31,6 +31,7 @@ This exception applies **only to `docs/context/`**. Everywhere else, the standar
 
 **Supporting material (not normative):**
 
+- `L0-POSITIONAL-SLICE.md` — design note for the current L0 work: §0 the vision (phenomenological, eight categories), §6-ter the event map, §7 where we are. **Not normative** (the spec is), but it is the entry point before touching the engine: a commit that touches `state.rs`, `spatial.rs`, `perception.rs`, `orchestrator.rs`, `save.rs` or `golden_l0.rs` carries `Note-Read: L0-POSITIONAL-SLICE §0, §6-ter, §7`.
 - `PROJECT-IDEA-LOG.md` — **archived** to `archive/PROJECT-IDEA-LOG.md` (historical record, frozen at 2026-10-27). Decisions now live in ADRs and `SESSION-STATE.md` Open items.
 - `IDEAS.md` — open and rejected ideas. Do not implement from it.
 
