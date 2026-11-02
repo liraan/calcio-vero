@@ -45,11 +45,12 @@ pub enum Importance {
 
 /// A single narrative entry.
 ///
-/// The first four fields are the rendered view; the `*_slot` and `goal`
-/// fields are the **structured substrate** (Plane B): they carry the
-/// observed slots, not names. A future renderer (voice, extended
-/// narrative, localised) reads them. `text` is derived from them; the
-/// names are resolved by the renderer, not by `narrate_event`.
+/// `NarrativeEntry` is **presentation**: the rendered text, its minute and
+/// importance, and a reference to the event (`event_id`). It is not the
+/// substrate: the event is. A future renderer (voice, extended narrative,
+/// localised) reads the `MatchEvent` from the `EventChain`
+/// (`MatchResult.events`), not a projection of it. `text` is derived from
+/// the event; names are resolved by the renderer.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NarrativeEntry {
     /// The minute of the match (0–120).
@@ -60,16 +61,6 @@ pub struct NarrativeEntry {
     pub text: String,
     /// The importance of the entry.
     pub importance: Importance,
-    /// The actor's slot, if known (structured substrate).
-    pub actor_slot: Option<u32>,
-    /// `Tackle`: the slot of the player who lost the ball.
-    pub from_slot: Option<u32>,
-    /// `Tackle`: the slot of the player who won the ball.
-    pub to_slot: Option<u32>,
-    /// `Duel`: the slot of the duel winner.
-    pub winner_slot: Option<u32>,
-    /// `Shot`: whether the shot resulted in a goal.
-    pub goal: Option<bool>,
 }
 
 /// Builds the narrative from the match and its event chain.
@@ -102,20 +93,11 @@ fn narrate_event(
     slot_map: &BTreeMap<u32, &str>,
 ) -> NarrativeEntry {
     let importance = importance_for(ev.event_type);
-    let actor_slot = match ev.actor {
-        Some(pcfm_core::ids::ActorId::Player(id)) => Some(id.slot()),
-        Some(pcfm_core::ids::ActorId::Referee(_)) | None => None,
-    };
     let player = match ev.actor {
         Some(pcfm_core::ids::ActorId::Player(id)) => names.get(&id).copied().unwrap_or("<unknown>"),
         Some(pcfm_core::ids::ActorId::Referee(_)) | None => "<match>",
     };
     let minute = ev.timestamp_minute;
-
-    let from_slot = field_u32(&ev.fields, "from");
-    let to_slot = field_u32(&ev.fields, "to");
-    let winner_slot = field_u32(&ev.fields, "winner_slot");
-    let goal = ev.fields.get("goal").and_then(serde_json::Value::as_bool);
 
     let text = render_text(ev, player, minute, slot_map);
 
@@ -124,11 +106,6 @@ fn narrate_event(
         event_id: ev.event_id,
         text,
         importance,
-        actor_slot,
-        from_slot,
-        to_slot,
-        winner_slot,
-        goal,
     }
 }
 

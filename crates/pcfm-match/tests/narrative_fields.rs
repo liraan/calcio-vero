@@ -1,9 +1,10 @@
 //! T (2026-11-02): the narrative reads the event fields.
 //!
-//! The structured substrate (`*_slot`, `goal`) is populated from
-//! `MatchEvent.fields`; the rendered text uses it. A missing field falls
-//! back to the old text. An old save (JSON without the new fields)
-//! deserializes with `None` (no `SCHEMA_VERSION` bump).
+//! `NarrativeEntry` is presentation: it carries the rendered text and a
+//! reference to the event. The substrate is the `MatchEvent`: a future
+//! renderer reads it from the `EventChain`, not from a projection. These
+//! tests assert both: the rendered text uses the fields, and the event
+//! (the substrate) is still there, unmodified.
 
 use pcfm_core::ids::{ActorId, EventId, MatchId, PlayerId};
 use pcfm_core::time::GameInstant;
@@ -27,7 +28,7 @@ fn ev(actor_slot: Option<u32>, event_type: EventType, fields: serde_json::Value)
 }
 
 #[test]
-fn tackle_has_structured_slots_and_text() {
+fn tackle_text_uses_from_field_and_event_keeps_it() {
     let m = match_fixture(42).expect("fixture");
     let mut chain = EventChain::new();
     // Defender (away, slot 105) tackles the attacker (home, slot 5).
@@ -40,11 +41,22 @@ fn tackle_has_structured_slots_and_text() {
         .expect("append");
     let entries = narrate(&m, &chain);
     assert_eq!(entries.len(), 1);
-    let e = &entries[0];
-    assert_eq!(e.actor_slot, Some(105));
-    assert_eq!(e.from_slot, Some(5));
-    assert_eq!(e.to_slot, Some(105));
-    assert!(e.text.contains("Home 5"), "text: {}", e.text);
+    // The rendered text uses the field.
+    assert!(
+        entries[0].text.contains("Home 5"),
+        "text: {}",
+        entries[0].text
+    );
+    // The substrate (the event) still carries it: a future renderer reads this.
+    let event = &chain.events()[0];
+    assert_eq!(
+        event.fields.get("from").and_then(serde_json::Value::as_u64),
+        Some(5)
+    );
+    assert_eq!(
+        event.fields.get("to").and_then(serde_json::Value::as_u64),
+        Some(105)
+    );
 }
 
 #[test]
@@ -59,7 +71,6 @@ fn shot_wide_when_goal_false() {
         ))
         .expect("append");
     let e = &narrate(&m, &chain)[0];
-    assert_eq!(e.goal, Some(false));
     assert!(e.text.contains("wide"), "text: {}", e.text);
 }
 
@@ -76,7 +87,6 @@ fn duel_lost_when_winner_is_not_actor() {
         ))
         .expect("append");
     let e = &narrate(&m, &chain)[0];
-    assert_eq!(e.winner_slot, Some(7));
     assert!(e.text.contains("loses"), "text: {}", e.text);
 }
 
@@ -88,15 +98,13 @@ fn missing_fields_falls_back() {
         .try_append(ev(Some(5), EventType::Tackle, serde_json::json!({})))
         .expect("append");
     let e = &narrate(&m, &chain)[0];
-    assert_eq!(e.from_slot, None);
-    assert_eq!(e.to_slot, None);
     assert!(e.text.contains("tackles in the"), "text: {}", e.text);
 }
 
 #[test]
 fn old_json_without_new_fields_deserializes() {
-    // Simulates a save written before this commit: no `actor_slot`,
-    // `from_slot`, `to_slot`, `winner_slot`, `goal`.
+    // `NarrativeEntry` is presentation: four fields, no structured copy.
+    // A save written by an earlier version still deserializes.
     let json = serde_json::json!({
         "minute": 7,
         "event_id": { "slot": 1, "generation": 0 },
@@ -104,6 +112,6 @@ fn old_json_without_new_fields_deserializes() {
         "importance": "Critical"
     });
     let e: pcfm_match::NarrativeEntry = serde_json::from_value(json).expect("old save");
-    assert_eq!(e.actor_slot, None);
-    assert_eq!(e.goal, None);
+    assert_eq!(e.minute, 7);
+    assert_eq!(e.text, "GOAL!");
 }
