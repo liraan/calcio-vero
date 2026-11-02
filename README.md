@@ -55,6 +55,14 @@ Full doctrine → [`specs/00-foundations.md`](specs/00-foundations.md) · Enforc
 
 ---
 
+## The paradigm: phenomenological simulation
+
+PCFM does not simulate physics. It models the **observable effects** of conditions and decisions, tick by tick. A slip is an event with a cause (wet grass, acceleration, balance), not a computed friction coefficient. A pass under rain is a perception event, not a trajectory integration.
+
+This is a deliberate choice, not a shortcut. A physical engine needs fixed-point physics, months of calibration, and data that does not exist publicly. The phenomenological engine is deterministic, calibratable (parameters in `balance/`, declared arbitrary until calibrated), and — most importantly — **explainable**: every event carries the fields to understand why it happened. "He slipped at the 67th minute on the wet grass and lost the ball" is the target, not "the friction coefficient exceeded the threshold".
+
+A physical engine is not a later step of this project: it is a different paradigm, not planned.
+
 ## Determinism, taken seriously
 
 Same seed → same match. **Always.** The same will hold for the season and the career when L1 and L2 exist: today the contract is local (ADR-013). This is verified on every commit by `pcfm-test-runner --check`:
@@ -163,6 +171,7 @@ PCFM simulates one football match with 22 players, a ball, and (planned) a refer
 | UI | **TUI-first** (v1); `cxx-qt` + QWidgets + QML for the future GUI | Terminal UI is the primary presentation in v1; `cxx-qt` remains the binding for the GUI → [ADR-022](docs/adr/022-presentation-tui-first.md), [ADR-005](docs/adr/005-qt-binding.md) |
 | Testing | `proptest`, `criterion`, Miri, ASan, **`pcfm-testkit`** | Property-based, benchmarks, UB detection, extensible coretest |
 | Audit | `cargo-deny` | Dependency hygiene |
+| Development | **Linux-first** | The maintainer develops and tests on Linux. Windows and macOS are supported targets, tested less frequently → [ADR-002](docs/adr/002-project-name-and-scope.md) (note 2026-11-02) |
 
 Dependencies are pinned and justified in ADRs. No `*` versions in `Cargo.toml`. Every upgrade goes through a deliberate process.
 
@@ -198,6 +207,8 @@ Full layout and rules → [`STRUCTURE.md`](STRUCTURE.md) · Index of all modules
 ## Getting started
 
 Requires **Rust 1.85+ (stable)**.
+
+Commands are tested on Linux. On Windows, use Git Bash or WSL; the Rust toolchain and `cargo` are the same.
 
 ```bash
 git clone https://github.com/liraan/pcfootballmanager.git

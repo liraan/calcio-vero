@@ -72,6 +72,10 @@ PCFM is **not** an FM clone. It is an alternative with a different philosophy:
 - Single-player first.
 - Non-goals listed above are out of scope for v1.0.
 
+## Note (2026-11-02) — development is Linux-first
+
+This ADR sets the **target platforms** (Windows, Linux, macOS): unchanged. This note records a **process** choice, not a change of target. Development is Linux-first: the maintainer develops and tests on Linux. Windows and macOS remain supported targets, tested less frequently. The three-platform target in `specs/00-foundations.md` §6 is not amended.
+
 ## References
 
 - `README.md` — product description
