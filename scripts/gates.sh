@@ -77,6 +77,31 @@ else
   say_fail "A4 numbers diverge: $a4_bad"
 fi
 
+# A4-coherence (2026-11-02): every `N tests` declared in the 4 main docs
+# must be the same number. A4 above checks crates and ADRs against the
+# filesystem; tests are not checked there (the real count comes from C2,
+# and the badge is declared). Coherence is different: the docs must not
+# contradict each other. Excluded: lines with "as of" (historical).
+a4c_values=""
+a4c_bad=""
+for a4c_f in README.md specs/_index.md STRUCTURE.md CONTRIBUTING.md; do
+  [ -f "$a4c_f" ] || continue
+  a4c_hit=$(grep -nE '[0-9]+ tests?' "$a4c_f" 2>/dev/null | grep -v 'as of')
+  [ -z "$a4c_hit" ] && continue
+  while IFS= read -r a4c_line; do
+    a4c_n=$(printf '%s\n' "$a4c_line" | grep -oE '[0-9]+ tests?' | head -1 | grep -oE '[0-9]+')
+    [ -z "$a4c_n" ] && continue
+    a4c_values="${a4c_values} ${a4c_n}"
+  done <<< "$a4c_hit"
+done
+a4c_uniq=$(printf '%s\n' "$a4c_values" | grep -oE '[0-9]+' | sort -u | tr '\n' ' ' | sed 's/ $//')
+a4c_count=$(printf '%s\n' "$a4c_uniq" | tr ' ' '\n' | grep -c .)
+if [ "$a4c_count" -le 1 ]; then
+  say_ok "A4-coherence tests count in docs (tests=$a4c_uniq)"
+else
+  say_fail "A4-coherence tests count diverges in docs: $a4c_uniq"
+fi
+
 # ---------- Gate B: fresh-session simulation (mechanical subset) ----------
 echo "Gate B - fresh-session simulation (mechanical subset)"
 
