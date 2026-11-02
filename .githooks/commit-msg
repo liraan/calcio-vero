@@ -5,6 +5,16 @@
 
 MSG="$1"
 
+# Direction-Check (2026-11-02): a commit that touches a direction file
+# (IDEAS.md, WORLD-MODEL.md) must carry a `Direction-Check:` trailer.
+# The judgment is not mechanised; the artefact is (a missing trailer is
+# a red hook, a false "none" is a D1 violation visible in git log).
+msg_trailers=$(git interpret-trailers --parse < "$MSG")
+dir_staged=$(git diff --cached --name-only | grep -E '^docs/context/IDEAS\.md$|^docs/WORLD-MODEL\.md$' || true)
+if [ -n "$dir_staged" ]; then
+  echo "$msg_trailers" | grep -qE '^Direction-Check:' || { echo "commit-msg: direction file staged ($(echo "$dir_staged" | tr '\n' ' ')); missing 'Direction-Check:' trailer" >&2; exit 1; }
+fi
+
 if ! git diff --cached --name-only | grep -qx 'docs/context/SESSION-STATE.md'; then
   exit 0
 fi
