@@ -28,6 +28,21 @@ Events and statistics computed exclusively from observable outcomes. Includes `M
 
 Valuations, projections, and indexes derived from statistical models. Includes `IndexSnapshot`, `ProjectionProfile`, visible attributes, and scouting reports. This is what the player sees. See [`specs/00-foundations.md`](../specs/00-foundations.md) §3.
 
+
+### Four layers of a player
+
+A player has four kinds of things, and each lives in exactly one place. The table is the reference model: a decision that blurs two rows is a decision to re-examine.
+
+| Layer | Examples | Plane | Lives in | Who sees it |
+|---|---|---|---|---|
+| **Identity** | name, role, foot, height | B/C | `pcfm-model` | everyone |
+| **State** | fatigue, condition, confidence, morale | B (observable) | `pcfm-model` | everyone (it is observed) |
+| **Latent skill** | finishing, tackling, passing, ... | **A (truth)** | `pcfm-hidden` | **nobody, ever** |
+| **Estimated skill** | "his passing is ~14, with a margin" | **C (estimate)** | **does not exist yet** | the player, with uncertainty |
+
+- **"Hidden" is a crate, not a meaning.** `pcfm-hidden` contains the latent skill layer, plus the RNG and the observations buffer (mechanics, not player properties). "hidden = the attributes" confuses the container with the content.
+- **Layer 3 and layer 4 are never the same thing.** The player never sees the latents: he sees estimates built from events. This is pillar 10 (`Plane B ≠ Plane A`), and it is what separates PCFM from a CA/PA game.
+- **The engine decides on truth, the player sees estimates.** `resolve_influence` reads layer 3 (inside the crate) and layer 2 (fatigue, passed as data), and returns an order — which is layer 2 (observable). No hidden scalar leaves.
 ### Doctrine
 
 The set of non-negotiable rules that every module must obey. Lives in [`specs/00-foundations.md`](../specs/00-foundations.md). Changing the doctrine requires an ADR.

@@ -214,6 +214,8 @@ The contract, in one sentence: the engine holds `&mut GroundTruth` (defined in `
 
 **Why the separation:** the entities in this cell (`Player`, `Squad`, `Pitch`, `Referee`, `Match`) are Plane B/C data. They can be serialised, logged, saved, displayed. `GroundTruth` is Plane A. It cannot be serialised, logged, saved, or displayed. Keeping them in separate cells keeps the boundary visible.
 
+**When a latent may exist (2026-11-02).** A latent is added to `PlayerLatents` only when (a) a `resolve_*` reads it **today**, or (b) a Plane C estimate will be derived from events **today**. Otherwise it is an idea, not a Plane A datum (D3). Today there are seven, one per `resolve_*`: `finishing`, `passing`, `tackling`, `aerial`, `goalkeeping`, `set_pieces`, `injury_proneness`. The number is not a model of football, it is the shadow of the current functions. The next likely additions are **pace/stamina** (for movement, OI-25) and **anticipation** (for interception, §6-ter #4) — not thirty. `injury_proneness` is a susceptibility, not a skill: same container, different category. All seven are `f32` uniform from the RNG: the *shape* is a prototype (see `latents.rs`); adding fields without changing the shape gives more columns, not more realism.
+
 ## 4. Edge cases
 
 - **Squad with fewer than 11 players**: error at construction, not a panic
