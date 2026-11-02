@@ -81,6 +81,57 @@ pub fn stoppage_for(events: &[pcfm_stats::MatchEvent], table: &StoppageTime) -> 
     total
 }
 
+/// The embedded influence weights file (`03-entities-minimal` §2.9).
+const INFLUENCE_JSON: &str = include_str!("../../../balance/influence.json");
+
+/// Influence weights as they appear in `balance/influence.json`.
+///
+/// Converted to [`pcfm_hidden::InfluenceWeights`] at load time: `pcfm-hidden`
+/// does not depend on `serde`, so the JSON shape lives here.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct InfluenceWeightsJson {
+    /// Weight of the space term.
+    pub w_space: i32,
+    /// Weight of the skill term.
+    pub w_skill: i32,
+    /// Weight of the fatigue term.
+    pub w_cost: i32,
+    /// Weight of the redundancy term.
+    pub w_red: i32,
+    /// Distance (cm) at which the space term reaches zero.
+    pub space_threshold_cm: i32,
+}
+
+impl Default for InfluenceWeightsJson {
+    fn default() -> Self {
+        serde_json::from_str(INFLUENCE_JSON).expect("embedded influence file is valid JSON")
+    }
+}
+
+impl InfluenceWeightsJson {
+    /// Loads the embedded influence weights.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the embedded JSON is invalid. The test
+    /// `embedded_influence_is_valid` catches this at test time.
+    #[must_use]
+    pub fn load() -> Self {
+        Self::default()
+    }
+
+    /// Converts to the `pcfm-hidden` type used by `resolve_influence`.
+    #[must_use]
+    pub const fn to_weights(self) -> pcfm_hidden::InfluenceWeights {
+        pcfm_hidden::InfluenceWeights {
+            w_space: self.w_space,
+            w_skill: self.w_skill,
+            w_cost: self.w_cost,
+            w_red: self.w_red,
+            space_threshold_cm: self.space_threshold_cm,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -120,6 +171,18 @@ mod tests {
             make_event(EventType::Foul),
         ];
         assert_eq!(stoppage_for(&events, &table), 140);
+    }
+
+    #[test]
+    fn embedded_influence_is_valid() {
+        let w = InfluenceWeightsJson::load();
+        assert_eq!(w.w_space, 100);
+        assert_eq!(w.w_skill, 40);
+        assert_eq!(w.w_cost, 20);
+        assert_eq!(w.w_red, 50);
+        assert_eq!(w.space_threshold_cm, 2000);
+        let hidden = w.to_weights();
+        assert_eq!(hidden.w_space, w.w_space);
     }
 
     fn make_event(kind: EventType) -> pcfm_stats::MatchEvent {
