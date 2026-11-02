@@ -98,6 +98,12 @@ impl MatchState {
     /// always `4-4-2`. A realistic engine would model role, formation,
     /// position on the pitch, and per-player action probabilities.
     ///
+    /// **Who acts vs what they do (2026-11-02).** With the influence model,
+    /// *who* acts is deterministic (max influence on the ball, §2.9). *What*
+    /// they do is still this roll: an open design question (does each agent
+    /// have an intent?). The per-agent slice must not assume the roll is the
+    /// design; it is the current placeholder for intention.
+    ///
     /// The `noise` term in `resolve_*` (`pcfm-hidden`) is also a
     /// placeholder: it adds variance to the outcome, but it is not
     /// calibrated to real football data. See `docs/CODE_TOUR.md` "A note
@@ -248,6 +254,10 @@ impl MatchState {
     /// The attacker is the agent of the possessing team nearest to the
     /// ball; the defender is the nearest opponent to the attacker. Ties
     /// are broken by `PlayerId` (deterministic).
+    ///
+    /// Special case of influence (`03-entities-minimal` §2.9): the general
+    /// case reads the latents inside `pcfm-hidden`; here only the space term
+    /// is used. The per-agent slice replaces this with the full formula.
     fn pick_from_space(&self, ctx: &MatchContext<'_>) -> (PlayerId, PlayerId) {
         let (attacker_squad, defender_squad) = self.squads(ctx);
         let ball = self.spatial.ball();

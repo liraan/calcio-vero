@@ -24,6 +24,12 @@ pub struct AgentState {
     pub heading: u16,
 }
 
+// Note (2026-11-02): `velocity` is `(0, 0)` and `heading` is never read.
+// They are reserved fields for the per-agent slice, not part of any model
+// today. They are the two declared limits of the influence formula
+// (`03-entities-minimal` §2.9): heading (orientation) and time to arrive
+// (velocity). See OI-25 and OI-29.
+
 /// The spatial state of a match: every agent, plus the ball.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SpatialState {

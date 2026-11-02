@@ -183,6 +183,9 @@ impl GroundTruth {
 
     /// Resolves a pressure event.
     pub fn resolve_pressure(&mut self, ctx: &PressureContext) -> PressureOutcome {
+        // Will be replaced by resolve_influence (03-entities-minimal §2.9):
+        // pressure is a contest of influence on the carrier, not a die.
+        // This is not a simplification of the new model, it is a different model.
         let _ = self.latents_for(ctx.player);
         let noise = next_unit(&mut self.rng);
         let success = noise > 0.5;

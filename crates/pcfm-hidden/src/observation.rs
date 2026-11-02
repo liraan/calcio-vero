@@ -9,8 +9,8 @@ use crate::context::DuelType;
 
 /// A Plane B observation.
 ///
-/// The engine calls `drain_observations` and forwards the events to
-/// `pcfm-stats`. The events carry no latent value.
+/// The engine will call `drain_observations` when a consumer exists;
+/// today only the tests call it. The events carry no latent value.
 #[derive(Debug, Clone)]
 pub enum ObservationEvent {
     /// A duel was resolved.
