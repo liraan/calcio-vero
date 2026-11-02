@@ -2,14 +2,14 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `96e8120` — "docs(session-state): closing final — LCV to 1e58ad8"
+**Last commit verified:** `060392e` — "docs(context): decision map, A3 luna/dito, OI-25..34, IDEA-DESIGN-001"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
 **Ideas backlog:** `docs/context/IDEAS.md`. Read at startup to know what is not yet decided; do not implement from it.
 **Decision map:** `docs/context/DECISION-MAP.md` — the map of *decisions*, not steps. Read before choosing a step that touches the engine model. The Plan executes; the map shows the forks the Plan cannot represent as a sequence. Status: sketch (2026-11-02), not ratified.
 
-**Legenda:** 🔵 in corso · 🟡 prossimo · ⬜ aperto · 🔴 urgente
+**Legenda:** [wip] in corso · [next] prossimo · [open] aperto · [urgent] urgente
 
 **Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G2/G10 ora OI-23/24; G1/OI-22 chiuso in slice B2). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
 
@@ -58,18 +58,18 @@ engine gets built.
 
 | Pr. | # | Cosa | Dipende da | Prima azione |
 |---|---|---|---|---|
-| ⬜ | 11 | **GitHub agent Phase 2 — deferred (2026-11-02).** Ruleset **disabled**. Reactivate when one holds: (a) a second reviewer exists; (b) the project ships; (c) a write token is granted to an agent. `Evaluate` is not available (personal repo, non-Enterprise). Until then, Phase 1: direct push by the maintainer. See `AGENT-POLICY.md` §6 | — | Rileggere `AGENT-POLICY.md` §6 quando una delle tre condizioni si presenta |
-| ⬜ | 5 | Review sketch ×3 | L2-tactics, input, L2-staff | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
-| ⬜ | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
-| ⬜ | 8 | **ADR-019 deferred 4-9: verificati 2026-11-01, nessuno chiudibile.** 4 (UX) e 5 (resolution per piattaforma) richiedono UI/mobile reali; 6 (adaptive) richiede un ADR dedicato; 7 (LOD override) un emendamento ad ADR-013; 8 (zona di influenza) `docs/calibration/` vuota; 9 (role→tactic) `L2-tactics` non esiste. Non è un rinvio: è D3, non c'è contenuto concreto | — | Riaprire quando la dipendenza esiste. Nessuna azione ora |
-| ⬜ | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
-| ⬜ | 19 | **Narrativa: legge i `fields` degli eventi.** Oggi `narrative.rs` ignora `fields` per ogni evento: `Tackle` non dice chi ha perso la palla (`from`/`to`), `Shot` non dice se è gol (`goal`), `Duel` non dice contro chi (`winner_slot`). Viola il criterio di §0 ("every event carries the fields to understand why"). Fix: `narrate_event` legge `fields`; test sul `Tackle` con `from`/`to`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` (la narrativa non è nel `chain_hash`) | — | Leggere `crates/pcfm-match/src/narrative.rs` (`render_text` e `narrate_event`), poi `fields` in `05-match-events.md` §2.1 |
-| ✅ | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
-| ✅ | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
-| ✅ | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |
-| ✅ | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
-| ⬜ | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
-| ⬜ | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
+| [open] | 11 | **GitHub agent Phase 2 — deferred (2026-11-02).** Ruleset **disabled**. Reactivate when one holds: (a) a second reviewer exists; (b) the project ships; (c) a write token is granted to an agent. `Evaluate` is not available (personal repo, non-Enterprise). Until then, Phase 1: direct push by the maintainer. See `AGENT-POLICY.md` §6 | — | Rileggere `AGENT-POLICY.md` §6 quando una delle tre condizioni si presenta |
+| [open] | 5 | Review sketch ×3 | L2-tactics, input, L2-staff | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
+| [open] | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
+| [open] | 8 | **ADR-019 deferred 4-9: verificati 2026-11-01, nessuno chiudibile.** 4 (UX) e 5 (resolution per piattaforma) richiedono UI/mobile reali; 6 (adaptive) richiede un ADR dedicato; 7 (LOD override) un emendamento ad ADR-013; 8 (zona di influenza) `docs/calibration/` vuota; 9 (role→tactic) `L2-tactics` non esiste. Non è un rinvio: è D3, non c'è contenuto concreto | — | Riaprire quando la dipendenza esiste. Nessuna azione ora |
+| [open] | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
+| [open] | 19 | **Narrativa: legge i `fields` degli eventi.** Oggi `narrative.rs` ignora `fields` per ogni evento: `Tackle` non dice chi ha perso la palla (`from`/`to`), `Shot` non dice se è gol (`goal`), `Duel` non dice contro chi (`winner_slot`). Viola il criterio di §0 ("every event carries the fields to understand why"). Fix: `narrate_event` legge `fields`; test sul `Tackle` con `from`/`to`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` (la narrativa non è nel `chain_hash`) | — | Leggere `crates/pcfm-match/src/narrative.rs` (`render_text` e `narrate_event`), poi `fields` in `05-match-events.md` §2.1 |
+| [done] | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
+| [done] | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
+| [done] | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |
+| [done] | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
+| [open] | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
+| [open] | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
 ## Decisioni operative (2026-11-01)
 
 - **Finding (2026-11-01, closing):** the DP archival check is no longer

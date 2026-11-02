@@ -739,12 +739,13 @@
 - **Critical note:** this is a documentation-hygiene idea, not a code change. Do not implement without an ADR only if it changes the doctrine; otherwise it is a doc task to schedule in `SESSION-STATE.md`.
 
 ### IDEA-DOC-002 — ASCII/ANSI style in documentation files
-- **Status:** sketch (with critical note — likely reject)
+- **Status:** promoted (partial) — `SESSION-STATE.md` only, 2026-11-02
 - **Category:** Documentation / presentation
 - **Source:** conversation 2026-10-31 (maintainer suggestion)
 - **Idea:** since the project is TUI-first (ADR-022), replace emoji and other Unicode decoration in documentation files (README badges, `SESSION-STATE` status icons, `IDEAS.md` markers) with ASCII/ANSI equivalents, so that the docs visually reflect the TUI choice.
 - **Open questions:** does any consumer read the `.md` files in a terminal? Is the emoji in `SESSION-STATE` operational readability (for the maintainer) rather than presentation of the game? What is the actual scale (how many files, how many occurrences)?
 - **Critical note:** this is probably over-engineering today. ADR-022 concerns the game renderer (`pcfm-demo` TUI), not the project documentation, which is read on GitHub web where emoji render correctly. Replacing operational status icons (✅🔴🟡) with text labels would be a readability downgrade, not an alignment. D3: no concrete content today requires ASCII docs. Do not implement without a concrete consumer.
+- **Update 2026-11-02 — promoted for a narrow scope.** A concrete consumer now exists for `SESSION-STATE.md` only: `gates.sh` B1 parses the Plan with `awk -F'|'` and needs ASCII states to check them mechanically (the bug: B1 finds the first numeric ID but does not check its state, so "first open step" is semantically imprecise). Emoji removed from `SESSION-STATE.md` (legend + Pr. column) and replaced with [wip]/[next]/[open]/[urgent]/[done]. Other files keep emoji: they are read on GitHub web and have no programmatic consumer. The original critical note ("no concrete consumer today") is superseded for `SESSION-STATE.md`, not for the rest.
 
 ### IDEA-DOC-003 — Screenshot or GIF of the TUI in the README
 - **Status:** sketch
