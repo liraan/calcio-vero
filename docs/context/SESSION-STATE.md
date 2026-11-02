@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `9f82dd0` — "docs(session-state): closing 2026-11-01/02 — slice B2, note, gate"
+**Last commit verified:** `808aab6` — "docs(policy): Phase 2 deferred — ruleset disabled, with three preconditions"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
