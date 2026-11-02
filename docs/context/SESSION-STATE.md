@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `f443442` — "docs(rules): Note-Read gate before touching the engine; trailer in .gitmessage"
+**Last commit verified:** `3a9f47d` — "docs(context): note cited in README, OI-22 status corrected, slice C first action"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -58,6 +58,12 @@ engine gets built.
 | ✅ | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
 | ⬜ | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
 ## Decisioni operative (2026-11-01)
+
+- **Finding (2026-11-01, closing):** the DP archival check is no longer
+  executable. `DPs-Applied` became optional with the ritual cut, so the
+  `git log` check cannot tell which DPs were used. Not urgent (3 active,
+  max 10). If the DPs grow, reintroduce the trailer or an alternative
+  check.
 
 - **Organizzazione futura:** branch per **area di lavoro**, non per livello architetturale. I livelli si esprimono nei crate, non nei branch. Prerequisito del parallelismo: CI + branch protection (OI-20).
 - **Board testuale e step 18:** il board di ADR-025 **non è la base** della demo posizionale. Con step 18 gli eventi diventano tracce di uno stato continuo; il board testuale scade, non si estende. La TUI sarà il veicolo del posizionale. **Non investire in abbellimenti del board.**
