@@ -127,6 +127,39 @@ impl MatchState {
         // The action belongs to the nearest agent; the ball follows.
         self.spatial.set_carrier(Some(attacker));
 
+        // Pressure beside the action (decision 2026-11-02, step toward the
+        // outcome): the most influential opponent on the ball's point presses,
+        // if it is within the space threshold. The rank is the order from
+        // resolve_influence; no scalar enters the event.
+        {
+            let weights = crate::balance::InfluenceWeightsJson::load().to_weights();
+            let infl_ctx = self.build_influence_ctx(
+                ctx,
+                self.spatial.ball(),
+                pcfm_hidden::SkillKind::Tackling,
+            );
+            let order = ctx.hidden.resolve_influence(&infl_ctx, &weights);
+            if let Some(&presser) = order.first() {
+                if let Some(a) = self.spatial.agent(presser) {
+                    if distance_squared(a.position, self.spatial.ball())
+                        <= i64::from(weights.space_threshold_cm)
+                            * i64::from(weights.space_threshold_cm)
+                    {
+                        self.emit_event(
+                            ctx,
+                            tick,
+                            Some(ActorId::Player(presser)),
+                            EventType::Pressure,
+                            serde_json::json!({
+                                "from": presser.slot(),
+                                "to": attacker.slot(),
+                            }),
+                        );
+                    }
+                }
+            }
+        }
+
         if action_kind_roll < 0.6 {
             let ctx_pass = pcfm_hidden::PassContext { passer: attacker };
             let outcome = ctx.hidden.resolve_pass(&ctx_pass);
@@ -271,6 +304,40 @@ impl MatchState {
         match self.possession {
             Possession::Home => (&ctx.match_.home, &ctx.match_.away),
             Possession::Away => (&ctx.match_.away, &ctx.match_.home),
+        }
+    }
+
+    /// Builds the influence context for the defenders of the current
+    /// possession (the opponents of the carrier), on `point`.
+    ///
+    /// `skill` is the latent used as modulator. The agents are the
+    /// defenders' squad: pressure is a contest of the opponents on the
+    /// carrier (03-entities-minimal §2.9, use 2).
+    fn build_influence_ctx(
+        &self,
+        ctx: &MatchContext<'_>,
+        point: (i32, i32),
+        skill: pcfm_hidden::SkillKind,
+    ) -> pcfm_hidden::InfluenceContext {
+        let (_, defenders) = self.squads(ctx);
+        let agents = defenders
+            .players
+            .iter()
+            .filter_map(|p| {
+                self.spatial
+                    .agent(p.id)
+                    .map(|a| pcfm_hidden::InfluenceAgent {
+                        id: p.id,
+                        position: a.position,
+                        #[allow(clippy::cast_possible_truncation)]
+                        fatigue_milli: (p.physical.fatigue * 1000.0) as i32,
+                    })
+            })
+            .collect();
+        pcfm_hidden::InfluenceContext {
+            point,
+            agents,
+            skill,
         }
     }
 
