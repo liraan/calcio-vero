@@ -68,3 +68,64 @@ pub struct SetPieceContext {
     /// The taker.
     pub taker: PlayerId,
 }
+
+/// The latent attribute used as modulator by an influence query.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SkillKind {
+    /// Tackling.
+    Tackling,
+    /// Passing.
+    Passing,
+    /// Finishing.
+    Finishing,
+    /// Aerial.
+    Aerial,
+    /// Goalkeeping.
+    Goalkeeping,
+}
+
+/// One agent as seen by an influence query.
+///
+/// Position in centimetres, fatigue in 0..=1000 (fixed-point, x1000).
+/// No latent: the latent is read inside the crate.
+#[derive(Debug, Clone, Copy)]
+pub struct InfluenceAgent {
+    /// The player.
+    pub id: PlayerId,
+    /// Position in centimetres.
+    pub position: (i32, i32),
+    /// Fatigue, fixed-point x1000, 0..=1000.
+    pub fatigue_milli: i32,
+}
+
+/// The context of an influence query.
+///
+/// Plane B data only: positions and fatigue are observed. The skill term is
+/// read inside the crate from the latents; the engine never sees it.
+#[derive(Debug, Clone)]
+pub struct InfluenceContext {
+    /// The point being queried.
+    pub point: (i32, i32),
+    /// The agents to rank.
+    pub agents: Vec<InfluenceAgent>,
+    /// Which latent modulates the skill term.
+    pub skill: SkillKind,
+}
+
+/// Weights and thresholds for the influence formula.
+///
+/// Prototype values, not calibrated. The form is doctrine; the numbers are
+/// calibration (see `balance/influence.json`).
+#[derive(Debug, Clone, Copy)]
+pub struct InfluenceWeights {
+    /// Weight of the space term.
+    pub w_space: i32,
+    /// Weight of the skill term.
+    pub w_skill: i32,
+    /// Weight of the fatigue term.
+    pub w_cost: i32,
+    /// Weight of the redundancy term.
+    pub w_red: i32,
+    /// Distance (cm) at which the space term reaches zero.
+    pub space_threshold_cm: i32,
+}
