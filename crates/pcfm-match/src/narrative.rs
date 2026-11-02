@@ -44,6 +44,12 @@ pub enum Importance {
 }
 
 /// A single narrative entry.
+///
+/// The first four fields are the rendered view; the `*_slot` and `goal`
+/// fields are the **structured substrate** (Plane B): they carry the
+/// observed slots, not names. A future renderer (voice, extended
+/// narrative, localised) reads them. `text` is derived from them; the
+/// names are resolved by the renderer, not by `narrate_event`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NarrativeEntry {
     /// The minute of the match (0–120).
@@ -54,6 +60,16 @@ pub struct NarrativeEntry {
     pub text: String,
     /// The importance of the entry.
     pub importance: Importance,
+    /// The actor's slot, if known (structured substrate).
+    pub actor_slot: Option<u32>,
+    /// `Tackle`: the slot of the player who lost the ball.
+    pub from_slot: Option<u32>,
+    /// `Tackle`: the slot of the player who won the ball.
+    pub to_slot: Option<u32>,
+    /// `Duel`: the slot of the duel winner.
+    pub winner_slot: Option<u32>,
+    /// `Shot`: whether the shot resulted in a goal.
+    pub goal: Option<bool>,
 }
 
 /// Builds the narrative from the match and its event chain.
@@ -63,38 +79,72 @@ pub struct NarrativeEntry {
 #[must_use]
 pub fn narrate(match_: &Match, chain: &EventChain) -> Vec<NarrativeEntry> {
     let mut names: BTreeMap<PlayerId, &str> = BTreeMap::new();
+    let mut slot_map: BTreeMap<u32, &str> = BTreeMap::new();
     for p in &match_.home.players {
         names.insert(p.id, p.name.as_str());
+        slot_map.insert(p.id.slot(), p.name.as_str());
     }
     for p in &match_.away.players {
         names.insert(p.id, p.name.as_str());
+        slot_map.insert(p.id.slot(), p.name.as_str());
     }
 
     chain
         .events()
         .iter()
-        .map(|ev| narrate_event(ev, &names))
+        .map(|ev| narrate_event(ev, &names, &slot_map))
         .collect()
 }
 
-fn narrate_event(ev: &MatchEvent, names: &BTreeMap<PlayerId, &str>) -> NarrativeEntry {
+fn narrate_event(
+    ev: &MatchEvent,
+    names: &BTreeMap<PlayerId, &str>,
+    slot_map: &BTreeMap<u32, &str>,
+) -> NarrativeEntry {
     let importance = importance_for(ev.event_type);
+    let actor_slot = match ev.actor {
+        Some(pcfm_core::ids::ActorId::Player(id)) => Some(id.slot()),
+        Some(pcfm_core::ids::ActorId::Referee(_)) | None => None,
+    };
     let player = match ev.actor {
         Some(pcfm_core::ids::ActorId::Player(id)) => names.get(&id).copied().unwrap_or("<unknown>"),
         Some(pcfm_core::ids::ActorId::Referee(_)) | None => "<match>",
     };
     let minute = ev.timestamp_minute;
 
-    let text = render_text(ev.event_type, player, minute);
+    let from_slot = field_u32(&ev.fields, "from");
+    let to_slot = field_u32(&ev.fields, "to");
+    let winner_slot = field_u32(&ev.fields, "winner_slot");
+    let goal = ev.fields.get("goal").and_then(serde_json::Value::as_bool);
+
+    let text = render_text(ev, player, minute, slot_map);
 
     NarrativeEntry {
         minute,
         event_id: ev.event_id,
         text,
         importance,
+        actor_slot,
+        from_slot,
+        to_slot,
+        winner_slot,
+        goal,
     }
 }
 
+/// Reads a `u64` field from a `serde_json::Value` and casts it to `u32`.
+fn field_u32(fields: &serde_json::Value, key: &str) -> Option<u32> {
+    fields
+        .get(key)
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|v| u32::try_from(v).ok())
+}
+
+/// Resolves a slot to a player name, or returns `None`.
+fn slot_name(slot_map: &BTreeMap<u32, &str>, slot: Option<u32>) -> Option<String> {
+    slot.and_then(|s| slot_map.get(&s))
+        .map(|n| (*n).to_string())
+}
 /// Returns the importance for an event type.
 const fn importance_for(event_type: EventType) -> Importance {
     match event_type {
@@ -131,19 +181,49 @@ const fn importance_for(event_type: EventType) -> Importance {
 /// Renders the text in English (the default language).
 ///
 /// The text is derived from the event type, the player name and the minute.
-fn render_text(event_type: EventType, player: &str, minute: u8) -> String {
-    match event_type {
-        EventType::Shot => format!("{player} shoots in the {minute}'"),
+fn render_text(
+    ev: &MatchEvent,
+    player: &str,
+    minute: u8,
+    slot_map: &BTreeMap<u32, &str>,
+) -> String {
+    match ev.event_type {
+        EventType::Shot => {
+            let wide = ev.fields.get("goal").and_then(serde_json::Value::as_bool) == Some(false);
+            if wide {
+                format!("{player} shoots wide in the {minute}'")
+            } else {
+                format!("{player} shoots in the {minute}'")
+            }
+        }
         EventType::Pass => format!("{player} passes in the {minute}'"),
         EventType::Cross => format!("{player} crosses in the {minute}'"),
         EventType::Dribble => format!("{player} dribbles in the {minute}'"),
         EventType::KeyPass => format!("{player} plays a key pass in the {minute}'"),
-        EventType::Tackle => format!("{player} tackles in the {minute}'"),
+        EventType::Tackle => {
+            let from = slot_name(slot_map, field_u32(&ev.fields, "from"));
+            from.map_or_else(
+                || format!("{player} tackles in the {minute}'"),
+                |f| format!("{player} tackles {f} in the {minute}'"),
+            )
+        }
         EventType::Interception => format!("{player} intercepts in the {minute}'"),
         EventType::Clearance => format!("{player} clears in the {minute}'"),
         EventType::Block => format!("{player} blocks in the {minute}'"),
         EventType::Save => format!("Save by {player} in the {minute}'"),
-        EventType::Duel => format!("{player} wins a duel in the {minute}'"),
+        EventType::Duel => {
+            let winner = field_u32(&ev.fields, "winner_slot");
+            let actor = match ev.actor {
+                Some(pcfm_core::ids::ActorId::Player(id)) => Some(id.slot()),
+                _ => None,
+            };
+            let lost = matches!((winner, actor), (Some(w), Some(a)) if w != a);
+            if lost {
+                format!("{player} loses a duel in the {minute}'")
+            } else {
+                format!("{player} wins a duel in the {minute}'")
+            }
+        }
         EventType::Foul => format!("Foul by {player} in the {minute}'"),
         EventType::Card => format!("Card for {player} in the {minute}'"),
         EventType::Corner => format!("Corner for {player} in the {minute}'"),

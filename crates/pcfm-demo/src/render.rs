@@ -244,6 +244,11 @@ mod tests {
             event_id: pcfm_core::ids::EventId::new(1, 0),
             text: "GOAL!".to_string(),
             importance: pcfm_match::Importance::Critical,
+            actor_slot: None,
+            from_slot: None,
+            to_slot: None,
+            winner_slot: None,
+            goal: None,
         };
         assert_eq!(format_narrative(&entry), "[  7'] GOAL!");
     }
