@@ -86,7 +86,7 @@ The rules that make this possible are non-negotiable:
 
 | Level | Specification | Code |
 |:-----:|:-------------:|:----:|
-| **L0** — Match   | 🟢 11 cells, ratified | 🟢 9 crates, 133 tests, 6 test scenarios |
+| **L0** — Match   | 🟢 11 cells, ratified | 🟢 9 crates, 138 tests, 6 test scenarios |
 | **L1** — Season  | ⚪ 12 cells planned   | ⚪ not started |
 | **L2** — Career  | ⚪ 9 cells planned    | ⚪ not started |
 | **L3** — Meta    | ⚪ 8 cells planned    | ⚪ not started |
@@ -101,12 +101,12 @@ The rules that make this possible are non-negotiable:
 |------|--------|---------|
 | **Doctrine** | 🟢 Settled | `specs/00-foundations.md` v2.0, ratified. The Three Planes and the bans are not under discussion. |
 | **L0 specification** | 🟢 Ratified | 11 cells, ratified. The contract is stable; the implementation evolves under it. |
-| **L0 implementation** | 🟡 Prototype | It compiles, it is deterministic, it is tested — but it is a *prototype model*: no positions, 4 event types out of 27, formulas marked as placeholders. |
+| **L0 implementation** | 🟡 Prototype | It compiles, it is deterministic, it is tested — but it is a *prototype model*: positions exist (slice A, used by slice B2), movement does not; 4 event types out of 27; formulas marked as placeholders. |
 | **ADRs** | 🟡 Evolving | 23 ADRs: 21 accepted, 1 proposed (017), 1 superseded (023 → 024). The set changes as the project learns. |
-| **Tests** | 🟢 Green | 133 tests, 6 test scenarios, `cargo fmt`/`clippy`/`test` clean. Green means "the contract holds", not "the game is finished". |
+| **Tests** | 🟢 Green | 138 tests, 6 test scenarios, `cargo fmt`/`clippy`/`test` clean. Green means "the contract holds", not "the game is finished". |
 | **L1–L3** | ⚪ Not started | Specifications only. No code. |
 
-**What "L0 complete" does not mean:** it does not mean the match engine is realistic. It means the L0 *contract* is ratified and implemented. Realism (positions, physics, all event types) is step 18: tracked, not started (D3: L2 does not exist yet).
+**What "L0 complete" does not mean:** it does not mean the match engine is realistic. It means the L0 *contract* is ratified and implemented. Realism (movement, ball dynamics, all event types) is step 18: tracked, not started (D3: L2 does not exist yet).
 
 **Roadmap (indicative, not commitments):**
 
@@ -118,6 +118,26 @@ The rules that make this possible are non-negotiable:
 | v1.0 | Q2 2028 |
 
 ---
+
+## The match engine in one glance
+
+PCFM simulates one football match with 22 players, a ball, and (planned) a referee. This is what the engine does today, and where it is going. Today's engine is a **prototype**: it compiles and it is deterministic, but the models are placeholders, not calibrated. No date: the direction is fixed, the calendar is not.
+
+| On the pitch | Today | Where it is going |
+|---|---|---|
+| **22 players** | They have a position on the pitch (a 4-4-2 grid). The one nearest the ball acts. | They move, and they know what they are doing: pressing, covering, running, waiting. |
+| **The ball** | It is at a player's feet, or it is loose. It does not move on its own. | It moves: a pass travels, a shot flies, a loose ball rolls. |
+| **The referee** | Not modelled. | He is on the pitch, blows fouls, gives cards. |
+| **Assistant referees** | Not modelled. | They flag offside and out-of-play. |
+
+### How the engine is built
+
+| Part | Today | Where it is going |
+|---|---|---|
+| **Hidden truth** (`pcfm-hidden`) | The players' real attributes and the random seed. Never visible outside. | Same: the engine reads it only through the `resolve_*` functions. |
+| **The engine** (`pcfm-match`) | One tick every tenth of a second. One roll decides whether something happens; four event types out of 27 are emitted. | Every player decides, every tick; the attempt and its outcome are separate, linked events. |
+| **The event log** | Append-only, hash-chained. Every event carries the fields to understand why. | Same. |
+| **The readers** | A text board, an HTML page, a text narrative, a save file. | A TUI. The board is not the product. |
 
 ## What makes it different
 
