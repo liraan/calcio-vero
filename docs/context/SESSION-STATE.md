@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `c3655c4` — "docs(context): de-emoji SESSION-STATE.md, promote IDEA-DOC-002 (partial)"
+**Last commit verified:** `bd410a8` — "docs(context): Plan as tree, gates.sh B1 checks state, remove DECISION-MAP"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -81,3 +81,5 @@ engine gets built.
 - **Organizzazione futura:** branch per **area di lavoro**, non per livello architetturale. I livelli si esprimono nei crate, non nei branch. Prerequisito del parallelismo: CI + branch protection (OI-20).
 - **Board testuale e step 18:** il board di ADR-025 **non è la base** della demo posizionale. Con step 18 gli eventi diventano tracce di uno stato continuo; il board testuale scade, non si estende. La TUI sarà il veicolo del posizionale. **Non investire in abbellimenti del board.**
 
+
+- **Fork non nel Plan (2026-11-02):** i fork A/B/C/D di slice C vivono in `IDEA-DESIGN-001` e OI-25/29/31, non nel Plan. Motivo: il Plan esegue (foglie con Prima azione); i fork espongono una decisione, e duplicarli nel Plan creerebbe un terzo stato (`[fork]`) che non è esecuzione, più la duplicazione che abbiamo appena eliminato rimuovendo `DECISION-MAP.md`. Il Plan ha C.1 che chiude il fork col test meccanico. Riaprire solo se i fork diventano 3+ e il Plan diventa illeggibile senza vederli.

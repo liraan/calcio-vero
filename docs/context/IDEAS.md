@@ -435,6 +435,10 @@
   4. Determinism: the plugin's output must not affect the simulation (Plane C → Plane A forbidden). Is the explanation purely presentational, or can it feed back into decisions (e.g. the assistant manager reading the narrative)? If it feeds back, it becomes Plane B and must be deterministic.
   5. Performance: reading the full event stream per match is cheap at L0; at L1/L2 with seasons, it must be scoped.
 - **Critical note:** this is a **sketch**, not a decision. It depends on ADR-012 (plugin contract) and ADR-019 (positional engine), neither of which is implemented. Do not implement before those exist. ADR-024 (remove CauseTrace at L0, supersedes ADR-023) is the current L0 decision and is not blocked by this sketch.
+- **Update 2026-11-02 — two pieces, not one.**
+  - **Pezzo A (today, in T):** `NarrativeEntry` carries the structured fields of the event (actor, from, to, goal, winner_slot) as data; `text` is derived from those fields. This is the solid substrate a future renderer reads. It also serves today: the current consumer gets the structured data, not just the string. D3-compliant (T is the content that requires it).
+  - **Pezzo B (later):** a `Narrator` trait with `fn render(&self, entry: &NarrativeEntry) -> String`, one implementation (`TemplateNarrator`), no registry, no plugin loading. This is the seam, not the plugin system. Implemented when a second renderer exists (voice, extended narrative) or when the maintainer decides to force the seam with an ADR.
+  - **Relationship:** A prepares B. A is done in T; B goes here. Do not implement B before A exists, and do not implement B without a second consumer (D3).
 
 ### IDEA-INFRA-009 — CauseTrace at L1 (reintroduction with content)
 
