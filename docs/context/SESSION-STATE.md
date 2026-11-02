@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `ba1bf30` — "chore(gates): re-add E4b (lost to a hard reset during the test)"
+**Last commit verified:** `7b69567` — "docs(session-state): track the ball decision (OI-37)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -86,3 +86,5 @@ engine gets built.
 
 
 - **Fork non nel Plan (2026-11-02):** i fork A/B/C/D di slice C vivono in `IDEA-DESIGN-001` e OI-25/29/31, non nel Plan. Motivo: il Plan esegue (foglie con Prima azione); i fork espongono una decisione, e duplicarli nel Plan creerebbe un terzo stato (`[fork]`) che non è esecuzione, più la duplicazione che abbiamo appena eliminato rimuovendo `DECISION-MAP.md`. Il Plan ha C.1 che chiude il fork col test meccanico. Riaprire solo se i fork diventano 3+ e il Plan diventa illeggibile senza vederli.
+
+- **Presenza fisica = budget di causalità (2026-11-02).** Un oggetto ha corpo nel motore solo se il suo corpo può essere causa di un evento che il giocatore deve poter capire. Tutto il resto è costo di modellazione che non produce spiegazione. Conseguenze: i 22 giocatori hanno presenza fisica (duelli, copertura); la palla ha **stato** posizionale, non corpo (è la posizione che conta, non la collisione); l'**arbitro non è stato del motore**: la sua posizione, se mostrata, è calcolata dal renderer in modo deterministico dagli eventi (layer visivo). Il fischio è normativo, **non dipende dalla posizione**: semplificazione dichiarata. ADR-019 D9 ("in-pitch, with Position and functional state") è interpretato come posizione presentazionale, non stato simulato; il comportamento (positioning) resta deferito al 2D come D9 già dice. Questo criterio rende coerenti la tesi sull'arbitro, la propensione sulla palla (OI-37) e il rifiuto della fisica in §0.
