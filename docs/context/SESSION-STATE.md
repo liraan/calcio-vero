@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `c639804` — "docs(session-state): LCV to ec86eed"
+**Last commit verified:** `00fc0f3` — "feat(l0): who acts comes from space; Tackle as a conquest event (slice B2)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -23,6 +23,14 @@ event carries the fields to understand why. The full note is
 map of the events, §7 is where we are. **Read it before the Plan.** A
 physical engine is not a later step of this project: it is a different
 paradigm, not planned.
+
+**Gate: reading before touching the engine.** `state.rs`, `spatial.rs`,
+`perception.rs`, `orchestrator.rs`, `save.rs`, `golden_l0.rs` may only be
+modified by a commit that carries `Note-Read: L0-POSITIONAL-SLICE §0,
+§6-ter, §7`. The trailer is self-declared but visible in `git log`; the
+hook check is deferred to a dedicated session (D5: an artefact today, a
+gate tomorrow). Touching those files without the note is how the wrong
+engine gets built.
 
 
 ## Open items (what is not decided or verified yet)

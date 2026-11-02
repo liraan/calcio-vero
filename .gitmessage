@@ -5,3 +5,4 @@
 # Trailers — required on closing commits (validated by .githooks/commit-msg).
 # Verified: C2-green
 # Rules-Audit: N changes, 0 contradictions, 0 leaks   -- only if a rule file changed
+# Note-Read: L0-POSITIONAL-SLICE §0, §6-ter, §7   -- required if state.rs, spatial.rs, perception.rs, orchestrator.rs, save.rs or golden_l0.rs is staged
