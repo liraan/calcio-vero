@@ -14,6 +14,8 @@
 
 ---
 
+**Contents:** [Why this project exists](#why-this-project-exists) · [Three Planes](#the-core-idea-three-planes) · [The paradigm](#the-paradigm-phenomenological-simulation) · [Determinism](#determinism-taken-seriously) · [Status](#project-status) · [The engine in one glance](#the-match-engine-in-one-glance) · [What makes it different](#what-makes-it-different) · [Technology](#technology) · [Getting started](#getting-started) · [Try it in 30 seconds](#try-it-in-30-seconds) · [Reading order](#reading-order-for-newcomers) · [Contributing](#contributing) · [License](#license) · [AI disclosure](#-ai-disclosure) · [FAQ](#faq)
+
 ## Why this project exists
 
 Football Manager and its ancestors built a genre. They also built walls around it: closed datasets, closed formulas, closed ecosystems. PC Football Manager is an attempt to rebuild that experience **without the walls**.
@@ -230,6 +232,44 @@ cargo run --release --bin pcfm-test-runner -- --coverage
 ```
 
 `--coverage` is the map of what the framework can do today. At the moment it shows `2/26 features covered (7%)` — L0 is complete, L1–L3 are still empty. When a module is implemented and its scenarios are registered, the percentage goes up.
+
+---
+
+## Try it in 30 seconds
+
+    cargo run --release --bin pcfm-demo -- --seed 42 --board
+
+Real output (seed 42, release build, first lines):
+
+    +--------------------------------------------------------------+
+    |                    PCFM -- MATCH BOARD                       |
+    +--------------------------------------------------------------+
+
+      Score          1  -  3
+      Possession    23.6%     76.4%
+      Shots          1       3
+      Goals          1       3
+
+      State hash   afca5f20344dedb96f422c67f52c2861f8cb4b9f143a3ff4f9a4691368d62556
+
+      -- Events (29) ----------------------------------------------
+      1T 0'00"      kick_off              -- 0
+      1T 2'33"      pressure              Away 6
+      1T 2'33"      duel                  Home 6
+      1T 10'34"     pressure              Away 6
+      1T 12'22"     pressure              Home 6
+      1T 12'22"     GOAL                  Away 6
+
+The board is the debug view, not the product: it shows the events, the
+score, the state hash. The same match, as JSON:
+
+    cargo run --release --bin pcfm-demo -- --seed 42 --json
+
+Every run with the same seed produces the same state hash. That is the
+determinism contract, verified on every commit. The player labels
+("Away 6", "Home 6") appear to show a fixed slot instead of the actor;
+under investigation (OI-41). It does not affect the simulation: the
+state hash is the same.
 
 ---
 
