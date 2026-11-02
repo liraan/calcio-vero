@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `164fc8b` — "docs(rules): B1-bis lesson — git interpret-trailers and multi-line trailers"
+**Last commit verified:** `f3f7a8c` — "chore(rules): mechanise the direction-coherence check (Direction-Check trailer)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
