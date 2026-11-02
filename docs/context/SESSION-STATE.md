@@ -2,12 +2,11 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `060392e` — "docs(context): decision map, A3 luna/dito, OI-25..34, IDEA-DESIGN-001"
+**Last commit verified:** `c3655c4` — "docs(context): de-emoji SESSION-STATE.md, promote IDEA-DOC-002 (partial)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
 **Ideas backlog:** `docs/context/IDEAS.md`. Read at startup to know what is not yet decided; do not implement from it.
-**Decision map:** `docs/context/DECISION-MAP.md` — the map of *decisions*, not steps. Read before choosing a step that touches the engine model. The Plan executes; the map shows the forks the Plan cannot represent as a sequence. Status: sketch (2026-11-02), not ratified.
 
 **Legenda:** [wip] in corso · [next] prossimo · [open] aperto · [urgent] urgente
 
@@ -54,7 +53,7 @@ engine gets built.
 | OI-33 | **Il motif è a stadi (L0 = causalità locale, L2 = causale globale).** Il pillar 5 ("perché ho perso?") non è rispondibile a L0 senza tattiche e psicologia. Va dichiarato esplicitamente nel README/manifesto, o il prodotto promette più di quanto L0 possa dare | Decidere se dichiarare la promessa a stadi in `README.md` o in un ADR |
 | OI-34 | **Tensione D2 nel codice esistente.** `state.rs:320` (`expect("spatial state contains every starter")`) e `state.rs:325` (`unwrap_or(max)`) sono in path di simulazione. D2 dice "no `unwrap`/`expect`/`panic!` in simulation paths". Documentati unreachable, ma letteralmente in violazione | Valutare sostituzione con `Option` + gestione esplicita, in una sessione dedicata (non ora: non blocca slice C) |
 
-## Plan (in dependency order)
+## Plan (tree: leaves are executable steps, forks expose a decision; see IDEA-DESIGN-001)
 
 | Pr. | # | Cosa | Dipende da | Prima azione |
 |---|---|---|---|---|
@@ -63,13 +62,14 @@ engine gets built.
 | [open] | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
 | [open] | 8 | **ADR-019 deferred 4-9: verificati 2026-11-01, nessuno chiudibile.** 4 (UX) e 5 (resolution per piattaforma) richiedono UI/mobile reali; 6 (adaptive) richiede un ADR dedicato; 7 (LOD override) un emendamento ad ADR-013; 8 (zona di influenza) `docs/calibration/` vuota; 9 (role→tactic) `L2-tactics` non esiste. Non è un rinvio: è D3, non c'è contenuto concreto | — | Riaprire quando la dipendenza esiste. Nessuna azione ora |
 | [open] | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
-| [open] | 19 | **Narrativa: legge i `fields` degli eventi.** Oggi `narrative.rs` ignora `fields` per ogni evento: `Tackle` non dice chi ha perso la palla (`from`/`to`), `Shot` non dice se è gol (`goal`), `Duel` non dice contro chi (`winner_slot`). Viola il criterio di §0 ("every event carries the fields to understand why"). Fix: `narrate_event` legge `fields`; test sul `Tackle` con `from`/`to`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` (la narrativa non è nel `chain_hash`) | — | Leggere `crates/pcfm-match/src/narrative.rs` (`render_text` e `narrate_event`), poi `fields` in `05-match-events.md` §2.1 |
 | [done] | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
 | [done] | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
 | [done] | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |
 | [done] | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
-| [open] | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
-| [open] | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Vedi §6-ter per la mappa | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
+| [next] | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
+| [open] | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Direzione relazionale (IDEA-DESIGN-001). Sotto-fork A/B/C/D tracciato in OI-25/29/31 | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
+| [open] | C.1 | **Pressure con input relazionale (primo passo verificabile).** Aggiungere `ConditionContext { player, nearest_opponent_distance }` in `pcfm-hidden`; `resolve_pressure` lo legge; test meccanico: due distanze diverse devono produrre distribuzioni diverse. Se non cambia, è ancora un dado | T (narrativa legge fields), direzione C | Leggere `pcfm-hidden/src/context.rs` e `lib.rs::resolve_pressure`, poi scrivere il test |
+| [open] | C.2 | **Slip/ControlError riformulati (dopo C.1).** Non più con velocity hardcoded: input osservabile alternativo, o sessione dedicata a OI-25 (modello di movimento) | C.1 | Decidere: input alternativo a velocity, o aprire OI-25 |
 ## Decisioni operative (2026-11-01)
 
 - **Finding (2026-11-01, closing):** the DP archival check is no longer

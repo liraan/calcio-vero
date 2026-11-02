@@ -82,16 +82,25 @@ echo "Gate B - fresh-session simulation (mechanical subset)"
 
 SS=docs/context/SESSION-STATE.md
 
-first_line=$(awk -F'|' 'NF>=7 && $3 ~ /^[[:space:]]*[0-9]+[ab]?[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
+# B1 (2026-11-02): state check added. Prefer [next], else [open]; [done]
+# never counts. Previous version found the first numeric ID regardless
+# of state, so "first open step" was imprecise (it returned 11, a
+# deferred step).
+first_line=$(awk -F'|' 'NF>=7 && $2 ~ /\[next\]/ && $3 ~ /^[[:space:]]*([0-9]+[ab]?|[A-Z]([.][0-9]+)?)[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
+kind="next"
 if [ -z "$first_line" ]; then
-  say_fail "B1 no open step found in the Plan"
+  first_line=$(awk -F'|' 'NF>=7 && $2 ~ /\[open\]/ && $3 ~ /^[[:space:]]*([0-9]+[ab]?|[A-Z]([.][0-9]+)?)[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
+  kind="open"
+fi
+if [ -z "$first_line" ]; then
+  say_fail "B1 no open/next step found in the Plan"
 else
   step=$(echo "$first_line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$3); print $3}')
   action=$(echo "$first_line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$6); print $6}')
   if [ -n "$action" ]; then
-    say_ok "B1 first open step ($step) has a Prima azione"
+    say_ok "B1 first $kind step ($step) has a Prima azione"
   else
-    say_fail "B1 first open step ($step) has an empty Prima azione"
+    say_fail "B1 first $kind step ($step) has an empty Prima azione"
   fi
 fi
 

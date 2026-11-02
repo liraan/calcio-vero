@@ -136,12 +136,13 @@ ordered next steps, the current priority, and the files touched.
 
 1. **Last commit verified** (S1 semantics: the commit before the bookmark update).
 2. **Open items** — decisions deferred, pending verifications. Each entry: ID, title, first action. The "why" lives in the title when not obvious; no separate column.
-3. **Plan** — ordered steps with priority. Each step: what, dependency, first concrete action. A step without a first action is a step the next session will skip.
+3. **Plan** — an indented tree, not a flat list. Leaves are executable steps: what, dependency, first concrete action. Branches (forks) expose a decision the flat sequence cannot represent: each fork names the step that closes it (in the row itself, "Direzione" column or a `decide-in:` note). A step without a first action is a step the next session will skip; a fork without a closing step is an idea, not a plan (D3).
+
+State labels are ASCII: `[wip]`, `[next]`, `[open]`, `[urgent]`, `[done]`. `gates.sh` B1 parses the Plan by state and ID; emoji would be invisible to the parser (and `sed` with 4-byte UTF-8 fails silently on Git Bash, see B1-bis). The label is operational, not decoration.
 
 The startup ritual extracts §1–§3. The closing ritual updates all three.
 
 **No `Files touched`, no `Done`.** Both are in `git log --stat` and `git log --oneline`. The bookmark is memory, not a log. A future session that needs the history runs `git log`.
-
 
 **G. What Git already does (use it, do not reimplement)**
 
