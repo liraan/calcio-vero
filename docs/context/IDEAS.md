@@ -773,3 +773,14 @@
 ### IDEA-REJ-004 — Real player names (including "initial + surname")
 - **Source:** conversation 2026-10-29 (user, then discarded)
 - **Why rejected:** legal risk (image rights include initials; a surname in context identifies a person) and doctrinal inconsistency (`00-foundations.md` §5: no invented real data, no bundling commercial data). The safe path is procedural, plausible names from `world_seed` + `player_id`. Real names only via an optional user-supplied pack, declared unofficial and never committed to the repo.
+
+---
+
+### IDEA-DESIGN-001 — Condizioni come relazioni, non stati individuali
+- **Status:** sketch
+- **Origine:** pausa 2026-11-02. Domanda del maintainer: "in una partita vera, qual è la natura della pressione, come si riconosce?"
+- **Tesi:** la pressione non è uno stato interno del giocatore (InPressione), è una relazione tra spazio, tempo e agenti. Si riconosce dal comportamento che produce (passaggio affrettato, protezione della palla, perdita), non da un'etichetta interna. La dimensione mancante nel motore non è "stato individuale" ma "configurazione relazionale osservabile".
+- **Conseguenza su ADR-019 D2:** D2 ratifica uno stato funzionale individuale. È una fotografia del 2026-10-27. La big picture dice che la condizione è relazionale. D2 non è la risposta finale: è un punto di partenza da rivedere quando il contenuto lo richiederà.
+- **Conseguenza su Pressure:** il modello attuale (noise > 0.5, latente scartato) non legge nulla. Un modello prototipo ma onesto legge un input osservabile che il motore già calcola: la distanza dal difensore più vicino (pick_from_space). Test meccanico: cambiando la distanza, l'outcome medio deve cambiare.
+- **Prerequisiti:** nessuno (non richiede D2, non richiede OI-25). pick_from_space esiste già.
+- **Questioni aperte:** (a) il ConditionContext va in pcfm-hidden o nel motore? (b) Pressure è l'unico evento che può essere reso relazionale subito, o anche altri? (c) questo cambia la valutazione di D2 (pagare il debito o no)?
