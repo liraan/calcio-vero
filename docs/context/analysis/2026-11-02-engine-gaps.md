@@ -26,6 +26,7 @@ not have to re-derive it.
 | "Freedom" of a candidate (distance from nearest defender) | **not computed** | composition of `nearest_opponents` needed |
 | `Interception` | in the enum, viewmodel, narrative; **no `resolve_*`, never emitted** | grep |
 | Per-tick interface (callback, frame, snapshot) | **absent** | `orchestrator.rs`, `state.rs` |
+| Per-agent loop, synthetic (22 agents x 54,000 ticks = 1,188,000 agent-ticks) | **18 ms** (17-19, stable under 4x parallel load) | `/tmp/tickbench`, release; lower bound: no `resolve_*`, no event building, no real perception. The real cost will be in the resolves |
 | `PassContext` in spec `10` §2.2 | contexts = observed state + PlayerId; outcomes = observable only | conforms |
 
 ## 2. Gaps, by category
