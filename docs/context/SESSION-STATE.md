@@ -2,13 +2,13 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `89ea3c9` — "docs: test count 142 -> 143 (four files, six occurrences)"
+**Last commit verified:** `418d28a` — "feat(match): C.1 — Pressure emitted beside the action (SIM_VERSION 9)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
 **Ideas backlog:** `docs/context/IDEAS.md`. Read at startup to know what is not yet decided; do not implement from it.
 
-**Legenda:** [wip] in corso · [next] prossimo · [open] aperto · [urgent] urgente
+**Legenda:** [wip] in corso · [next] prossimo · [open] aperto · [deferred] rinviato · [urgent] urgente · [done] chiuso
 
 **Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G2/G10 ora OI-23/24; G1/OI-22 chiuso in slice B2) e `docs/context/analysis/2026-11-02-engine-gaps.md` (fatti misurati + decisioni 2026-11-02, da annotare sui contratti). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
 
@@ -63,7 +63,7 @@ engine gets built.
 
 | Pr. | # | Cosa | Dipende da | Prima azione |
 |---|---|---|---|---|
-| [open] | 11 | **GitHub agent Phase 2 — deferred (2026-11-02).** Ruleset **disabled**. Reactivate when one holds: (a) a second reviewer exists; (b) the project ships; (c) a write token is granted to an agent. `Evaluate` is not available (personal repo, non-Enterprise). Until then, Phase 1: direct push by the maintainer. See `AGENT-POLICY.md` §6 | — | Rileggere `AGENT-POLICY.md` §6 quando una delle tre condizioni si presenta |
+| [deferred] | 11 | **GitHub agent Phase 2 — deferred (2026-11-02).** Ruleset **disabled**. Reactivate when one holds: (a) a second reviewer exists; (b) the project ships; (c) a write token is granted to an agent. `Evaluate` is not available (personal repo, non-Enterprise). Until then, Phase 1: direct push by the maintainer. See `AGENT-POLICY.md` §6 | — | Rileggere `AGENT-POLICY.md` §6 quando una delle tre condizioni si presenta |
 | [open] | 5 | Review sketch ×3 | L2-tactics, input, L2-staff | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
 | [open] | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
 | [open] | 8 | **ADR-019 deferred 4-9: verificati 2026-11-01, nessuno chiudibile.** 4 (UX) e 5 (resolution per piattaforma) richiedono UI/mobile reali; 6 (adaptive) richiede un ADR dedicato; 7 (LOD override) un emendamento ad ADR-013; 8 (zona di influenza) `docs/calibration/` vuota; 9 (role→tactic) `L2-tactics` non esiste. Non è un rinvio: è D3, non c'è contenuto concreto | — | Riaprire quando la dipendenza esiste. Nessuna azione ora |
@@ -74,7 +74,7 @@ engine gets built.
 | [done] | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
 | [done] | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
 | [open] | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Direzione relazionale (IDEA-DESIGN-001). Sotto-fork A/B/C/D tracciato in OI-25/29/31 | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
-| [next] | C.1 | **Pressure con input relazionale (primo passo verificabile).** Aggiungere `ConditionContext { player, nearest_opponent_distance }` in `pcfm-hidden`; `resolve_pressure` lo legge; test meccanico: due distanze diverse devono produrre distribuzioni diverse. Se non cambia, è ancora un dado. **Priorità non confermata (2026-11-02):** la palla (OI-37) potrebbe venire prima; `[next]` è il default finché OI-37(a) non è deciso | T (narrativa legge fields), direzione C | Leggere `pcfm-hidden/src/context.rs` e `lib.rs::resolve_pressure`, poi scrivere il test |
+| [done] | C.1 | **Pressure con `resolve_influence` (2026-11-02).** Il difensore più influente sulla palla, entro `space_threshold_cm`, emette `Pressure` accanto all'azione (`fields: {from, to}`), non a ogni tick. `SIM_VERSION` 9, golden rigenerato, `CHANGELOG-SIM`. Primo consumatore di `resolve_influence`. **Lacuna dichiarata:** nessun test dedicato a `Pressure` (i 143 test coprono il golden e l'influenza isolata, non l'emissione); il costo composto dello stream RNG condiviso è ora visibile (OI-39) | — | Fatto `418d28a`. Vedi OI-39 |
 | [open] | C.2 | **Slip/ControlError riformulati (dopo C.1).** Non più con velocity hardcoded: input osservabile alternativo, o sessione dedicata a OI-25 (modello di movimento) | C.1 | Decidere: input alternativo a velocity, o aprire OI-25 |
 ## Decisioni operative (2026-11-01)
 

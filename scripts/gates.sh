@@ -114,18 +114,15 @@ echo "Gate B - fresh-session simulation (mechanical subset)"
 
 SS=docs/context/SESSION-STATE.md
 
-# B1 (2026-11-02): state check added. Prefer [next], else [open]; [done]
-# never counts. Previous version found the first numeric ID regardless
-# of state, so "first open step" was imprecise (it returned 11, a
-# deferred step).
+# B1 (2026-11-02, revised): only [next] counts as "the next step".
+# No fallback to [open]: that fallback returned 11 (a [deferred] step)
+# whenever no [next] was declared, which is misleading. A Plan with no
+# [next] is a valid state (between slices): B1 says so, green, and the
+# maintainer sees it.
 first_line=$(awk -F'|' 'NF>=7 && $2 ~ /\[next\]/ && $3 ~ /^[[:space:]]*([0-9]+[ab]?|[A-Z]([.][0-9]+)?)[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
 kind="next"
 if [ -z "$first_line" ]; then
-  first_line=$(awk -F'|' 'NF>=7 && $2 ~ /\[open\]/ && $3 ~ /^[[:space:]]*([0-9]+[ab]?|[A-Z]([.][0-9]+)?)[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
-  kind="open"
-fi
-if [ -z "$first_line" ]; then
-  say_fail "B1 no open/next step found in the Plan"
+  say_ok "B1 no [next] step declared (valid between slices)"
 else
   step=$(echo "$first_line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$3); print $3}')
   action=$(echo "$first_line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$6); print $6}')
