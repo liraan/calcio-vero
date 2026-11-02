@@ -89,6 +89,15 @@ The two are **separate**. A 3D stadium with 45,000 people is rendering; the crow
 | **2D** | Ball with physics, posts and crossbar as obstacles, net as constraint, referee with full physics, assistant positions along lines, pitch condition (wet/dry), visual weather, 3D rendering prototype | VAR process, advanced weather (wind curves ball with physics), full crowd simulation |
 | **post-v1.0** | VAR (`VARReview` event delaying the decision when uncertain), advanced weather, crowd simulation (ADR-018, v1.1), full 3D, commentary, replay, spectator mode | — |
 
+
+**Note (2026-11-02) — ball, posts, pitch condition.** This document is a vision, updated when the vision changes; the table above stays as the record of the earlier horizon, this note records the change.
+
+- **"Physical ball dynamics" is redefined** as *computed from forces* (friction, gravity, spin, bounce integration). A **declared geometric rebound** (the ball travels, hits a static obstacle, leaves at a computed angle) is **not** physical dynamics: it is deterministic geometry, and it is admitted at v1.0.
+- **Posts and crossbar are static obstacles at v1.0** (moved earlier from 2D). The goal is a static field datum; the rebound angle is computed. Rationale: the ball has an intermediate position (see below), and "hit the post" is an event a fan recognises (D6).
+- **`Pitch.condition` stays reserved at v1.0**: the field exists, no consumer reads it. It is read when the ball's movement model uses it (wet/dry affecting the roll).
+- **The ball has an intermediate position at v1.0** (`InFlight` with position): it is not deferred to 2D. It is persistent state, saved, in the hash.
+
+The 2D horizon keeps "ball with physics" in the force sense: a renderer or a future engine that integrates trajectories. The difference between the two is *computed from forces* vs *declared geometry*, and it is the same distinction as `L0-POSITIONAL-SLICE` §0: effects are modelled, not simulated.
 **Rule:** a horizon is not a promise. It is a place to put things so that the contract does not have to grow to accommodate them prematurely.
 
 ---

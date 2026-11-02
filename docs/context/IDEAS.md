@@ -550,6 +550,7 @@
 - **Where it lives:** inside L0 (the tick loop owns it). Not a separate level. It is Plane B output, not Plane A.
 - **When:** when the positional slice (L0 positional) opens. Not now (D3). The snapshot exists conceptually already (`state_hash`, `chain_hash`); the record makes it explicit and per-tick.
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`, `docs/context/TICK-TEMPORAL-STATE.md`. The file is a draft, never compiled; the *idea* is kept here, the *file* is not imported.
+- **Update 2026-11-02 — "durable" is the wrong word; the record is derived.** The tick record is an **index**, not a saved artefact: `tick_id`, `score`, `possession counters`, `event_count`, `state_hash`. Replay **regenerates** it from the seed (measured 2026-11-02: a full match in ~0.2 s, release), so it is not saved and does not duplicate `state_hash`/`chain_hash`. Two interfaces, not one: **replay** = regenerate (no storage); **live** = the engine emits the record during the tick (callback or buffer), the renderer consumes it. The live streaming is a separate design decision, still open. The frame is a projection of the record; no renderer talks to the engine.
 
 ### IDEA-INFRA-019 — Spatial primitives as step-18 foundation (duplicate BallState to resolve)
 
@@ -563,6 +564,7 @@
 - **What is not imported:** the code as written (never compiled, 15 errors, deprecated by `00-foundations` §9 numbering). It is a **vocabulary**, not a ready module. Step 18 designs the module; these names are a starting point.
 - **When:** the positional slice. Not now (D3: L2 does not exist as a concrete consumer).
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`. Kept as reference, not merged.
+- **Update 2026-11-02 — verified: these are drafts, not current code.** `BallState`, `Position2D`, `Velocity2D`, `PitchBounds`, `PlayerSpatialState` have **zero occurrences** in `main` (grep). The "duplicate `BallState`" is draft-vs-draft on branch `repair/review-l0-branch` at `4613797`, not code-vs-code: it does not block anything. The current ball model is `SpatialState.ball: (i32, i32)` + `carrier: Option<PlayerId>`. The names are a **vocabulary** to borrow, not a constraint to resolve. The slice defines its own ball state.
 
 
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode

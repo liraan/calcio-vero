@@ -125,6 +125,8 @@ pub struct Pitch {
     pub condition: f32,          // 0.0–1.0, affects ball roll
     pub weather: Weather,        // Clear, Rain, Snow, Wind
 }
+
+**`Pitch.condition` — reserved (2026-11-02).** The field exists but has no consumer at v1.0: `WORLD-MODEL` §5 lists "pitch condition" as excluded from v1.0 and included in the 2D horizon. It is kept (not removed) because it documents the 2D intention and the spec is ratified. It will be read when the ball's movement model uses it (wet/dry affecting the roll). Until then, it is inactive and must not be read by the engine.
 ```
 
 ### 2.6 Referee
