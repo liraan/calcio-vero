@@ -141,6 +141,15 @@ if [ "$oi_count" -gt 0 ]; then
 else
   say_fail "B3 no OI table in SESSION-STATE.md"
 fi
+# B3-bis (2026-11-02): every OI must have a non-empty "Prima azione"
+# (third column). An OI without a first action is a step the next session
+# will skip (bookmark contract, §F).
+oi_empty=$(awk -F'|' '/^\| OI-[0-9]+ / { a=$4; gsub(/^[[:space:]]+|[[:space:]]+$/,"",a); if (a == "") print $2 }' "$SS" 2>/dev/null | tr -d ' ' | tr '\n' ' ')
+if [ -n "$oi_empty" ]; then
+  say_fail "B3-bis OI without a Prima azione: $oi_empty"
+else
+  say_ok "B3-bis all OIs have a Prima azione"
+fi
 
 
 proposed=0
