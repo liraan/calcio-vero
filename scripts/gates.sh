@@ -94,6 +94,13 @@ for a4c_f in README.md specs/_index.md STRUCTURE.md CONTRIBUTING.md; do
     a4c_values="${a4c_values} ${a4c_n}"
   done <<< "$a4c_hit"
 done
+# A4-coherence extended: the README badge `tests-N_passing` declares a
+# number too. It must match the docs. Pattern: the badge has the number
+# after `tests-`, not before.
+a4c_badge=$(grep -oE 'badge/tests-[0-9]+_passing' README.md 2>/dev/null | grep -oE '[0-9]+' | head -1)
+if [ -n "$a4c_badge" ]; then
+  a4c_values="${a4c_values} ${a4c_badge}"
+fi
 a4c_uniq=$(printf '%s\n' "$a4c_values" | grep -oE '[0-9]+' | sort -u | tr '\n' ' ' | sed 's/ $//')
 a4c_count=$(printf '%s\n' "$a4c_uniq" | tr ' ' '\n' | grep -c .)
 if [ "$a4c_count" -le 1 ]; then
