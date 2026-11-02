@@ -58,6 +58,7 @@ The rule: **if the match engine does not need it, it is not here.**
 | [2.6](#26-referee) | `Referee` | Strictness, consistency |
 | [2.7](#27-match) | `Match` | Home + away + pitch + referee + seed + rules |
 | [2.8](#28-what-is-not-here) | *Not here* | What does not belong in L0 |
+| [2.9](#29-zone-of-influence-formula) | *Zone of influence* | Derived relation: who can intervene where (D8, deferred 8) |
 
 ### 2.1 Player (L0 projection)
 
@@ -126,8 +127,9 @@ pub struct Pitch {
     pub weather: Weather,        // Clear, Rain, Snow, Wind
 }
 
-**`Pitch.condition` — reserved (2026-11-02).** The field exists but has no consumer at v1.0: `WORLD-MODEL` §5 lists "pitch condition" as excluded from v1.0 and included in the 2D horizon. It is kept (not removed) because it documents the 2D intention and the spec is ratified. It will be read when the ball's movement model uses it (wet/dry affecting the roll). Until then, it is inactive and must not be read by the engine.
 ```
+
+**`Pitch.condition` — reserved (2026-11-02).** The field exists but has no consumer at v1.0: `WORLD-MODEL` §5 lists "pitch condition" as excluded from v1.0 and included in the 2D horizon. It is kept (not removed) because it documents the 2D intention and the spec is ratified. It will be read when the ball's movement model uses it (wet/dry affecting the roll). Until then, it is inactive and must not be read by the engine.
 
 ### 2.6 Referee
 
@@ -160,6 +162,35 @@ pub struct Match {
 
 **Design note:** the match engine is usable in "sandbox" mode — pass two squads directly, no club, no season. This is the test harness for L0.
 
+### 2.9 Zone of influence (formula)
+
+**Status:** first model, arbitrary weights, declared (deferred 8 of ADR-019, minimal closure). Reinterpretation of ADR-019 D8: "observable attributes" becomes "computed inside pcfm-hidden with the latents, exposed to the engine as an observable order (Vec<PlayerId>)". The engine never sees a latent, and never sees a continuous influence value (anti-CA/PA: no scalar in Plane B).
+
+    influence(agent, point) =
+        w_space * space_term(agent, point)
+      + w_skill * skill_term(agent, context)
+      - w_cost  * fatigue_term(agent)
+      - w_red   * redundancy_term(agent, point)
+
+- space_term: decreasing function of the squared integer distance from point, normalised on a declared threshold.
+- skill_term: the latent relevant to the context (tackling to contest, passing to receive, ...), read inside pcfm-hidden.
+- fatigue_term: PhysicalStateMinimal.fatigue (exists, never read before).
+- redundancy_term: sum of the raw influences (without redundancy) of the agents closer to point than agent, normalised. Two defenders on the same attacker: the second has a high redundancy, the first is not penalised.
+- Output: an order of PlayerId, never the value. The engine reads "who counts most", not "how much".
+
+**Order of computation (determinism):** all raw influences first, then the redundancy subtraction. Order is spatial (distance from the point, tie-break by PlayerId), per ADR-019 deferred 1. Without a fixed order, the result depends on iteration and determinism falls.
+
+**Cost:** O(n^2) per point (n=22, ~484 operations), but few points per tick (the ball, a trajectory, the pass candidates). The synthetic per-agent loop (1,188,000 agent-ticks, 18 ms) does not include this: it must be measured with a real resolve_* before the slice.
+
+**Weights and threshold:** balance/influence.json, arbitrary, declared, "prototype, not calibrated". The form (space primary, skill modulator, redundancy, fatigue) is doctrine; the weights are calibration. Weights per use: pressing is space-dominant, the duel weighs skill more, the receiver is about freedom.
+
+**Declared limits (not modelled at v1.0):**
+1. Heading (AgentState.heading exists, unused): a defender at 5 m facing the ball is more influential than one facing away.
+2. Time to arrive: influence is "who arrives first", not "who is closest". Velocity is (0,0) today, so time is not computable.
+3. Redundancy as substitution, not cooperation: two defenders can cooperate (one presses, one covers). The formula treats them as substitutes. True for "who contests the same point", false for coordinated defence (L2).
+4. Aggregate vs ranking: Pressure needs the total pressure on the carrier, not only "who is first". The formula ranks; for the aggregate, a sum or a max must be declared separately.
+5. Influence is not intention: a player can be influential and choose not to intervene. The formula says "can", not "wants" — selection vs execution. Without weights/intent, the ranking produces a list, not realistic movement.
+6. Where it applies (verified against L0-POSITIONAL-SLICE §6-ter): selection (who contests a duel, who is the marker, who shoots, who reaches a loose ball) and receiver freedom. Not execution (resolve_*), not assigned roles, not fouls/cards.
 ## 3. Data model
 
 `Player`, `PhysicalStateMinimal`, `PsychologicalStateMinimal`, `Squad`, `Pitch`, `Referee`, `Match`, `MatchRules`, `Foot`, `Weather`.

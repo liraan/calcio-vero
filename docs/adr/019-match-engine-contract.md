@@ -84,6 +84,8 @@ with its own state, like the grid. The observable attributes referenced here are
 the same as those in D3. The specific attributes and formula are
 deferred (see deferred 8).
 
+
+**Note (2026-11-02) — D8 reinterpreted for the influence model.** The formula lives in `03-entities-minimal.md` §2.9; the weights in `balance/influence.json` (arbitrary, declared, "prototype, not calibrated"). "Observable attributes" in D8 is reinterpreted as **"computed inside `pcfm-hidden` with the latents, exposed to the engine as an observable order (`Vec<PlayerId>`)"**: the engine never sees a latent, and never sees a continuous influence value (anti-CA/PA: no scalar in Plane B). D8's "derived, not stored" is unchanged: the influence is computed per query, never saved. The rest of D8 (engine uses it to determine who can intervene on a position) is unchanged.
 **D9. Referee is a normative agent.** In-pitch, with `Position` and
 functional state, but not competitive: it does not play for the ball. Its
 behaviour (positioning, avoidance, whistling) is deferred to the 2D
