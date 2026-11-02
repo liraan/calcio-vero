@@ -177,6 +177,25 @@ else
 fi
 
 echo ""
+# E4b (2026-11-02): before a push, the bookmark update is the last commit.
+# Mechanised: if there are commits ahead of the upstream, HEAD must touch
+# docs/context/SESSION-STATE.md. This failed twice on 2026-11-02: code
+# pushed, bookmark not updated first.
+if git rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+  e4b_ahead=$(git rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+  if [ "${e4b_ahead:-0}" -gt 0 ]; then
+    if git show --name-only --format='' HEAD 2>/dev/null | grep -qx 'docs/context/SESSION-STATE.md'; then
+      say_ok "E4b bookmark updated before push (HEAD touches SESSION-STATE.md)"
+    else
+      say_fail "E4b bookmark not updated: HEAD ($(git rev-parse --short HEAD)) does not touch SESSION-STATE.md, $e4b_ahead unpushed commit(s)"
+    fi
+  else
+    say_ok "E4b no unpushed commits"
+  fi
+else
+  say_ok "E4b no upstream configured (skipped)"
+fi
+
 if [ "$fail" -eq 0 ]; then
   if [ "$MODE" = "closing" ]; then
     echo "gates: GREEN (closing; manual: B2 - do it in the closing report)"
