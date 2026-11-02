@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `bd410a8` — "docs(context): Plan as tree, gates.sh B1 checks state, remove DECISION-MAP"
+**Last commit verified:** `de976fb` — "feat(narrative): read event fields, structured substrate (T)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -66,9 +66,9 @@ engine gets built.
 | [done] | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
 | [done] | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |
 | [done] | B2 | **Slice B2 — chi agisce dallo spazio + conquista come evento.** `MatchState` possiede `SpatialState`; `pick_players` → `pick_from_space`; duello vinto dal difensore emette `Tackle` con `from`/`to`; pass incompleto/fallo azzerano il carrier; `SIM_VERSION` 8, golden rigenerato, OI-22. Fatto. 133 test | B1 | Fatto. Vedi slice C |
-| [next] | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
+| [done] | T | **Step 19 — la narrativa legge i `fields` (nodo trasversale, vale in ogni strada).** `narrate_event` legge `fields`: `Tackle` con `from`/`to`, `Shot` con `goal`, `Duel` con `winner_slot`. Test sul `Tackle`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` | — | Leggere `narrative.rs` (`render_text`, `narrate_event`) e `05-match-events.md` §2.1 |
 | [open] | C | **Slice C — primi eventi fenomenologici.** `Slip` e `ControlError` da `pitch_wear` × `weather` (parametri in `balance/`, arbitrari dichiarati); `Pressure` emesso. Direzione relazionale (IDEA-DESIGN-001). Sotto-fork A/B/C/D tracciato in OI-25/29/31 | B2 | Leggere §0, §6-ter, §7 (trailer `Note-Read`), poi aprire `balance/` |
-| [open] | C.1 | **Pressure con input relazionale (primo passo verificabile).** Aggiungere `ConditionContext { player, nearest_opponent_distance }` in `pcfm-hidden`; `resolve_pressure` lo legge; test meccanico: due distanze diverse devono produrre distribuzioni diverse. Se non cambia, è ancora un dado | T (narrativa legge fields), direzione C | Leggere `pcfm-hidden/src/context.rs` e `lib.rs::resolve_pressure`, poi scrivere il test |
+| [next] | C.1 | **Pressure con input relazionale (primo passo verificabile).** Aggiungere `ConditionContext { player, nearest_opponent_distance }` in `pcfm-hidden`; `resolve_pressure` lo legge; test meccanico: due distanze diverse devono produrre distribuzioni diverse. Se non cambia, è ancora un dado | T (narrativa legge fields), direzione C | Leggere `pcfm-hidden/src/context.rs` e `lib.rs::resolve_pressure`, poi scrivere il test |
 | [open] | C.2 | **Slip/ControlError riformulati (dopo C.1).** Non più con velocity hardcoded: input osservabile alternativo, o sessione dedicata a OI-25 (modello di movimento) | C.1 | Decidere: input alternativo a velocity, o aprire OI-25 |
 ## Decisioni operative (2026-11-01)
 
