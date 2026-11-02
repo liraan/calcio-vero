@@ -57,7 +57,7 @@ Full doctrine → [`specs/00-foundations.md`](specs/00-foundations.md) · Enforc
 
 ## Determinism, taken seriously
 
-Same seed → same match, same season, same career. **Always.** This is verified on every commit by `pcfm-test-runner --check`:
+Same seed → same match. **Always.** The same will hold for the season and the career when L1 and L2 exist: today the contract is local (ADR-013). This is verified on every commit by `pcfm-test-runner --check`:
 
 ```
   ✅ demo teams are valid
@@ -93,7 +93,7 @@ The rules that make this possible are non-negotiable:
 
 </div>
 
-**Where we are:** L0 is **complete, ratified, implemented, and tested**. The framework compiles, the health check is green, the determinism contract is enforced, and the test harness (`pcfm-testkit`) is in place. L1 (the season) is the next specification milestone. **No playable build exists yet** — the docs have to be solid before the engine is.
+**Where we are:** L0 is **complete as a contract, ratified, implemented, and tested**. The engine is a prototype: the two tables below say what exists today and what does not. The framework compiles, the health check is green, the determinism contract is enforced, and the test harness (`pcfm-testkit`) is in place. L1 (the season) is the next specification milestone. **No playable build exists yet** — the docs have to be solid before the engine is.
 
 **Maturity (what is settled, what is not):**
 
@@ -242,7 +242,7 @@ The specification is **concentric**. Read in this order:
 Contributions are welcome — code, docs, data, bug reports, honest criticism.
 
 **The short version:**
-- One change per PR (one module, one ADR, one fix).
+- One change per PR (one module, one ADR, one fix). In Phase 1 the maintainer pushes directly on `main`; external contributors use PRs.
 - English is canonical for code, commits, and technical docs → [ADR-007](docs/adr/007-canonical-language.md).
 - Every factual claim needs a source. Every decision needs an ADR if it changes an invariant.
 - Every contribution is **reviewed by a human**. AI may draft; humans decide.
@@ -299,7 +299,7 @@ When L0 and L1 are stable and a minimal kernel runs. Indicatively **Q3 2027**. N
 
 **Which decisions are actually settled?**
 Settled: the doctrine, the Three Planes, Plane A enforcement (ADR-003), FFI panic strategy (ADR-004), TUI-first presentation (ADR-022), Qt binding for the future GUI (ADR-005), license (ADR-006), canonical language (ADR-007), provider integration policy (ADR-008).
-For a human-readable summary of the current state, see [`docs/context/SESSION-STATE.md`](docs/context/SESSION-STATE.md) (the bookmark) and [`STRUCTURE.md`](STRUCTURE.md) §5 for ADR status.
+For ADR status, see [`STRUCTURE.md`](STRUCTURE.md) §5.
 
 **What is `pcfm-testkit`?**
 A small crate that defines the `Scenario` trait and the `TestRegistry`. It has **no dependency on any other `pcfm-*` crate**, so core modules, plugins, and tools can all contribute test scenarios without coupling. `pcfm-test-runner --check` runs them; `--list` and `--coverage` inspect them.
