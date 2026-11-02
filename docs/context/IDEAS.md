@@ -330,7 +330,7 @@
 
 - **Scope now (2026-10-31, after the L0 census).** Two things, not one:
   - **Now — board + events.** Score, possession, shots, the event list (today 4 types: Shot, Goal, Duel, Foul), narrative, state hash, chain. This is a TUI a *scoreboard*, not a *pitch*. It validates the architectural point: a second renderer reads `MatchResult` without touching the engine (ADR-022, `simulation_is_shared_and_renderer_agnostic`). That point holds even without positions.
-  - **Later — pitch with 22 players.** Requires L0 positional (step 18), which requires L2 as a concrete consumer (D3). Not now.
+  - **Later — pitch with 22 players.** Requires L0 positional (the positional slice), which requires L2 as a concrete consumer (D3). Not now.
 - **Why the distinction matters:** if the TUI is built as a pitch today, it will be rebuilt when `MatchResult` gains `PositionSnapshot` and attempt/outcome events. If it is built as a board, the split renderer/engine survives the rewrite: the structure (renderer reads `MatchResult`, engine unaware) is the durable part, the drawing is not.
 - **Link to OI-17:** the TUI shows the real state, and the census says what that state is (4 events out of 27, no positions). Building it after reading the census means it shows the truth, not a state we are about to change.
 - **Splash screen:** an ASCII ball (character density, no ANSI needed) shown at the start of `pcfm-demo`, before the match. The artwork is supplied by the maintainer; without the text it cannot be rendered (an image is not a string). Tracked here so the decision is not lost.
@@ -352,7 +352,7 @@
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`. Kept as reference, not merged.
 
 
-### IDEA-TACT-003 — Foul severity and differentiated stoppage time (parked with step 18)
+### IDEA-TACT-003 — Foul severity and differentiated stoppage time (parked with the positional slice)
 
 - **Status:** sketch
 - **Category:** Tactics / simulation
@@ -364,8 +364,8 @@
     3. `balance/stoppage_time.json` splits `foul` into `foul_light` and `foul_serious` (proposed: 15s and 60s).
     4. `stoppage_for` reads `fields.severity`.
     5. `SIM_VERSION` bump.
-- **Why parked with step 18:** severity is a *perception* the engine must resolve (how violent was the contact?), and the positional engine is where contact resolution will live. Adding it now, on the event-only prototype, would mean inventing a severity from a `DuelOutcome` that does not model contact intensity. D3: structure after content.
-- **Link:** step 18 (L0 positional), `IDEA-INFRA-019` (spatial primitives), `balance/stoppage_time.json`.
+- **Why parked with the positional slice:** severity is a *perception* the engine must resolve (how violent was the contact?), and the positional engine is where contact resolution will live. Adding it now, on the event-only prototype, would mean inventing a severity from a `DuelOutcome` that does not model contact intensity. D3: structure after content.
+- **Link:** the positional slice (L0 positional), `IDEA-INFRA-019` (spatial primitives), `balance/stoppage_time.json`.
 - **Not rejected:** scheduled. The flat 20s is a declared placeholder, not a final value.
 - **Known consequence (2026-11-01):** the recovery is high for high-scoring halves. Seed 42 (4 goals in the first half) produces `45'+4'`, against a real-game 2-3'. The cause is not the formula: it is the prototype engine, which emits 4 of 27 event types (`action_probability = 0.0005` produces ~27 events per match, with a goal-heavy distribution). A half with 4 goals is rare IRL; the prototype generates it more often. The recovery is reported as the engine produces it, not hidden with a coefficient.
 - **Do not add a per-half multiplier.** It would be arbitrary and would mask the engine's distribution. When the engine emits more event types (substitutions, injuries, cards, VAR), the contributions are recalibrated, not the formula.
@@ -526,13 +526,13 @@
   - **Graph only:** players are nodes, passes are edges; "position" is the topology. *Gives:* "the pass network was dense on the right". *Loses:* everything spatial.
   - **Enriched events, no space:** keep the abstract model, add more event types and fields (pressure, body part, context). *Gives:* "long pass under pressure". *Loses:* "from where", "how far".
   - **Hybrid:** space for some events (shots, corners), enriched events for the rest. *Gives:* maximum where it matters. *Loses:* coherence (a pass has no space, a shot does).
-  - **Why positional won:** it is the only model that supports *all* the sentences an FM player expects ("he was outside the box", "the defender did not see him", "the cross came from the wing"). The others support a subset. Cost: geometry, movement, perception, physics. Decided in step 18: positional with coordinates; the derived graph is downstream (IDEA-INFRA-017).
+  - **Why positional won:** it is the only model that supports *all* the sentences an FM player expects ("he was outside the box", "the defender did not see him", "the cross came from the wing"). The others support a subset. Cost: geometry, movement, perception, physics. Decided in the positional slice: positional with coordinates; the derived graph is downstream (IDEA-INFRA-017).
 ### IDEA-INFRA-017 — Derived graph from coordinates (downstream, not L0)
 
 - **Status:** sketch
 - **Category:** Infra
 - **Source:** session 2026-10-31 (discussion on the L0 positional rewrite).
-- **Idea:** if L0 is positional with coordinates (step 18), the graph of relations between agents (who is connected to whom, who is free, who is marked) is a **derived view**, computable from the coordinates. It is not a datum L0 produces.
+- **Idea:** if L0 is positional with coordinates (the positional slice), the graph of relations between agents (who is connected to whom, who is free, who is marked) is a **derived view**, computable from the coordinates. It is not a datum L0 produces.
 - **Where it lives:** downstream, in whatever level consumes match statistics. It does not exist today. It is not part of L0.
 - **Why not L0:** L0 needs coordinates to decide actions. It does not need the graph: the graph is a *post-hoc* description, not a decision input.
 - **Plane caveat (D2):** the graph is Plane B (an agent's perception), not Plane A (the full map of coordinates). An event must never expose the full map; it exposes what the agent perceived.
@@ -547,7 +547,7 @@
 - **Why it matters:** with static frames alone, the same action looks different depending on the frame; temporal variance is confused with semantic variance; causality between events becomes hard to verify; the simulation cannot be reconstructed from static views. The tick record fixes all four.
 - **What it is not:** not a replacement for `chain_hash` or `state_hash` (both exist). It is an **index** over them: "at tick N, the state hash was H, the score was S, the chain had C events". It is what allows a renderer to show a timeline without inventing it.
 - **Where it lives:** inside L0 (the tick loop owns it). Not a separate level. It is Plane B output, not Plane A.
-- **When:** when step 18 (L0 positional) opens. Not now (D3). The snapshot exists conceptually already (`state_hash`, `chain_hash`); the record makes it explicit and per-tick.
+- **When:** when the positional slice (L0 positional) opens. Not now (D3). The snapshot exists conceptually already (`state_hash`, `chain_hash`); the record makes it explicit and per-tick.
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`, `docs/context/TICK-TEMPORAL-STATE.md`. The file is a draft, never compiled; the *idea* is kept here, the *file* is not imported.
 
 ### IDEA-INFRA-019 — Spatial primitives as step-18 foundation (duplicate BallState to resolve)
@@ -555,12 +555,12 @@
 - **Status:** sketch
 - **Category:** Infra
 - **Source:** session 2026-11-01 (extracted from `draft/layered-match-2026-11-01`, files `crates/pcfm-model/src/spatial.rs` and `crates/pcfm-match/src/spatial.rs`, draft never compiled: 15 errors).
-- **Idea:** the two `spatial.rs` drafts contain a usable vocabulary for step 18 (L0 positional with coordinates):
+- **Idea:** the two `spatial.rs` drafts contain a usable vocabulary for the positional slice (L0 positional with coordinates):
     - **`pcfm-model`**: `Position2D` (with `try_new` validation, `distance_to`), `Velocity2D`, `Heading`, `FieldSide`, `FieldZone`, `PlayerPose`, `BallState`, `PitchBounds` — geometric primitives, validated.
     - **`pcfm-match`**: `Vec2`, `BallState`, `PlayerSpatialState`, `TeamShapeState`, `PressurePoint`, `PressureMap`, `SpatialState` — per-tick match state.
 - **Duplicate to resolve:** there are **two `BallState`** (one in each crate, different fields). Step 18 must pick one. Recommendation: `pcfm-model::BallState` (validated) is the data type; `pcfm-match` owns the per-tick `SpatialState` that *uses* it, plus the match-context fields (`owner`, `last_touch`). Also `Vec2` vs `Position2D` — one must win.
 - **What is not imported:** the code as written (never compiled, 15 errors, deprecated by `00-foundations` §9 numbering). It is a **vocabulary**, not a ready module. Step 18 designs the module; these names are a starting point.
-- **When:** step 18. Not now (D3: L2 does not exist as a concrete consumer).
+- **When:** the positional slice. Not now (D3: L2 does not exist as a concrete consumer).
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`. Kept as reference, not merged.
 
 

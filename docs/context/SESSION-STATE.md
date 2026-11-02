@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `d59c43e` — "chore(docs): fix stale test counts, extend A4 to doc coherence"
+**Last commit verified:** `a95394e` — "docs(rules): A2 structured reports must pause first"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -53,6 +53,7 @@ engine gets built.
 | OI-33 | **Il motif è a stadi (L0 = causalità locale, L2 = causale globale).** Il pillar 5 ("perché ho perso?") non è rispondibile a L0 senza tattiche e psicologia. Va dichiarato esplicitamente nel README/manifesto, o il prodotto promette più di quanto L0 possa dare | Decidere se dichiarare la promessa a stadi in `README.md` o in un ADR |
 | OI-34 | **Tensione D2 nel codice esistente.** `state.rs:320` (`expect("spatial state contains every starter")`) e `state.rs:325` (`unwrap_or(max)`) sono in path di simulazione. D2 dice "no `unwrap`/`expect`/`panic!` in simulation paths". Documentati unreachable, ma letteralmente in violazione | Valutare sostituzione con `Option` + gestione esplicita, in una sessione dedicata (non ora: non blocca slice C) |
 | OI-35 | **README — tabelle superate da sostituire.** Level/Code (riga ~89), Axis/Status (~100), Phase/Target (~113), FM vs PCFM (~124) hanno numeri e stato che invecchiano. La nuova sezione "The match engine in one glance" è un primo passo; le vecchie tabelle vanno riscritte o rimosse quando il motore L0 è completo | Riscrivere le tre tabelle con numeri e stato reali (o rimuoverle se ridondanti) quando il debito ADR-019 è chiuso |
+| OI-36 | **ADR-025 cita "step 18" (vecchia numerazione).** Il Plan è ora un albero (T/C/C.1/C.2), "L0 posizionale" si chiama positional slice. ADR è record storico, non si modifica; ma il lettore che lo apre trova un riferimento che non esiste più. README e IDEAS corretti (2026-11-02) | Aggiungere una nota glossario o un emendamento leggero ad ADR-025 quando lo si tocca per altro |
 
 ## Plan (tree: leaves are executable steps, forks expose a decision; see IDEA-DESIGN-001)
 
