@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `808aab6` — "docs(policy): Phase 2 deferred — ruleset disabled, with three preconditions"
+**Last commit verified:** `110b285` — "docs(session-state): closing revised — Phase 2 deferred above the previous closing"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -52,6 +52,7 @@ engine gets built.
 | ⬜ | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
 | ⬜ | 8 | **ADR-019 deferred 4-9: verificati 2026-11-01, nessuno chiudibile.** 4 (UX) e 5 (resolution per piattaforma) richiedono UI/mobile reali; 6 (adaptive) richiede un ADR dedicato; 7 (LOD override) un emendamento ad ADR-013; 8 (zona di influenza) `docs/calibration/` vuota; 9 (role→tactic) `L2-tactics` non esiste. Non è un rinvio: è D3, non c'è contenuto concreto | — | Riaprire quando la dipendenza esiste. Nessuna azione ora |
 | ⬜ | 10 | `L1-world/01-nation` | — | Scrivere `L1.04` (`L1-world/00-overview.md`) prima di `L1.05` |
+| ⬜ | 19 | **Narrativa: legge i `fields` degli eventi.** Oggi `narrative.rs` ignora `fields` per ogni evento: `Tackle` non dice chi ha perso la palla (`from`/`to`), `Shot` non dice se è gol (`goal`), `Duel` non dice contro chi (`winner_slot`). Viola il criterio di §0 ("every event carries the fields to understand why"). Fix: `narrate_event` legge `fields`; test sul `Tackle` con `from`/`to`. Non tocca i sei file del motore (niente `Note-Read`), non cambia `SIM_VERSION` (la narrativa non è nel `chain_hash`) | — | Leggere `crates/pcfm-match/src/narrative.rs` (`render_text` e `narrate_event`), poi `fields` in `05-match-events.md` §2.1 |
 | ✅ | 13 | **Sicurezza dipendenze**: Dependabot alerts **attivato dal maintainer il 2026-11-01** (non era attivo di default, contrariamente a quanto avevo assunto). `cargo-deny` (licenze, ban) resta pre-release. | — | Chiuso. Se in futuro serve `cargo-audit` in CI, è un OI nuovo |
 | ✅ | A | **Slice A — fondamenta spaziali**: `spatial.rs` (`AgentState`, `SpatialState`, griglia 4-4-2, 6 test). Fatto `39c444b` | — | Fatto |
 | ✅ | B1 | **Slice B parte 1 — percezione + carrier**: `perception.rs` (4 test), `SpatialState.carrier`. Fatto `c231c98`. Non usati dal motore | A | Fatto |

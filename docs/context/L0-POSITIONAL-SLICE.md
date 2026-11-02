@@ -520,6 +520,21 @@ and `Pressure` follow in slice C, with #3 (`Slip`, `ControlError`). The
 order is deliberate: interaction first (the heart), execution after
 (weather as an input, not the theme).
 
+
+### The consumer gap (2026-11-02)
+
+An event with the right fields is not enough: someone must read them.
+`crates/pcfm-match/src/narrative.rs` ignores `fields` for every event:
+`Tackle` does not say who lost the ball (`from`/`to`), `Shot` does not say
+whether it was a goal (`goal`), `Duel` does not say against whom
+(`winner_slot`). The map above says "fields to understand why"; the
+narrative does not use them.
+
+This is **step 19** in the bookmark. It is not part of slice C, and it
+does not need the new engine: the fields exist today. It is the first
+consumer fix, and the pattern to follow: every new field added in slice C
+must have a consumer in the same slice, or it is an idea, not a design
+(the four criteria above, applied to the fields).
 ### The parameters
 
 Every model has parameters (how much a surface raises the control error,
