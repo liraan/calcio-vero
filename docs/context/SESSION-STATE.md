@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `45d73e8` — "docs: ball sequence, tick record derived/live, 2D as tick-record consumer"
+**Last commit verified:** `d33fecf` — "docs: per-agent first (no static interception), measure 18 ms"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
