@@ -578,6 +578,18 @@
 - **Applicazione 2026-11-03:** A1 (stream per scopo) scelta per misurabilita del per-agent, non per lettera di §4; B1 (movimento fuori da slice C) scelta perche una scivolata si riconosce solo se qualcuno si stava muovendo; OI-34 (due `expect`) lasciato in OI-34 perche non e sul percorso della partita.
 - **Open questions:** e una lente (non vincolante) o una regola? Se regola, va in `NEW-SESSION-PROMPT.md` con pre-mortem D4. Chi la invoca, e con quale artefatto visibile (D5)?
 - **Critical note:** non e una scusa per saltare passi scomodi; e una scusa per non fare igiene fuori percorso. Se una scelta non ha effetto osservabile sulla partita oggi, va in un OI, non in una sessione.
+### IDEA-INFRA-021 — Pipeline engine -> narrator -> 2D -> 3D
+
+- **Status:** sketch
+- **Category:** Infra / presentation
+- **Source:** pausa 2026-11-03 (maintainer). Direction, not a plan.
+- **Idea:** the data flow is `engine -> narrator -> 2D -> 3D`, not `engine -> 2D -> 3D`. The narrator is not a string formatter downstream of the engine: it is **Plane B**, the layer where "every event explains why" is kept. The renderers are projections of the narrator's output, not direct readers of the engine's events.
+- **Why it matters:** it is the Three Planes made data flow. Engine = Plane A (truth). Narrator = Plane B (observation: what happened and why, in a vocabulary a fan recognises). 2D/3D = Plane C (what the user sees). Without the narrator as a stage, the renderer either talks to the engine directly (forbidden: no renderer talks to `MatchState`) or re-derives causality from raw events (duplicating the narrator).
+- **Tension with IDEA-INFRA-018 (declared, not resolved):** INFRA-018 says the shared substrate is the *tick record*, consumed by renderers. This idea says the stage between engine and renderer is the *narrator*. Two possible readings, both defensible: (a) the narrator consumes the tick record and produces a *narrated tick record* (positions + narrated events), and the renderers consume that; (b) the narrator is only for events, and positions travel separately. Reading (a) is more coherent with this pipeline (the 2D talks to the narrator, not to the raw tick record), but it is an architectural decision, not a detail. Not decided today.
+- **Consequence for F2 (the reason this matters now):** if the 2D shows movement *through* the narrator, then movement must be **narrable**. A tick with no event is not "nothing to say": it is "the agents moved, the shape shifted, the ball is still at the centre". Today the narrator has one entry per event (test: `one_entry_per_event`). F2 must make movement narrable, or the pipeline does not hold: the 2D cannot show movement because the narrator does not emit it. This touches `narrative.rs`, which F2 did not originally plan.
+- **What it is not:** not a decision on where the narrator lives (crate, module), not a decision on the tick record shape (INFRA-018), not a commitment to live streaming (v1 is replay-only, INFRA-018 decision 2026-11-03).
+- **Open questions:** (1) reading (a) or (b)? (2) does the narrator have a per-tick output, or only per-event plus a periodic position snapshot? (3) does F2 need to touch `narrative.rs` to make movement narrable, or can the first 2D show movement without narration (which would weaken the pipeline to `engine -> 2D`)? (4) when the 3D arrives, does it consume the narrator's output unchanged, or does it need a richer narrator output?
+
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch
