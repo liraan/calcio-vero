@@ -140,7 +140,7 @@ reconstructed? Why is `MatchSave` JSON and not `postcard` yet?
 **Key test to read:** `simulation_is_shared_and_renderer_agnostic` in
 `engine.rs`. It is the contract that any renderer must satisfy.
 
-**A note on events:** the match engine emits temporal events in two synchronous phases (ADR-019 D11): an *attempt* event carrying a `PositionSnapshot`, followed by the *outcome* event linked back via `attempt_event_id`. See [`specs/L0-match/05-match-events.md`](../specs/L0-match/05-match-events.md) §2.6.
+**Two-phase events (ADR-019 D11, target — not yet implemented).** The target design emits temporal events in two synchronous phases: an *attempt* event carrying a `PositionSnapshot`, followed by the *outcome* event linked back via `attempt_event_id`. Both phases occur in the same tick. The prototype does **not** do this yet: `PositionSnapshot` and `attempt_event_id` do not exist in code. See [`specs/L0-match/05-match-events.md`](../specs/L0-match/05-match-events.md) §2.6.
 
 ---
 

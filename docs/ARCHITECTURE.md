@@ -111,7 +111,7 @@ the sequence that a future UI will follow.
 6. simulate_match(&mut ctx)            (pcfm-match::orchestrator)
      for each tick:
        a. MatchState::tick(tick, ctx)  (pcfm-match::state)
-       b. pick_players(ctx)            (deterministic, from RNG)
+       b. pick_from_space(ctx)         (deterministic, from space, slice B2)
        c. action kind roll             (pass / shot / duel / foul)
        d. ctx.hidden.resolve_*(...)    (pcfm-hidden)         [Plane A read]
        e. emit MatchEvent to ctx.chain (pcfm-stats)          [Plane B write]
@@ -121,7 +121,7 @@ the sequence that a future UI will follow.
 10. MatchSave::to_bytes() / from_bytes()                      [JSON, for now]
 ```
 
-**Two-phase events:** step 6e emits temporal events in two synchronous phases (ADR-019 D11): an *attempt* event carrying a `PositionSnapshot`, followed by the *outcome* event linked back via `attempt_event_id`. Both phases occur in the same tick. See [`specs/L0-match/05-match-events.md`](../specs/L0-match/05-match-events.md) §2.6.
+**Two-phase events (ADR-019 D11, target — not yet implemented).** The target design emits temporal events in two synchronous phases: an *attempt* event carrying a `PositionSnapshot`, followed by the *outcome* event linked back via `attempt_event_id`. Both phases occur in the same tick. The prototype does **not** do this yet: `PositionSnapshot` and `attempt_event_id` do not exist in code. See [`specs/L0-match/05-match-events.md`](../specs/L0-match/05-match-events.md) §2.6.
 
 **Key invariant:** step 6d is the only interaction with Plane A. The
 engine constructs a `DuelContext`/`ShotContext`/etc., calls `resolve_*`,
