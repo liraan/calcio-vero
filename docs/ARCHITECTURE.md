@@ -160,6 +160,21 @@ simulation. With it, the 3D renderer is additive.
 
 See `docs/PLUGIN_DEVELOPER_GUIDE.md` §3 for the developer-facing view.
 
+**Note (2026-11-03) — the narrator is inside `simulate_match` (new engine).**
+In the new engine, `simulate_match` includes the narrator: the engine
+emits typed facts, the narrator classifies them into events, and
+`simulate_match` returns events already created by the narrator. The
+renderer fills only the text. The simulation/rendering split is
+unchanged in its purpose; the boundary moves: classification
+(simulation, in the golden) vs text (presentation, out of the golden).
+`TextMatchEngine` calls `render_text()`, not `narrate()` (which in the
+prototype creates the events). The test
+`simulation_is_shared_and_renderer_agnostic` still compares two calls
+to `simulate_match`, but the events it compares are now created by the
+narrator. Consequence: changing a classification rule changes the
+golden and requires a `SIM_VERSION` bump (already decided in T1, not a
+new bump). See `SESSION-STATE.md` "Nuovo motore — decisioni T2".
+
 ---
 
 ## 5. The testkit contract
