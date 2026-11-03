@@ -181,8 +181,12 @@ late). The consumer already exists (`resolve_influence` reads
 `fatigue_milli`). The quality effect is declared out of scope, tracked,
 not forgotten: if it returns, it needs its own ADR (and it must avoid
 double-counting, because a tired player is already less influential).
-`weather_severity` and `pitch_wear` in `09 §2.2` remain valid: they are
-external conditions (the pass is harder for everyone), not fatigue.
+**Note (2026-11-03b) — weather and pitch_wear are prototype-only in the
+new engine.** `weather_severity` and `pitch_wear` in `09 §2.2` are
+**excluded from the new engine** (T5, 2026-11-03): they are environmental
+conditions that the new engine does not model. This supersedes the
+sentence "remain valid" in the note above. The prototype keeps them; the
+new engine does not.
 
 ## 3. Data model
 

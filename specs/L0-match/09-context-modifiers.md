@@ -86,6 +86,8 @@ The engine applies modifiers to its internal calculations:
 - `weather_severity` → increases error rates, reduces pass completion
 - `derby_intensity` → increases random event probability (brawls, cards)
 - `pitch_wear` → increases injury risk modifier, reduces pass completion
+
+**Note (2026-11-03) — weather_severity and pitch_wear are excluded from the new engine.** They remain in this cell as prototype fields; the new engine does not model them (T5, 2026-11-03). The reasons: they are not the player's internal state (unlike fatigue), they are not selection (unlike the cone), and the new engine's first phenomena (the ball travelling, the geometric goal, the keeper's save) do not depend on them. They return only if a phenomenon of the new engine requires them (D3), and with their own decision.
 - `relegation_pressure` / `title_race_pressure` → increases `pressure_load` for both teams, magnitude depends on the field's value
 
 **Rule:** the engine treats these as **inputs**. It does not compute them, does not know their origin. `L2-psyche` could set `squad_chemistry = 0.3` because of a fight in training; the engine just sees `0.3`.

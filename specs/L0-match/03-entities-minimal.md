@@ -191,6 +191,8 @@ pub struct Match {
 4. Aggregate vs ranking: Pressure needs the total pressure on the carrier, not only "who is first". The formula ranks; for the aggregate, a sum or a max must be declared separately.
 5. Influence is not intention: a player can be influential and choose not to intervene. The formula says "can", not "wants" — selection vs execution. Without weights/intent, the ranking produces a list, not realistic movement.
 6. Where it applies (verified against L0-POSITIONAL-SLICE §6-ter): selection (who contests a duel, who is the marker, who shoots, who reaches a loose ball) and receiver freedom. Not execution (resolve_*), not assigned roles, not fouls/cards.
+
+**Note (2026-11-03) — distance appears in two places, by design (not double-counting).** Distance is in `space_term` (the influence formula, §2.9 above) and in the die's difficulty (T5, 2026-11-03). They answer two different questions: "who can intervene here?" (selection: the closest agent is more influential) and "how hard is it to reach the target?" (execution: a far target is harder). The same agent is not penalised twice, because the two terms enter two different mechanisms. The cone of vision and the obstacles do NOT enter the die: the cone is selection (what the agent sees, only players — T1.3), the obstacles are selection (what is reachable) and facts (`line crossing` during the flight, T5).
 ## 3. Data model
 
 `Player`, `PhysicalStateMinimal`, `PsychologicalStateMinimal`, `Squad`, `Pitch`, `Referee`, `Match`, `MatchRules`, `Foot`, `Weather`.
