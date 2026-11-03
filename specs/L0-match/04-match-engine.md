@@ -171,6 +171,19 @@ snapshot_interval_ticks = 300   # every 30 simulated seconds
 
 Nothing in the engine is hardcoded. Changing a parameter requires no recompile (hot-reload at the start of a match).
 
+**Note (2026-11-03) — fatigue_multiplier is prototype-only.** The
+`fatigue_multiplier` above belongs to the prototype's execution model:
+it penalises the quality of the action (the die). The NEW engine models
+fatigue as **selection + time, not execution**: one source
+(`PhysicalStateMinimal.fatigue`), two delays (perception delay: the
+agent decides on an old state; execution delay: the agent arrives
+late). The consumer already exists (`resolve_influence` reads
+`fatigue_milli`). The quality effect is declared out of scope, tracked,
+not forgotten: if it returns, it needs its own ADR (and it must avoid
+double-counting, because a tired player is already less influential).
+`weather_severity` and `pitch_wear` in `09 §2.2` remain valid: they are
+external conditions (the pass is harder for everyone), not fatigue.
+
 ## 3. Data model
 
 `MatchContext`, `MatchResult`, `MatchConfig`, `Score`.
