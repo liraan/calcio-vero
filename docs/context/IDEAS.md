@@ -567,6 +567,16 @@
 - **Update 2026-11-02 — verified: these are drafts, not current code.** `BallState`, `Position2D`, `Velocity2D`, `PitchBounds`, `PlayerSpatialState` have **zero occurrences** in `main` (grep). The "duplicate `BallState`" is draft-vs-draft on branch `repair/review-l0-branch` at `4613797`, not code-vs-code: it does not block anything. The current ball model is `SpatialState.ball: (i32, i32)` + `carrier: Option<PlayerId>`. The names are a **vocabulary** to borrow, not a constraint to resolve. The slice defines its own ball state.
 
 
+### IDEA-INFRA-020 - Luna/dito: la lente dell'obiettivo prima della conformita
+
+- **Status:** sketch
+- **Category:** Infrastructure (process)
+- **Source:** pausa 2026-11-03 (maintainer)
+- **Idea:** quando una scelta di design e conforme alla dottrina ma non avvicina il motore al calcio riconoscibile, la domanda giusta e "quale lettura avvicina il motore al calcio", non "quale e piu fedele alla lettera". La dottrina e il dito; la partita riconoscibile e la luna. La lente non sostituisce il ragionamento: lo orienta.
+- **Limite esplicito:** non cancella i hard stop (D1, D2, C2) ne gli invarianti (`SIM_VERSION`, `chain_hash`, schema). Se dottrina e obiettivo sembrano in conflitto, il conflitto si dichiara e si decide; non si ignora la dottrina in silenzio. Un gate rosso resta rosso.
+- **Applicazione 2026-11-03:** A1 (stream per scopo) scelta per misurabilita del per-agent, non per lettera di §4; B1 (movimento fuori da slice C) scelta perche una scivolata si riconosce solo se qualcuno si stava muovendo; OI-34 (due `expect`) lasciato in OI-34 perche non e sul percorso della partita.
+- **Open questions:** e una lente (non vincolante) o una regola? Se regola, va in `NEW-SESSION-PROMPT.md` con pre-mortem D4. Chi la invoca, e con quale artefatto visibile (D5)?
+- **Critical note:** non e una scusa per saltare passi scomodi; e una scusa per non fare igiene fuori percorso. Se una scelta non ha effetto osservabile sulla partita oggi, va in un OI, non in una sessione.
 ### IDEA-STAFF-001 — Assistant manager and skip-match mode
 
 - **Status:** sketch

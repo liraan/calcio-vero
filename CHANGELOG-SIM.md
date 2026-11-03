@@ -18,6 +18,8 @@ SIM_VERSION = 9
 
 9: C.1 — `Pressure` emitted beside an action (Pass, Shot, Duel), calculated with `resolve_influence` (03-entities-minimal §2.9) on the ball's point; the most influential opponent within `space_threshold_cm` presses. A step toward the outcome (ControlError, later). Golden hash regenerated.
 
+10: A1 — one RNG stream per noise consumer in `pcfm-hidden` (`hidden:{match_id}:{latents,duel,shot,pass,save,injury,set_piece,pressure}`), replacing the single shared stream. Adding a new consumer no longer shifts the outcomes of the others (`00-foundations` §4, `01-rng.md` §2.3). Closes OI-39. Golden hash regenerated.
+
 **Known gap (OI-14):** no golden hash exists yet — the 10-season golden test is not implemented. The bump procedure below notes this explicitly.
 
 `SIM_VERSION` is defined in `pcfm-match` (`crates/pcfm-match/src/save.rs`) and embedded in every save (see `L0.07` §2.1).

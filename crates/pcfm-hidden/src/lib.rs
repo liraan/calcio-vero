@@ -44,11 +44,30 @@ use rand_chacha::ChaCha20Rng;
 use crate::latents::PlayerLatents;
 use pcfm_core::rng::next_unit;
 
+/// One RNG stream per noise consumer.
+///
+/// Each `resolve_*` draws its noise from its own stream, so adding a
+/// new consumer never shifts the outcomes of the others
+/// (`00-foundations` 4, `01-rng.md` 2.3). Names are
+/// `hidden:{match_id}:{purpose}`, extensible to L1/L2. `:latents` is
+/// separate because latent generation is persistent state, not a
+/// transient decision: reordering resolves must not change the latents.
+struct Streams {
+    latents: ChaCha20Rng,
+    duel: ChaCha20Rng,
+    shot: ChaCha20Rng,
+    pass: ChaCha20Rng,
+    save: ChaCha20Rng,
+    injury: ChaCha20Rng,
+    set_piece: ChaCha20Rng,
+    pressure: ChaCha20Rng,
+}
+
 /// Plane A. The actual state of the world, never exposed.
 pub struct GroundTruth {
     world_seed: u64,
     match_id: MatchId,
-    rng: ChaCha20Rng,
+    streams: Streams,
     latents: BTreeMap<PlayerId, PlayerLatents>,
     observations: Vec<ObservationEvent>,
 }
@@ -64,13 +83,24 @@ impl GroundTruth {
     #[must_use]
     pub fn new(world_seed: u64, match_id: MatchId) -> Self {
         let mut registry = RngRegistry::new(world_seed);
-        let name = StreamName::new(format!("hidden:{}:resolve", match_id.slot()))
-            .expect("stream name is always non-empty");
-        let rng = registry.stream(&name).clone();
+        let name = |purpose: &str| {
+            StreamName::new(format!("hidden:{}:{purpose}", match_id.slot()))
+                .expect("stream name is always non-empty")
+        };
+        let streams = Streams {
+            latents: registry.stream(&name("latents")).clone(),
+            duel: registry.stream(&name("duel")).clone(),
+            shot: registry.stream(&name("shot")).clone(),
+            pass: registry.stream(&name("pass")).clone(),
+            save: registry.stream(&name("save")).clone(),
+            injury: registry.stream(&name("injury")).clone(),
+            set_piece: registry.stream(&name("set_piece")).clone(),
+            pressure: registry.stream(&name("pressure")).clone(),
+        };
         Self {
             world_seed,
             match_id,
-            rng,
+            streams,
             latents: BTreeMap::new(),
             observations: Vec::new(),
         }
@@ -109,7 +139,7 @@ impl GroundTruth {
     pub fn resolve_duel(&mut self, ctx: &DuelContext) -> DuelOutcome {
         let attacker = self.latents_for(ctx.attacker);
         let defender = self.latents_for(ctx.defender);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.duel);
 
         let attacker_score = match ctx.duel_type {
             DuelType::Aerial => attacker.aerial,
@@ -148,7 +178,7 @@ impl GroundTruth {
     /// Resolves a shot.
     pub fn resolve_shot(&mut self, ctx: &ShotContext) -> ShotOutcome {
         let shooter = self.latents_for(ctx.shooter);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.shot);
         let goal_probability = noise.mul_add(0.3, shooter.finishing).clamp(0.0, 1.0);
         let goal = goal_probability > 0.6;
 
@@ -168,7 +198,7 @@ impl GroundTruth {
     /// Resolves a pass.
     pub fn resolve_pass(&mut self, ctx: &PassContext) -> PassOutcome {
         let passer = self.latents_for(ctx.passer);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.pass);
         let complete = noise.mul_add(0.3, passer.passing) > 0.5;
 
         let outcome = PassOutcome { complete };
@@ -187,7 +217,7 @@ impl GroundTruth {
         // pressure is a contest of influence on the carrier, not a die.
         // This is not a simplification of the new model, it is a different model.
         let _ = self.latents_for(ctx.player);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.pressure);
         let success = noise > 0.5;
 
         let outcome = PressureOutcome { success };
@@ -203,7 +233,7 @@ impl GroundTruth {
     /// Resolves an injury risk.
     pub fn resolve_injury_risk(&mut self, ctx: &InjuryContext) -> InjuryOutcome {
         let player = self.latents_for(ctx.player);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.injury);
         let injured = noise.mul_add(0.3, player.injury_proneness) > 0.8;
 
         let outcome = InjuryOutcome { injured };
@@ -219,7 +249,7 @@ impl GroundTruth {
     /// Resolves a save.
     pub fn resolve_save(&mut self, ctx: &SaveContext) -> SaveOutcome {
         let keeper = self.latents_for(ctx.goalkeeper);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.save);
         let saved = noise.mul_add(0.3, keeper.goalkeeping) > 0.5;
 
         let outcome = SaveOutcome { saved };
@@ -235,7 +265,7 @@ impl GroundTruth {
     /// Resolves a set piece.
     pub fn resolve_set_piece(&mut self, ctx: &SetPieceContext) -> SetPieceOutcome {
         let taker = self.latents_for(ctx.taker);
-        let noise = next_unit(&mut self.rng);
+        let noise = next_unit(&mut self.streams.set_piece);
         let success = noise.mul_add(0.3, taker.set_pieces) > 0.5;
 
         let outcome = SetPieceOutcome { success };
@@ -259,7 +289,7 @@ impl GroundTruth {
         if let Some(l) = self.latents.get(&player) {
             return *l;
         }
-        let new = PlayerLatents::from_rng(&mut self.rng);
+        let new = PlayerLatents::from_rng(&mut self.streams.latents);
         self.latents.insert(player, new);
         new
     }
