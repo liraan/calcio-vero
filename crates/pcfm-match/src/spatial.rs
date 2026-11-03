@@ -108,6 +108,29 @@ impl SpatialState {
         self.agents.get(&id)
     }
 
+    /// The state of one agent, mutably, or `None` if the id is not on the pitch.
+    ///
+    /// The only mutable door for an agent's position: the simulation must
+    /// not reach into the map directly (`00-foundations` §3).
+    pub fn agent_mut(&mut self, id: PlayerId) -> Option<&mut AgentState> {
+        self.agents.get_mut(&id)
+    }
+
+    /// Sets the position of an agent. Returns `false` if the id is not on
+    /// the pitch (nothing is changed).
+    ///
+    /// No clamping here: the pitch bounds belong to the movement model
+    /// (F.3), not to the primitive. A target derived from the ball can fall
+    /// outside the pitch; what the agent does then is a model decision
+    /// declared in F.3, not hidden in a setter.
+    pub fn set_position(&mut self, id: PlayerId, position: (i32, i32)) -> bool {
+        let Some(agent) = self.agents.get_mut(&id) else {
+            return false;
+        };
+        agent.position = position;
+        true
+    }
+
     /// The ball position, in centimetres.
     #[must_use]
     pub const fn ball(&self) -> (i32, i32) {
@@ -220,5 +243,29 @@ mod tests {
         let away_lb = s.agent(PlayerId::new(101, 0)).unwrap();
         assert_eq!(home_lb.position.1, away_lb.position.1);
         assert_eq!(home_lb.position.0 + away_lb.position.0, 10500);
+    }
+
+    #[test]
+    fn set_position_moves_the_agent() {
+        let mut s = make_state();
+        let id = PlayerId::new(1, 0);
+        assert!(s.set_position(id, (1000, 2000)));
+        assert_eq!(s.agent(id).unwrap().position, (1000, 2000));
+    }
+
+    #[test]
+    fn set_position_unknown_id_changes_nothing() {
+        let mut s = make_state();
+        let before = s.len();
+        assert!(!s.set_position(PlayerId::new(999, 0), (1, 1)));
+        assert_eq!(s.len(), before);
+    }
+
+    #[test]
+    fn agent_mut_reaches_the_position() {
+        let mut s = make_state();
+        let id = PlayerId::new(1, 0);
+        s.agent_mut(id).unwrap().position = (500, 500);
+        assert_eq!(s.agent(id).unwrap().position, (500, 500));
     }
 }
