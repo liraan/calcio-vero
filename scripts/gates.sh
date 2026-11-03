@@ -202,6 +202,27 @@ else
   say_ok "E4b no upstream configured (skipped)"
 fi
 
+
+echo ""
+# B8 (2026-11-03, MD-32): every [done] micro-decision that declares a
+# simplification must say which leaf removes it. The gate checks that
+# `Removed-by:` exists and is non-empty; it does NOT check that the value
+# is right (not mechanisable). `never` is a valid declared value.
+b8_missing=0
+while IFS= read -r line; do
+  case "$line" in
+    *"- [done]"*"[simpl]"*)
+      if ! printf '%s' "$line" | grep -qE 'Removed-by:[[:space:]]*[^[:space:]]'; then
+        b8_missing=$((b8_missing + 1))
+      fi
+      ;;
+  esac
+done < "$SS"
+if [ "$b8_missing" -eq 0 ]; then
+  say_ok "B8 simplifications declare Removed-by:"
+else
+  say_fail "B8 $b8_missing simplification(s) without a non-empty Removed-by: (MD-32)"
+fi
 if [ "$fail" -eq 0 ]; then
   if [ "$MODE" = "closing" ]; then
     echo "gates: GREEN (closing; manual: B2 - do it in the closing report)"
