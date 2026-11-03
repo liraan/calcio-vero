@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `96c051c` — "docs(bookmark): OI-45 rewritten with a concrete trigger"
+**Last commit verified:** `7ddd383` — "docs(movement): (G) recorded; MOVEMENT-NOTE marked as direction; OI-46"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -92,7 +92,7 @@ engine gets built.
 
 - **Cerchio motore->2D->3D: tre chiusure di direzione (2026-11-03).** (a) Il 3D e una proiezione dello stesso motore fenomenologico, non un motore fisico: aggiungere fisica richiede un ADR che cambia la dottrina, non una decisione di rendering (`WORLD-MODEL` §5). (b) Il renderer non deriva eventi dalle posizioni: mostra gli eventi emessi dal motore e usa le posizioni come sfondo; un `Tackle` esiste solo se il motore lo ha emesso (`WORLD-MODEL` §4). E il criterio di accettazione del 2D debug: i frame cambiano, gli eventi non si inventano. (c) v1 e **replay-only**: il live streaming e un ADR quando un consumatore lo chiede, non prima (IDEA-INFRA-018, D3). Restano aperti (D3, quando il 2D debug esiste): dove vive il calcolo presentazionale condiviso (arbitro, interpolazione) e la forma del `TickRecord`.
 
-- **Movimento: (G) scelto, non si implementa ora (2026-11-03).** Analisi della partita vera: in una partita vera i 22 si muovono sempre, il movimento off-ball e la maggior parte del gioco. "Si muove solo chi agisce" (P, ponte dichiarato) e stato respinto: la palla e ferma al centro, chi agisce e il piu vicino, quindi i centrali si muovono verso il centro, ci arrivano in pochi tick e si fermano — un grumo che si congela, non calcio. La variante "target = slot" e un no-op (gli agenti partono dallo slot). Sequenza: OI-44 (ADR event-keyed noise) -> per-agent -> movimento di tutti + ball slice. Codice pronto in `/tmp/pcfm-movement-2026-11-03/` (`home_position`, `move_toward`, `max_step_cm`, 10 test verdi), non committato (D3). `MOVEMENT-NOTE` §3/§4 sono direzione, non piano eseguibile: nota datata in testa al file.
+- **Movimento: (G) scelto, non si implementa ora (2026-11-03).** Analisi della partita vera: in una partita vera i 22 si muovono sempre, il movimento off-ball e la maggior parte del gioco. "Si muove solo chi agisce" (P, ponte dichiarato) e stato respinto: la palla e ferma al centro, chi agisce e il piu vicino, quindi i centrali si muovono verso il centro, ci arrivano in pochi tick e si fermano — un grumo che si congela, non calcio. La variante "target = slot" e un no-op (gli agenti partono dallo slot). Sequenza: OI-44 (ADR event-keyed noise) -> per-agent -> movimento di tutti + ball slice. Il codice scritto il 2026-11-03 (`home_position`, `move_toward`, `max_step_cm`, 4 test verdi) era per il modello respinto ("si muove chi agisce") ed e andato perso con `/tmp`: non era committato (D3). Va riscritto nel per-agent, dove la forma e quella giusta; non e un lavoro perso, e lavoro spostato. `MOVEMENT-NOTE` §3/§4 sono direzione, non piano eseguibile: nota datata in testa al file.
 
 ## Decisioni operative (2026-11-01)
 
