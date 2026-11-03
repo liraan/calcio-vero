@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `7ddd383` — "docs(movement): (G) recorded; MOVEMENT-NOTE marked as direction; OI-46"
+**Last commit verified:** `3039512` — "docs(bookmark): fix lost /tmp reference (code not recoverable)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -67,8 +67,8 @@ engine gets built.
 
 | Pr. | # | Cosa | Dipende da | Prima azione |
 |---|---|---|---|---|
-| [next] | E | **ADR event-keyed noise (OI-44).** Con il per-agent, 22 agenti decidono ogni tick e il rumore che ricevono dipende dalla posizione nell'ordine di iterazione: una sostituzione sposta gli esiti di tutti quelli dopo. In una partita vera agiscono simultaneamente, l'ordine e un artefatto. Direzione: rumore derivato per hash da `(world_seed, match_id, tick, player_id, purpose)`, estensione di `01-rng.md` §2.4. | D (fatto), A1 (fatto) | Leggere `01-rng.md` §2.4 e ADR-019 deferred 1; scrivere l'ADR; poi `SIM_VERSION` bump |
-| [open] | F | **Il per-agent: ogni agente decide ogni tick.** Oggi un dado globale sceglie chi agisce; il target (ADR-019 D1) e 22 agenti che decidono ogni tick. Dipende da OI-44: senza rumore per evento, il per-agent non e deterministico rispetto alle sostituzioni. Non aprire prima dell'ADR. | OI-44 | Dopo l'ADR: leggere `orchestrator.rs`, `state.rs` (`tick`), `04-match-engine.md` §2.2, poi scrivere il loop |
+| [open] | E | **ADR event-keyed noise (OI-44).** Con il per-agent (F), 22 agenti decidono ogni tick e il rumore che ricevono dipende dalla posizione nell'ordine di iterazione: una sostituzione sposta gli esiti di tutti quelli dopo. In una partita vera agiscono simultaneamente, l'ordine e un artefatto. Direzione: rumore derivato per hash da `(world_seed, match_id, tick, player_id, purpose)`, estensione di `01-rng.md` §2.4. Non aprire prima di F: senza il loop per-agente non c'e consumatore (D3). | F | Dopo F: leggere `01-rng.md` §2.4 e ADR-019 deferred 1, poi scrivere l'ADR |
+| [next] | F | **Il per-agent: ogni agente decide ogni tick.** Oggi un dado globale sceglie chi agisce; il target (ADR-019 D1) e 22 agenti che decidono ogni tick. Il rumore per-ordine (OI-44) e un limite noto, tracciato: F lo rende visibile e misurabile, E lo risolve. `SIM_VERSION` bump quando il loop cambia la simulazione. | D (fatto), A1 (fatto) | Leggere `orchestrator.rs`, `state.rs` (`tick`), `04-match-engine.md` §2.2, poi scrivere il loop |
 | [deferred] | 11 | **GitHub agent Phase 2 — deferred (2026-11-02).** Ruleset **disabled**. Reactivate when one holds: (a) a second reviewer exists; (b) the project ships; (c) a write token is granted to an agent. `Evaluate` is not available (personal repo, non-Enterprise). Until then, Phase 1: direct push by the maintainer. See `AGENT-POLICY.md` §6 | — | Rileggere `AGENT-POLICY.md` §6 quando una delle tre condizioni si presenta |
 | [open] | 5 | Review sketch ×3 | L2-tactics, input, L2-staff | Leggere i tre sketch in `IDEAS.md` (TACT-001, INFRA-007, STAFF-001) |
 | [open] | 7 | Verification cascade | — | Decidere da quale file parte la cascade (candidato: `README.md`) |
