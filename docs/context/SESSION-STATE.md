@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `552cc04` — "docs(spec+bookmark): dated note in 04 §2.6; bookmark corrections"
+**Last commit verified:** `1655c74` — "rules(C2-bis): elegance as doctrine-visibility, with artefact"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -83,6 +83,8 @@ engine gets built.
 - **A1 — RNG per scopo in `pcfm-hidden` (2026-11-03).** Le sette `resolve_*` oggi condividono una sola stream (`hidden:{match_id}:resolve`), quindi aggiungerne una sposta gli esiti di tutte le altre: e la violazione di `00-foundations` §4 e `01-rng.md` §2.3, ed e il blocco della foglia D (OI-39). Decisione: una stream per scopo (`hidden:{match_id}:latents`, `:duel`, `:shot`, `:pass`, `:save`, `:injury`, `:set_piece`, `:pressure`), nomi estensibili a L1/L2 senza rifare la convenzione (`{scope}:{id}:{purpose}`, gia in `01-rng.md` §2.3). `RngRegistry` e lazy (`entry().or_insert_with`): solo le stream usate esistono, costo di memoria nullo. `SIM_VERSION` bump, golden rigenerato, `CHANGELOG-SIM`. Chiude OI-39. V2 chiuso dalla nota datata in spec 04 §2.6 (2026-11-03): la spec nomina il target ADR-019, il prototipo ha i suoi nomi, la sezione si riscrive una volta sola sul modello definitivo. Ragione: misurabilita del per-agent (una stream per scopo rende confrontabile "prima/dopo" una modifica di movimento), non lettera di §4 (IDEA-INFRA-020).
 - **B1 — il movimento esce da slice C e va nella slice posizionale (2026-11-03).** OI-28: `L0-POSITIONAL-SLICE.md` §3.4 mette il movimento in C, §2/§7 no. Vince §2/§7: C resta `Slip` + `ControlError` + `Pressure`, senza movimento. Ragione: una scivolata si riconosce solo se qualcuno si stava muovendo; senza movimento `Slip` e un'etichetta su una statua (D6). Coerente con la sequenza decisa il 2026-11-02 (misura -> movimento -> palla -> 2D, OI-37). Aggiornare §3.4 nello stesso commit che tocca la nota.
 - **OI-34 (due `expect` in `state.rs`) resta in OI-34 (2026-11-03).** Non e sul percorso della partita: igiene, non luna (IDEA-INFRA-020). Non aprire una sessione dedicata finche il per-agent non la tocca.
+- **Elegance (C2-bis, 2026-11-03).** "Elegante" = la forma del codice rispecchia la forma della dottrina (Plane A dietro una porta sola, determinismo visibile, una sola fonte di verità, commenti che spiegano il *perché*). Criterio di **visibilità**, non licenza di riscrivere codice che funziona (D7). Artefatto (D5): una riga nel report di chiusura, `Elegance: <cosa reso più visibile> | no change`, verificabile in `git diff`. Non e un pillar: e un raffinamento di C2-bis (D7). Se un domani servira un pillar, richiede un ADR.
+
 ## Decisioni operative (2026-11-01)
 
 - **Finding (2026-11-01, closing):** the DP archival check is no longer
