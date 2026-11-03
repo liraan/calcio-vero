@@ -130,6 +130,15 @@ The full API (with `Context` / `Outcome` types) is in [`10-ground-truth.md`](10-
 - State hash after each tick, compared across runs
 - Golden test: 1,000 matches, same seed → same hash
 
+**Note (2026-11-03) — stream names in the prototype.** The bullet above names the
+*target* streams (ADR-019). The current prototype uses different names, and they
+are correct for it: `hidden:{match_id}:{latents,duel,shot,pass,save,injury,set_piece,pressure}`
+(one per noise consumer, `SIM_VERSION` 10) and `match:{id}:{actions,action_kind}`.
+The target names are **not** binding on the prototype, and the prototype names are
+**not** a commitment for the positional engine. This section is rewritten once, on
+the final per-agent model, not twice. Recorded so a reader comparing spec and code
+knows which of the two is authoritative *today* (the code, for the prototype).
+
 ### 2.7 What the engine does NOT do
 
 - It does not know about clubs, seasons, money, contracts
