@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `b713e64` — "docs(bookmark): elegance decision; LCV to 1655c74"
+**Last commit verified:** `2709d31` — "docs(bookmark): D closed (decidable part); OI-44 event-keyed noise"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -85,6 +85,8 @@ engine gets built.
 - **B1 — il movimento esce da slice C e va nella slice posizionale (2026-11-03).** OI-28: `L0-POSITIONAL-SLICE.md` §3.4 mette il movimento in C, §2/§7 no. Vince §2/§7: C resta `Slip` + `ControlError` + `Pressure`, senza movimento. Ragione: una scivolata si riconosce solo se qualcuno si stava muovendo; senza movimento `Slip` e un'etichetta su una statua (D6). Coerente con la sequenza decisa il 2026-11-02 (misura -> movimento -> palla -> 2D, OI-37). Aggiornare §3.4 nello stesso commit che tocca la nota.
 - **OI-34 (due `expect` in `state.rs`) resta in OI-34 (2026-11-03).** Non e sul percorso della partita: igiene, non luna (IDEA-INFRA-020). Non aprire una sessione dedicata finche il per-agent non la tocca.
 - **Elegance (C2-bis, 2026-11-03).** "Elegante" = la forma del codice rispecchia la forma della dottrina (Plane A dietro una porta sola, determinismo visibile, una sola fonte di verità, commenti che spiegano il *perché*). Criterio di **visibilità**, non licenza di riscrivere codice che funziona (D7). Artefatto (D5): una riga nel report di chiusura, `Elegance: <cosa reso più visibile> | no change`, verificabile in `git diff`. Non e un pillar: e un raffinamento di C2-bis (D7). Se un domani servira un pillar, richiede un ADR.
+
+- **Cerchio motore->2D->3D: tre chiusure di direzione (2026-11-03).** (a) Il 3D e una proiezione dello stesso motore fenomenologico, non un motore fisico: aggiungere fisica richiede un ADR che cambia la dottrina, non una decisione di rendering (`WORLD-MODEL` §5). (b) Il renderer non deriva eventi dalle posizioni: mostra gli eventi emessi dal motore e usa le posizioni come sfondo; un `Tackle` esiste solo se il motore lo ha emesso (`WORLD-MODEL` §4). E il criterio di accettazione del 2D debug: i frame cambiano, gli eventi non si inventano. (c) v1 e **replay-only**: il live streaming e un ADR quando un consumatore lo chiede, non prima (IDEA-INFRA-018, D3). Restano aperti (D3, quando il 2D debug esiste): dove vive il calcolo presentazionale condiviso (arbitro, interpolazione) e la forma del `TickRecord`.
 
 ## Decisioni operative (2026-11-01)
 

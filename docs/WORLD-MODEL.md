@@ -65,6 +65,8 @@ The most important distinction in this document. **Everything that influences th
 | **Deterministic?** | Yes (local determinism, ADR-013) | No requirement (frame rate varies) |
 | **Examples** | Player positions, ball state, events, crowd atmosphere value | 3D meshes, textures, camera, HUD, sound |
 
+**Rule (2026-11-03) — the renderer does not derive events from positions.** A renderer shows the events the engine emitted and uses positions as the background. If two agents are close in the 2D or 3D view, that is **not** a `Tackle`: a `Tackle` exists only if the engine emitted it. A renderer that infers events from geometry invents football the engine did not simulate, which is the opposite of radical transparency (pillar 5). This is the shared rule for 2D and 3D, and the acceptance criterion of the debug view: frames change, events are not invented.
+
 ### Two "weather" concepts
 
 - **Gameplay weather** (L0/L1, a modifier): rain makes the pitch slippery, wind curves the ball, heat drains stamina. It **changes the simulation**.
@@ -98,6 +100,8 @@ The two are **separate**. A 3D stadium with 45,000 people is rendering; the crow
 - **The ball has an intermediate position at v1.0** (`InFlight` with position): it is not deferred to 2D. It is persistent state, saved, in the hash.
 
 The 2D horizon keeps "ball with physics" in the force sense: a renderer or a future engine that integrates trajectories. The difference between the two is *computed from forces* vs *declared geometry*, and it is the same distinction as `L0-POSITIONAL-SLICE` §0: effects are modelled, not simulated.
+**Note (2026-11-03) — the 3D is a projection, not a physics engine.** The 3D view (post-v1.0) consumes the same tick record as the 2D view; it is a new projection of the same phenomenological engine, not a new engine. "Physical ball dynamics" stays defined as *computed from forces* (§5 note, 2026-11-02), and it is **not** on the roadmap: a physics engine is a different paradigm, not a later step (`L0-POSITIONAL-SLICE` §0). Adding physics would require an ADR that changes the doctrine, not a rendering decision. Recorded so that "for the 3D we need physics" cannot be introduced as an implementation detail.
+
 **Rule:** a horizon is not a promise. It is a place to put things so that the contract does not have to grow to accommodate them prematurely.
 
 ---

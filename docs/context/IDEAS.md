@@ -551,6 +551,7 @@
 - **When:** when the positional slice (L0 positional) opens. Not now (D3). The snapshot exists conceptually already (`state_hash`, `chain_hash`); the record makes it explicit and per-tick.
 - **Reference:** `draft/layered-match-2026-11-01` at `4613797`, `docs/context/TICK-TEMPORAL-STATE.md`. The file is a draft, never compiled; the *idea* is kept here, the *file* is not imported.
 - **Update 2026-11-02 — "durable" is the wrong word; the record is derived.** The tick record is an **index**, not a saved artefact: `tick_id`, `score`, `possession counters`, `event_count`, `state_hash`. Replay **regenerates** it from the seed (measured 2026-11-02: a full match in ~0.2 s, release), so it is not saved and does not duplicate `state_hash`/`chain_hash`. Two interfaces, not one: **replay** = regenerate (no storage); **live** = the engine emits the record during the tick (callback or buffer), the renderer consumes it. The live streaming is a separate design decision, still open. The frame is a projection of the record; no renderer talks to the engine.
+- **Decision 2026-11-03 — v1 is replay-only.** The live interface is not designed today: v1 regenerates from the seed (~0.2 s per match, measured) and the renderer consumes the regenerated record. The live streaming is an ADR when a consumer asks for it, not before (D3). This closes the "replay or live?" question for the scope of the first renderer, and leaves the live path open as a separate decision.
 
 ### IDEA-INFRA-019 — Spatial primitives as step-18 foundation (duplicate BallState to resolve)
 
