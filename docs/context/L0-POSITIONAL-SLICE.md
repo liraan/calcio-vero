@@ -324,9 +324,7 @@ by the defender sets it to the defender; a foul sets it to `None`.
 not from a global roll") with zero regression on the demo, the event types,
 or `MatchResult`. The conquest event (a duel won by the defender emits
 `Tackle`) is added in the same slice, because a change in *who acts* that
-nobody can see is not observable. The "pass to the nearest free teammate"
-rule and the movement are not in this slice: they are part of slice C,
-with the first phenomenological events (§6-ter).
+nobody can see is not observable. The "pass to the nearest free teammate" rule and the movement are not in this slice. **Nor are they in slice C** (§2, §7: C is `Slip` + `ControlError` + `Pressure`). Movement is a **precondition of the ball slice**, not a slice: a slip is recognised because someone was moving and fell. The design is in `docs/context/MOVEMENT-NOTE.md` (2026-11-03, closes OI-28).
 **What stays out:** the goalkeeper, the pressing, the formation-aware
 movement, `PositionSnapshot`, attempt/outcome events. Those are §5.
 
