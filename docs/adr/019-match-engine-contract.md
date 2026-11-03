@@ -62,6 +62,14 @@ quantisation of `Position`, not the primary type.
 `Position` applies to players, the ball, and the referee. Assistant
 referees have no in-pitch position in v1.0 (see D10).
 
+**Note (2026-11-03) — D4 amended.** `Position` is in integer centimetres
+(`i32`, signed), not metres `u16`: this confirms `spatial.rs:8-10,20`
+(`AgentState.position: (i32, i32)`, "Coordinates are integer centimetres").
+The named type `Position` does not exist in the code yet; when introduced,
+it uses cm `i32`. The ball's 3D position (MD-17) lives in a separate
+`BallState` (MD-25), not in `Position`: this amendment covers the unit and
+the type, not the ball (see the deferred-3 note below).
+
 **D5. Resolution: engine parameter, fixed per match, saved.**
 `Resolution { width: u16, height: u16 }`, mandatory in `MatchSave`, included in
 `state_hash`, verified on load and replay. Default: 105×68. The engine does not
@@ -124,6 +132,14 @@ or dedicated notes before implementation:
    grid is not an entity, the ball is). The state machine must prevent invalid
    combinations (e.g. `InFlight` requires `possession = None`). The ball's
    `Position` is deferred to the 2D implementation.
+
+   **Note (2026-11-03) — deferred 3 amended for F.3.** The ball's `Position`
+   is no longer deferred to the 2D implementation: MD-17/25 put the ball's
+   continuous 3D state (`InFlight` with position) in F.3, at v1.0. The
+   decision is the ball has an intermediate position with height, saved in
+   the state hash and reconstructed by replay (MD-41), not a field in
+   `MatchSave`. `Possessed | InFlight | Contested | Free` (above) is
+   superseded by MD-25's `Possessed | InFlight | Loose`, declared in F.3.
 4. **Granular UX**: separate choice of LOD and resolution, readable presets,
    per-platform defaults.
 5. **Resolution values per platform** (mobile, ADR-014): not before mobile is
