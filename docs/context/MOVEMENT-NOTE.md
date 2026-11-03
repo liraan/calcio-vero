@@ -4,6 +4,7 @@
 **Date:** 2026-11-03.
 **Closes (design):** OI-28, B1 of the 2026-11-03 session.
 **Depends on:** `L0-POSITIONAL-SLICE.md` §2/§7 (movement is not in slice C), `IDEA-DESIGN-001` (influence as the common currency), ADR-019 deferred 1 (iteration order).
+**Note (2026-11-03, after the analysis) — §3 and §4 are direction, not an executable plan.** §3 ("per tick, per agent") requires the per-agent loop and OI-44 (event-keyed noise) decided; §4 ("slot default, most-influential goes to the ball") requires the ball to move. Without a moving ball, "move only the acting agent" produces a clump at the centre that freezes once the target is reached (verified in the 2026-11-03 analysis): rejected, it is not football. A variant with the target = slot is a no-op (agents start on their slots). **Decision (G):** movement is not implemented now. Sequence: OI-44 (ADR event-keyed noise) -> per-agent -> movement of all 22 + ball slice. The code ready for that step (`home_position`, `move_toward`, `max_step_cm`, 10 tests) is in `/tmp/pcfm-movement-2026-11-03/`, not committed (D3). **Do not implement §3/§4 from this note alone**; read OI-44 and the bookmark first.
 
 ## 1. Why a note, not code
 
