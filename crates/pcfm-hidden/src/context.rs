@@ -32,6 +32,10 @@ pub struct DuelContext {
 pub struct ShotContext {
     /// The shooter.
     pub shooter: PlayerId,
+    /// Where the shot starts (the ball), in centimetres, 3D.
+    pub from: (i32, i32, i32),
+    /// The goal centre, in centimetres, 3D.
+    pub to: (i32, i32, i32),
 }
 
 /// The context of a pass resolution.
@@ -39,6 +43,10 @@ pub struct ShotContext {
 pub struct PassContext {
     /// The passer.
     pub passer: PlayerId,
+    /// Where the pass starts (the ball), in centimetres, 3D.
+    pub from: (i32, i32, i32),
+    /// The receiver position, in centimetres, 3D.
+    pub to: (i32, i32, i32),
 }
 
 /// The context of a pressure resolution.

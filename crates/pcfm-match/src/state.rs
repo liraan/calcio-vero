@@ -162,8 +162,19 @@ impl MatchState {
         }
 
         if action_kind_roll < 0.6 {
-            let ctx_pass = pcfm_hidden::PassContext { passer: attacker };
+            let from = match self.spatial.agent(attacker) {
+                Some(a) => (a.position.0, a.position.1, 0),
+                None => self.spatial.ball_3d(),
+            };
+            let to = (from.0 + 2000, from.1, from.2);
+            let ctx_pass = pcfm_hidden::PassContext {
+                passer: attacker,
+                from,
+                to,
+            };
             let outcome = ctx.hidden.resolve_pass(&ctx_pass);
+            self.spatial
+                .set_ball_in_flight(from, outcome.initial_velocity);
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
                 kind: crate::fact::TrajectoryKind::Pass,
@@ -178,8 +189,22 @@ impl MatchState {
                 self.spatial.set_carrier(None);
             }
         } else if action_kind_roll < 0.85 {
-            let ctx_shot = pcfm_hidden::ShotContext { shooter: attacker };
+            let from = match self.spatial.agent(attacker) {
+                Some(a) => (a.position.0, a.position.1, 0),
+                None => self.spatial.ball_3d(),
+            };
+            let to = match self.possession {
+                Possession::Home => (i32::from(ctx.match_.pitch.length_m) * 100, 3400, 244),
+                Possession::Away => (0, 3400, 244),
+            };
+            let ctx_shot = pcfm_hidden::ShotContext {
+                shooter: attacker,
+                from,
+                to,
+            };
             let outcome = ctx.hidden.resolve_shot(&ctx_shot);
+            self.spatial
+                .set_ball_in_flight(from, outcome.initial_velocity);
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
                 kind: crate::fact::TrajectoryKind::Shot,

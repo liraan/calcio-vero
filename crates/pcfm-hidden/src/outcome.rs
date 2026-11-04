@@ -24,6 +24,10 @@ pub struct ShotOutcome {
     pub goal: bool,
     /// Whether the shot was on target.
     pub on_target: bool,
+    /// The ball's initial velocity, in centimetres per tick, 3D
+    /// (MD-19: initial velocity is the outcome of the die, not a field
+    /// of intent; the direction is geometry, the speed is the die).
+    pub initial_velocity: (i16, i16, i16),
 }
 
 /// The outcome of a pass.
@@ -31,6 +35,8 @@ pub struct ShotOutcome {
 pub struct PassOutcome {
     /// Whether the pass was completed.
     pub complete: bool,
+    /// The ball's initial velocity, in centimetres per tick, 3D (MD-19).
+    pub initial_velocity: (i16, i16, i16),
 }
 
 /// The outcome of a pressure event.

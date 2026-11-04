@@ -175,23 +175,52 @@ impl GroundTruth {
         outcome
     }
 
+    /// A unit-ish 3D direction from `from` to `to`, scaled to integer
+    /// centimetres. Pure: no RNG, deterministic from the geometry.
+    fn direction_3d(from: (i32, i32, i32), to: (i32, i32, i32)) -> (i16, i16, i16) {
+        let dx = i64::from(to.0 - from.0);
+        let dy = i64::from(to.1 - from.1);
+        let dz = i64::from(to.2 - from.2);
+        let len_sq = dx * dx + dy * dy + dz * dz;
+        if len_sq == 0 {
+            return (0, 0, 0);
+        }
+        let len = len_sq.isqrt();
+        let scale = 1000_i64 / len;
+        (
+            i16::try_from(dx * scale).unwrap_or(0),
+            i16::try_from(dy * scale).unwrap_or(0),
+            i16::try_from(dz * scale).unwrap_or(0),
+        )
+    }
+    /// (MD-19: power is the die's outcome, not a field of intent).
+    const fn speed_from_success(success: bool) -> i16 {
+        if success { 300 } else { 150 }
+    }
+
     /// Resolves a shot.
     pub fn resolve_shot(&mut self, ctx: &ShotContext) -> ShotOutcome {
         let shooter = self.latents_for(ctx.shooter);
         let noise = next_unit(&mut self.streams.shot);
         let goal_probability = noise.mul_add(0.3, shooter.finishing).clamp(0.0, 1.0);
         let goal = goal_probability > 0.6;
-
+        let on_target = goal || noise > 0.3;
+        let dir = Self::direction_3d(ctx.from, ctx.to);
+        let speed = Self::speed_from_success(on_target);
+        let initial_velocity = (
+            dir.0.saturating_mul(speed) / 1000,
+            dir.1.saturating_mul(speed) / 1000,
+            dir.2.saturating_mul(speed) / 1000,
+        );
         let outcome = ShotOutcome {
             goal,
-            on_target: goal || noise > 0.3,
+            on_target,
+            initial_velocity,
         };
-
         self.observations.push(ObservationEvent::Shot {
             shooter: ctx.shooter,
             goal,
         });
-
         outcome
     }
 
@@ -200,14 +229,21 @@ impl GroundTruth {
         let passer = self.latents_for(ctx.passer);
         let noise = next_unit(&mut self.streams.pass);
         let complete = noise.mul_add(0.3, passer.passing) > 0.5;
-
-        let outcome = PassOutcome { complete };
-
+        let dir = Self::direction_3d(ctx.from, ctx.to);
+        let speed = Self::speed_from_success(complete);
+        let initial_velocity = (
+            dir.0.saturating_mul(speed) / 1000,
+            dir.1.saturating_mul(speed) / 1000,
+            dir.2.saturating_mul(speed) / 1000,
+        );
+        let outcome = PassOutcome {
+            complete,
+            initial_velocity,
+        };
         self.observations.push(ObservationEvent::Pass {
             passer: ctx.passer,
             complete,
         });
-
         outcome
     }
 
