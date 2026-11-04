@@ -5,6 +5,7 @@
 # Calcio Vero — Deep Simulator
 
 **An open football management simulation.**
+**An open football management simulation.**<br>
 *Transparent by design. Deterministic by construction. Yours by default.*
 
 [![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/calcio-vero)
