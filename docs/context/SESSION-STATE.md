@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `be0a930` — "fix(gates): B1 accepts hyphenated step IDs (OI-46 closed)"
+**Last commit verified:** `e3b52e5` — "docs(ideas): IDEA-PERCEPTION-001 — two regimes of backward running (user, 2026-11-04)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
