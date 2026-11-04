@@ -856,17 +856,16 @@
   3. The logo (IDEA-PROJ-002): two names, one logo? The mark should work for "Calcio Vero" and be readable as "Deep Simulator".
 - **Prerequisites for the rename:** ADR-002 amended or superseded (name, scope, non-commercial declared); a dated note on historical identifiers (old commits, `SIM_VERSION`, reports citing "pcfm") — history is not rewritten.
 ### IDEA-PROJ-002 — Project logo
-- **Status:** sketch
+- **Status:** sketch (assets arrived 2026-11-04; not reviewed, not licensed)
 - **Category:** Infrastructure / identity (not the engine)
-- **Source:** conversation 2026-11-04 (user). Deferred to the same pause as IDEA-PROJ-001.
-- **Idea:** the user generated a logo they like and wants to discuss it. Not seen by the agent yet, not evaluated. It is a sketch until the user shows it in pause.
+- **Source:** conversation 2026-11-04 (user). The user generated a logo and pushed it from the web: `assets/colored-logo.{svg,png,pdf}` and `assets/transparent-logo.{svg,png,pdf}` (commit `3c4facf`).
+- **What arrived:** six files, two variants (colored, transparent), three formats each. The SVGs are large (~480 KB each, ~10,500 lines of path data): they look like an auto-traced illustration, not a hand-made mark. As a **banner/hero image** they may work; as a **16-px icon** they will not (too many paths and colours). Not evaluated visually by the agent (no renderer in chat).
 - **Open questions:**
-  1. Does the logo encode a name (IDEA-PROJ-001) or a symbol independent of it?
-  2. Licence of the logo: generated with which tool, under which terms? (`00-foundations` §5: no unlicensed assets.) A logo is an asset and needs a declared licence.
-  3. Where does it live (`assets/`, `docs/`), and is it `export-ignore` for packaging?
-  4. Does it survive a rename, or is it tied to the name?
-- **Prerequisites:** the user shows the logo in pause; the name discussion (IDEA-PROJ-001) at least opened, because name and logo are one identity.
-
+  1. **Licence** — generated with which tool, under which terms? `LICENSE-ASSETS` (CC BY-NC-SA) requires that the project has the right to license them. **Blocking**: until this is answered, the files cannot be considered project assets.
+  2. **Weight** — ~2 MB of binaries and ~1 MB of SVG in `assets/`. Acceptable for GitHub, heavy for the README and for the diff. Consider keeping the SVG only, or a resized PNG for the banner.
+  3. **Role** — banner/hero (plausible) vs icon (not plausible as is). If an icon is needed, it must be a separate, simpler mark.
+  4. **Name tie** — the logo predates ADR-027; does it encode the old name or no name at all?
+- **Prerequisites:** licence answer (Q1); a visual review by the maintainer; the decision on the role (Q3).
 ### IDEA-PERCEPTION-001 — Gaze/run misalignment: the speed cost
 - **Status:** sketch
 - **Category:** Match engine (L0 movement, F.4-c or after)
