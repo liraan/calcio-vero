@@ -839,3 +839,28 @@
 - **Cosa serve:** due fatti gia in T1-bis (`Contact` + `PositionChange`, quest'ultimo di F.4), un narrator che li compone in `Push` quando ricorrono le condizioni (contatto tra due agenti + spostamento dell'uno nella direzione dell'altro). Il "parte del corpo" resta fuori (nessun dataset, `00-foundations` §5).
 - **Open questions:** (a) `Push` e un evento a se o un caso di `Duel`? (b) la direzione dello spostamento e sufficiente a distinguere spinta e contrasto, o serve altro? (c) come si lega a `Foul` (che ha gia una causa: fallo)? (d) e di F.4 (interazione) o di una foglia successiva?
 - **Critical note:** non e una decisione, e un'idea. Non si implementa finche F.4 (per-agent + movimento) non e verde, e finche il vocabolario dei fatti non e stabile. D3: struttura dopo contenuto.
+
+### IDEA-PROJ-001 — Rename the project
+- **Status:** sketch
+- **Category:** Infrastructure / identity (not the engine)
+- **Source:** conversation 2026-11-04 (user). Explicitly deferred: discussed in pause **after** the engine (F.4-b, F.4-c, F.3-b3, F.5) is done.
+- **Idea:** "pcfootballmanager" is too generic. The user is considering "My Football Manager", "Liraan Football Manager", "Deep Football Manager". Not a decision: the name is a sketch, the choice belongs to the user, and the discussion happens in pause with the logo (IDEA-PROJ-002).
+- **Why it is not cosmetic:** ADR-002 (accepted) defines the project name and scope. A rename requires amending or superseding ADR-002, and it touches repo URL, badges, README, STRUCTURE, CONTRIBUTING, specs/_index, and possibly the crate prefix `pcfm-*`. It is a coordinated change, not a `sed`.
+- **Open questions:**
+  1. **Trademark (checked first).** "My Football Manager", "Liraan Football Manager", "Deep Football Manager" all contain "Football Manager", a trademark of Sports Interactive/Sega. Not a legal opinion; a risk to verify before committing to a name. If the answer is "confusable", the name is found elsewhere.
+  2. Does the new name still map to the `pcfm-*` crate prefix, or does the prefix change too?
+  3. Order with the logo (IDEA-PROJ-002): name first, or logo first (the logo can suggest the name)?
+  4. What happens to historical identifiers (ADR text, old commit messages, save format `SIM_VERSION`)? History is not rewritten; a dated note points to the rename.
+- **Prerequisites:** engine done; trademark check; ADR-002 amendment or successor; the logo discussion (IDEA-PROJ-002).
+
+### IDEA-PROJ-002 — Project logo
+- **Status:** sketch
+- **Category:** Infrastructure / identity (not the engine)
+- **Source:** conversation 2026-11-04 (user). Deferred to the same pause as IDEA-PROJ-001.
+- **Idea:** the user generated a logo they like and wants to discuss it. Not seen by the agent yet, not evaluated. It is a sketch until the user shows it in pause.
+- **Open questions:**
+  1. Does the logo encode a name (IDEA-PROJ-001) or a symbol independent of it?
+  2. Licence of the logo: generated with which tool, under which terms? (`00-foundations` §5: no unlicensed assets.) A logo is an asset and needs a declared licence.
+  3. Where does it live (`assets/`, `docs/`), and is it `export-ignore` for packaging?
+  4. Does it survive a rename, or is it tied to the name?
+- **Prerequisites:** the user shows the logo in pause; the name discussion (IDEA-PROJ-001) at least opened, because name and logo are one identity.
