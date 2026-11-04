@@ -1025,17 +1025,15 @@ that resolves them, not here.
 
 - `specs/00-foundations.md` §3 (Three Planes), §5 (banned: no CA/PA)
 - `docs/adr/003-plane-a-enforcement.md` (Plane A, the only door)
-- `docs/adr/028-observability-plane-criterion.md` — **to be rewritten.** The
-  criterion "observable in a match" is insufficient: height is not seen
-  with precision without a ruler, weight needs a scale, and a dynamometer
-  measures strength in half an hour. The criterion that holds is
-  **dimension vs performance**: a dimension is a property of the body
-  (height, weight), a performance is something the player does (strength,
-  passing). Dimensions live in `Player`; performances live hidden and are
-  read through the custodian. The three-component structure (§4) is the
-  other half of the rewrite.
-  Old line: "observability as the A/B criterion; no model value in a
-  `.rs` without a derivation or `balance/`" — the second half stays valid.
+- `docs/adr/028-dimension-performance-plane-criterion.md` — the criterion:
+  **dimension vs performance**. A dimension is a property of the body
+  (height, weight, foot), measured, Plane B. A performance is what the
+  player does (strength, passing), hidden, Plane A. A state is a condition
+  of the moment, Plane B. The manager reads an estimate in Plane C for
+  every datum, never a true value. The ADR also records the three
+  components (custodian, calculator, orchestrator) and the corollary: no
+  model value in a `.rs` without a derivation or a `balance/` include.
+  Supersedes its own first version ("observable in a match").
 - `specs/L0-match/03-entities-minimal.md` §2.1–2.3 (Player,
   PhysicalStateMinimal, PsychologicalStateMinimal) and §3.2 (the latents
   are the shadow of the prototype functions)
