@@ -38,27 +38,107 @@ explain is kept even if it costs; the cost is measured (OI-51 has the
 threshold and the method), and if it is too high the simplification is
 declared and tracked, not used as a silent veto.
 
-## 2. Three kinds of datum: characteristic, behaviour, state
+## 2. The one criterion: what is a characteristic
 
-Before the families, a distinction that the prototype mixes and that
-decides where a datum lives and how it is saved.
+This section gives the single criterion that decides, for every datum, what
+it is and where it lives. It is stated first, because every later table
+follows from it. It assumes no knowledge of the project: every term is
+defined the first time it appears.
 
-| Kind | What it is | Changes | Lives in | Saved |
+### 2.1 The criterion, in one sentence
+
+> **A characteristic is a hidden datum that is stable over months and is a
+> performance, not a dimension. Everything else is a dimension, a state, a
+> behaviour, a composite, or out of scope — and none of those is a
+> characteristic.**
+
+The criterion has two halves, and both must hold:
+
+1. **Hidden.** The value is not visible without an instrument: you cannot
+   read it by watching, you infer it from effects (a dynamometer for
+   strength, many matches for passing). Visible-and-measured data is a
+   *dimension*, not a characteristic.
+2. **Stable and a performance.** The value changes over months or years
+   (age, training, experience), never within a match. A value that changes
+   within a match is a *state*. A dimension (height, weight) is a property
+   of the body, not a performance: it does not change with effort and it
+   is not something the player *does*.
+
+### 2.2 The five kinds of datum
+
+| Kind | What it is | Changes | Example | Lives in |
 |---|---|---|---|---|
-| **Characteristic** | A stable trait of the player: body, learned skill, head, reading | Over months or years (age, training, experience) | `PlayerLatents` (hidden) or `Player` (public) | With the player identity |
-| **Behaviour** | Something the player *does*: scanning, positioning, pressing | Every action or tick | The decision code, not a datum | No: it is behaviour, recomputed from the characteristics and the situation |
-| **State** | A condition of the moment: fatigue, confidence, morale, pressure | Within a match, or between matches | `PhysicalStateMinimal`, `PsychologicalStateMinimal` | Per match (or reconstructed from events, MD-41) |
+| **Characteristic** | Hidden, stable, a performance | Over months or years | passing, strength, vision | `pcfm-hidden`, read through the custodian |
+| **Dimension** | Visible, measured, a property of the body | Over years (growth), not with effort | height, weight, preferred foot | `Player` (`pcfm-model`), read directly |
+| **State** | A condition of the moment | Within a match, or between matches | fatigue, confidence, morale | `PhysicalStateMinimal`, `PsychologicalStateMinimal` |
+| **Behaviour** | Something the player *does* | Every action or tick | scanning, positioning, pressing | The decision code, never a saved datum |
+| **Composite** | A name that hides several things | — | set pieces (free kicks, penalties, corners) | Not a datum: it is split or declared a label |
 
-**Why it matters.** A characteristic is saved once and evolves slowly; a
-state is saved or reconstructed every match; a behaviour is never saved.
-If the three are mixed, the save does not know what to keep and the model
-does not know what is a trait and what is a condition.
+**A composite is not a sixth kind of datum: it is a warning.** `set pieces`
+looks like one capability but hides four different skills. `instinct` /
+`anticipation` is reading + experience + concentration. A composite is
+either split into its parts or declared a label that describes an effect,
+never a stored value.
 
-**Example.** Scanning (turning the head before receiving) is a
-**behaviour**, not a characteristic: it is what the player does with his
-vision. Vision is the characteristic; scanning is the behaviour that
-uses it. Keeping scanning in the characteristic list would be a category
-error.
+### 2.3 Why it matters
+
+A characteristic is saved once and evolves slowly; a state is saved or
+reconstructed every match; a behaviour is never saved; a dimension is
+measured once. If the kinds are mixed, three things break: the save does
+not know what to keep, the model does not know what is a trait and what is
+a condition, and the manager is shown a value he should have discovered.
+
+**Example (the boundary that matters).** Scanning — turning the head
+before receiving — is a **behaviour**, not a characteristic: it is what
+the player does with his vision. Vision is the characteristic; scanning is
+the behaviour that uses it. Putting scanning in the characteristic list
+would be a category error: it is not something the player *is*, it is
+something he *does*.
+
+**Example (the boundary that used to be fuzzy).** Fatigue and confidence
+are both conditions of the moment, so both are **states**, not
+characteristics. But they differ in how the manager knows them: fatigue is
+seen directly (the player slows, the engine holds a counter), confidence
+is not — it is inferred from behaviour. The next section explains why this
+difference does not change the kind of datum: it changes the *estimate*.
+
+### 2.4 The manager never sees a true value
+
+This is the principle that makes the game a game.
+
+The manager — the human player of Calcio Vero — **never reads a true
+value**. He reads an **estimate**, always, for every datum: a measurement
+for a dimension (height with a ruler, weight with a scale), a test for a
+physical performance (a dynamometer for strength), many matches for a
+technical skill (passing). The estimate has a confidence, and the
+confidence depends on the method, not on the datum.
+
+This is why scouting exists. If the manager saw `passing = 0.73`, there
+would be nothing to discover and the game would lose its core. He sees
+"this player passes well, but I have seen him only five times, and twice
+against weak opponents": an estimate with low confidence.
+
+**Consequence for the model.** There is no "the manager reads Plane B
+directly". Plane B is where the *engine* reads a value directly (a
+dimension, a state it holds). The manager reads an estimate in Plane C,
+for every kind of datum, with a confidence that depends on the method.
+The distinction between "observable" and "estimable" is not a difference
+between datums: it is a difference between *who reads*, and with what
+confidence.
+
+**The three methods of estimation** (a lens for analysis, not a
+classification of datums; it becomes concrete only when the scouting crate
+exists):
+
+| Method | What it means | Example |
+|---|---|---|
+| **Instrumental** | A test produces a number, low error, repeatable | dynamometer for strength, sprint for acceleration, eye-tracking for peripheral vision |
+| **Statistical-contextual** | Match statistics plus a model, high error, depends on teammates and opponents | completed passes for passing, shots for finishing |
+| **Qualitative** | Expert judgement only, no reliable number | composure under pressure, reading of the game |
+
+The same characteristic can have more than one method (strength is
+instrumental *and* observable in duels); the methods describe how the
+estimate is formed, not where the datum lives.
 
 ## 3. The four families
 
@@ -298,92 +378,167 @@ real is declared here so a future session does not restart from zero.
 | Resilience | L2 (events between matches) |
 | Set pieces | OI-48 (the rules module) |
 
-## 7. The characteristics
+## 7. The characteristics, by plane
 
-Columns: **Persist.** (trait = stable over months; state = changes within
-a match), **Meas.** (M = objectively measurable; S = estimated by
-observation; D = to be discovered by playing), **Reads at L0** (which
-formula, if any, or "none yet"), **Observable effect** (which event field
-carries its consequence).
+Every row follows the criterion of §2: a characteristic is hidden, stable,
+and a performance. It lives in **one plane, and one only**. The column
+**Plane** says which: **A** (hidden, read by the engine through the
+custodian) or **B** (visible, read by the engine directly). There is no
+"A+B": a datum that looks like it belongs to two planes is not one datum,
+it is a characteristic plus a state (see §7.6).
 
-### 7.1 Physical
+Columns: **Plane** (A or B), **Persist.** (trait = stable over months;
+state = changes within a match), **Est.** (how the manager estimates it:
+**I** instrumental test, **S** statistical-contextual, **Q** qualitative
+judgement — a lens for analysis, not a classification, §2.4),
+**Consumed by** (which formula or decision, or "none yet"), **Observable
+effect** (which event field carries the consequence).
 
-| Name | Persist. | Meas. | Reads at L0 | Observable effect |
-|---|---|---|---|---|
-| Height | trait | M | movement (stride), header (via technique) | position, trajectory |
-| Explosive force | trait | M | movement, save, header, shot | velocity, save distance, shot speed |
-| Maximal force | trait | M | duel (holding position) | duel outcome |
-| Acceleration | trait | M | movement | velocity, position delta |
-| Max speed | trait | M | movement | velocity |
-| Resistance (aerobic + anaerobic) | trait | M | movement over 90' | fatigue accumulation and recovery |
-| Joint mobility | trait | M | movement (direction changes), save (dive) | position, dive reach |
-| Reactivity | trait | M | save (reaction ticks) | save timing |
-| Control of the body (equilibrium + coordination) | trait | S | duel, shot under pressure | duel outcome, on-target |
+### 7.1 Physical (Plane A)
 
-**Accorpamenti dichiarati:**
+| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
+|---|---|---|---|---|---|
+| Explosive force | A | trait | I | movement, save, header, shot | velocity, save distance, shot speed |
+| Maximal force | A | trait | I | duel (holding position) | duel outcome |
+| Acceleration | A | trait | I | movement | velocity, position delta |
+| Max speed | A | trait | I | movement | velocity |
+| Resistance (aerobic + anaerobic) | A | trait | I | movement over 90' | fatigue accumulation and recovery |
+| Joint mobility | A | trait | I | movement (direction changes), save (dive) | position, dive reach |
+| Reactivity | A | trait | I | save (reaction ticks) | save timing |
+| Control of the body (equilibrium + coordination) | A | trait | Q | duel, shot under pressure | duel outcome, on-target |
 
-- **Resistenza aerobica + anaerobica -> Resistenza.** In a real match the
+**Height and weight are not here.** They are dimensions, not
+performances: properties of the body that exist whether the player moves
+or not. They live in `Player` (Plane B), they are measured, and they enter
+the formulas as inputs. See §7.5.
+
+**Declared merges:**
+
+- **Aerobic + anaerobic resistance -> Resistance.** In a real match the
   phenomenon is one ("who collapses", "who recovers"). The engine reads it
   in two moments (duration and recovery), but it is one characteristic.
-- **Equilibrio + coordinazione -> Controllo del corpo.** In a real match
-  they are seen together ("he moves well"), and the engine uses them in
-  the same place (duel, gesture under pressure).
-- **Peso non è una caratteristica a sé.** Derived from height and maximal
-  force; a separate field would be a parameter without a phenomenon the
-  engine can distinguish.
-- **Accelerazione e velocità massima restano due parametri** dello stesso
-  modello, non due caratteristiche indipendenti: in a real match they are
-  distinct but correlated by nature.
+- **Equilibrium + coordination -> Control of the body.** Seen together in
+  a real match ("he moves well"), used in the same place by the engine
+  (duel, gesture under pressure).
+- **Acceleration and max speed stay two parameters** of the same model,
+  not two independent characteristics: distinct in a real match (short
+  burst vs long run) but correlated by nature.
 
-### 7.2 Technical
+### 7.2 Technical (Plane A)
 
-| Name | Persist. | Meas. | Reads at L0 | Observable effect |
-|---|---|---|---|---|
-| Control / first touch | trait | D | pass (receiving), shot (setup) | pass complete, shot on target |
-| Passing | trait | D | `resolve_pass` | pass complete |
-| Shooting | trait | D | `resolve_shot` | on_target, shot_type |
-| Dribbling | trait | D | duel (attacker side) | duel outcome |
-| Heading | trait | D | duel (aerial), shot (header) | duel outcome, on_target |
-| Tackling | trait | D | `resolve_duel` (defender side) | duel outcome |
-| Goalkeeping | trait | D | `resolve_save` | save outcome |
-| Set pieces | trait (composite) | D | none yet (OI-48) | free kick / penalty / corner outcome |
+| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
+|---|---|---|---|---|---|
+| Control / first touch | A | trait | Q | pass (receiving), shot (setup) | pass complete, shot on target |
+| Passing | A | trait | S | pass formula | pass complete |
+| Shooting | A | trait | S | shot formula | on_target, shot_type |
+| Dribbling | A | trait | S | duel (attacker side) | duel outcome |
+| Heading | A | trait | S | duel (aerial), shot (header) | duel outcome, on_target |
+| Tackling | A | trait | S | duel formula (defender side) | duel outcome |
+| Goalkeeping | A | trait | S | save formula | save outcome |
 
 **Heading is not aerial.** Heading is the technique; it is *expressed
 through* height and explosive force. The prototype's `aerial` collapsed
-the three into one number and never read `height_cm`.
+the three into one number and never read `height_cm`. In the new model,
+`height_cm` (Plane B) and `explosive force` (Plane A) are terms of the
+same formula, together with `heading` (Plane A).
 
-**Set pieces is a composite**, not one capability: free kicks, penalties,
-corners, throw-ins are different skills. It waits for the rules module
-(OI-48).
+**Set pieces is not a characteristic** (it is a composite, §2.2): free
+kicks, penalties, corners, throw-ins are different skills. It waits for
+the rules module (OI-48) and will be split, not stored as one number.
 
-### 7.3 Psychological
+### 7.3 Psychological traits (Plane A)
 
-| Name | Persist. | Meas. | Reads at L0 | Observable effect |
-|---|---|---|---|---|
-| Concentration | state (trait threshold) | D | decision (degraded image, MD-40) | pass/shot outcome under pressure |
-| Confidence | state | D | decision (risk taking), shot | shot choice, on_target |
-| Composure | state (trait threshold) | D | shot (under pressure) | on_target under pressure |
-| Emotional control | trait + state | D | duel (foul commit), card | foul, card |
-| Resilience | trait | D | none yet (L2) | action after a mistake |
+| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
+|---|---|---|---|---|---|
+| Resilience | A | trait | Q | none yet (L2) | action after a mistake |
+| Emotional control | A | trait | Q | duel (foul commit), card | foul, card |
+| Aggressiveness | A | trait | Q | duel (commitment) | duel intensity |
+| Courage | A | trait | Q | duel (going for the ball) | duel outcome |
 
-**Trait + state.** Concentration, composure and emotional control have a
-stable threshold (the trait) and a level of the day (the state). The
-formula reads the state; the trait sets the baseline. This is the
-trait-by-state question, open in §11.
+These are **traits**: stable thresholds, hidden. They are not the state of
+the moment: that is a separate datum, in Plane B, computed from the trait
+plus fatigue plus events (§7.6).
 
-### 7.4 Cognitive
+### 7.4 Cognitive (Plane A)
 
-| Name | Persist. | Meas. | Reads at L0 | Observable effect |
-|---|---|---|---|---|
-| Vision | trait | M (eye-tracking) | perception (cone width) | targets considered |
-| Game reading | trait | D | `choose_action` (option quality) | action chosen |
-| Decision making | trait | D | `choose_action` (speed/quality) | action chosen |
+| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
+|---|---|---|---|---|---|
+| Vision | A | trait | I | perception (cone width) | targets considered |
+| Game reading | A | trait | Q | choice of action (option quality) | action chosen |
+| Decision making | A | trait | Q | choice of action (speed/quality) | action chosen |
+| Risk management | A | trait | Q | choice of action (risk) | action chosen |
 
-**The cognitive family does not exist in the prototype.** Today
-`choose_action` is geometric: it reads positions and picks. With this
+**The cognitive family does not exist in the prototype.** Today the
+choice of action is geometric: it reads positions and picks. With this
 family, the choice is no longer pure geometry. The leaf is F.6.
 
-### 7.5 Behaviours (not characteristics)
+**Vision is the exception in this family for the estimate:** a test
+(eye-tracking) measures it, so the manager estimates it instrumentally,
+not qualitatively. The datum is still hidden (the engine reads it through
+the custodian); the estimate is just better than for reading or decision
+making.
+
+### 7.5 Dimensions (Plane B, in `Player`)
+
+These are **not characteristics**: they are properties of the body, they
+are measured, and they are visible enough that the manager does not need
+to discover them (the estimate is a measurement).
+
+| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
+|---|---|---|---|---|---|
+| Height | B | property | measurement | movement (stride), header (via technique), save (reach) | position, trajectory, save distance |
+| Weight | B | property | measurement | movement (mass vs force), duel (mass) | velocity, duel outcome |
+| Preferred foot | B | property | observation | pass, shot (which foot) | pass/shot direction |
+
+**Why dimensions enter the formulas.** A player of 100 kg and 150 cm with
+average strength accelerates less than one of 75 kg and 180 cm with the
+same strength: acceleration depends on force *and* mass. If the movement
+formula read only `strength`, the model would produce a world where mass
+does not exist — which is false. So `movement.json` reads `strength`
+(Plane A, through the custodian), `height` and `weight` (Plane B, from
+`Player`), and the situation. One formula, inputs from two planes, each
+datum in its own plane. The formula crosses the planes; it does not merge
+them.
+
+**Weight is measured, not derived.** A scale measures it. The prototype
+of this cell derived it from height and maximal force; that was wrong:
+a player can be heavy and weak, or light and strong.
+
+### 7.6 States (Plane B, not characteristics)
+
+A state is a condition of the moment. It changes within a match (or
+between matches) and it is not a characteristic. States are **computed**:
+the trait (Plane A, through the custodian) plus fatigue plus events,
+inside the calculator, produce the state. The engine holds the state; the
+manager estimates it (often with low confidence).
+
+| Name | Plane | Persist. | Est. | Computed from | Observable effect |
+|---|---|---|---|---|---|
+| Fatigue | B | state | observation | effort over the match (MD-40) | slower movement, later arrival |
+| Condition | B | state | observation | recent load, recovery | baseline of the day |
+| Confidence | B | state | Q | trait threshold + events (error, goal) | risk taking, shot choice |
+| Morale | B | state | Q | results, context | commitment |
+| Pressure load | B | state | Q | accumulated pressure events | composure under pressure |
+| Concentration (level) | B | state | Q | trait threshold + fatigue + events | errors, distraction |
+| Composure (level) | B | state | Q | trait threshold + pressure load | on-target under pressure |
+
+**The three "double" cases are resolved here.** Concentration,
+composure and emotional control looked like they belonged to two planes.
+They do not: **the trait is a characteristic in Plane A; the level of the
+moment is a state in Plane B, computed from the trait plus context.**
+Two datums, two planes, one criterion. The trait is what the player *is*
+(hidden, stable); the state is what he *is like today* (visible in its
+effects, computed).
+
+**How the state is computed, and where.** The calculator reads the trait
+(through the custodian), combines it with fatigue and the events, and
+produces the state. The state is an **output** of the calculator, stored
+in the engine's state (`MatchState`), not a latent and not a field of
+`Player`. This is the piece that the prototype did not have: it stored
+psychological traits as states (in `PsychologicalStateMinimal`) without a
+trait behind them.
+
+### 7.7 Behaviours (not datums)
 
 | Behaviour | Uses which characteristics | Where it lives |
 |---|---|---|
@@ -391,21 +546,79 @@ family, the choice is no longer pure geometry. The leaf is F.6.
 | Positioning (where to stand) | Game reading, role | Decision code (F.6) |
 | Pressing (when to close down) | Aggressiveness, game reading | Decision code (F.6, later) |
 
-A behaviour is never a latent and never a saved datum: it is recomputed
-from the characteristics and the situation.
+A behaviour is never a latent, never a state, never a saved datum: it is
+recomputed from the characteristics and the situation.
 
-## 8. Visibility and the manager
+### 7.8 Out of scope at L0 (L2)
 
-**M** characteristics are measurable: the manager can know them, or a
-close estimate, without playing. A 190 cm centre-back is visible; a strong
-leg is visible from a test. **S** characteristics are estimated from
-observation (control of the body). **D** characteristics are the game:
-they are discovered by playing, and scouting exists because of them.
+| Datum | Why out of scope | When |
+|---|---|---|
+| Leadership | Needs the dressing room, not the match | L2 |
+| Motivation | Needs season objectives, contracts | L2 |
+| Communication / organisation | Needs the unit that talks, the line that manages | L2 |
 
-**Consequence for design.** An `M` characteristic does not need a scouting
-report; a `D` characteristic does. Mixing them (as the prototype does,
-with seven `D` latents and `height_cm` public) hides the distinction that
-makes scouting a game.
+They are real, they are football, and they are not L0. They are listed so
+that a future session does not restart from zero, and they are not
+generated at L0 (no consumer, no context).
+
+### 7.9 Composites (to be split, not stored)
+
+| Composite | Parts | Status |
+|---|---|---|
+| Set pieces | Free kicks, penalties, corners, throw-ins | Split when OI-48 (rules module) exists |
+| Instinct / anticipation | Reading + experience + concentration | Not a datum: a label for an effect |
+
+A composite is never a stored value. Either it is split into its parts, or
+it is declared a label that describes an effect of other data.
+
+### 7.10 Summary of the planes
+
+| Plane | Contains | Count |
+|---|---|---|
+| **A** | Hidden performances: physical, technical, psychological traits, cognitive | 8 + 7 + 4 + 4 = 23 |
+| **B** | Dimensions (3) and states (7) | 10 |
+| **C** | Estimates, not datums: the manager's view, with confidence | — (future scouting crate) |
+| Out | L2 (3), composites (2), behaviours (3) | 8 |
+
+**The plane decides where the datum lives, not how the manager knows it.**
+The manager estimates every datum in C, with a confidence that depends on
+the method (§2.4): a measurement for a dimension, a test for a physical
+performance, many matches for a technical skill. The plane is about who
+reads the true value; the estimate is about what the manager sees. Two
+questions, two answers, no double home.
+
+## 8. What the manager sees, and why scouting is a game
+
+The manager never reads a true value (§2.4). He reads an estimate, in
+Plane C, for every datum: a measurement for a dimension (height with a
+ruler), a test for a physical performance (a dynamometer for strength),
+many matches for a technical skill (passing), expert judgement for what
+has no instrument (composure, reading).
+
+**The confidence of the estimate is what makes scouting a game.** Two
+characteristics can both be hidden and both be performances, and still be
+known very differently:
+
+- **Strength** is estimated with a test: thirty minutes, low error. The
+  manager who has a laboratory knows it well; the one who does not
+  estimates it from duels. The asymmetry is resources, not time.
+- **Passing** is estimated from matches: months, high error, and the
+  error depends on teammates, opponents, position. The asymmetry is time
+  and observation, and it is never fully resolved.
+
+This is why the game has scouting: the manager must decide whom to watch,
+for how long, and with what method. A world where every characteristic
+had an instrumental test would have no scouting; a world where none had
+one would have no measurement. The mix is the design.
+
+**Consequence for the model.** The model must not collapse the methods
+into one. A characteristic with an instrumental test and a characteristic
+with only qualitative judgement are both hidden performances, but they
+are known in different ways, and the game is built on that difference.
+The three methods — instrumental, statistical-contextual, qualitative
+(§2.4) — are a lens for analysis, not a classification of datums. They
+become concrete only when the scouting crate exists; today they explain
+why the estimate, not the datum, is what the manager sees.
 
 ## 9. Where each characteristic lives
 
