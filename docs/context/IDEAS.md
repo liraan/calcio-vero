@@ -892,3 +892,12 @@
 - **Source:** conversation 2026-11-04 (user). Deferred: no consumer (D3).
 - **Idea:** two thresholds — 55° for recognising/deciding, 90° for detecting motion in the periphery. Physiologically grounded, but without a consumer for the second threshold it is structure without content.
 - **When:** if a phenomenon needs "I saw the movement but not the detail" (anticipation, reaction to a run). Tracked, not planned.
+
+### IDEA-INFRA-022 — Invariants independent of the profile
+- **Status:** sketch
+- **Category:** Infrastructure / quality gate
+- **Source:** OI-51 measurement (2026-11-04). The release profile is 15x faster but `cargo test --release` disables `debug_assert!`, including the one that guards the event invariant in `emit_event`.
+- **Idea:** make the critical invariants independent of the build profile, so release can be the gate profile without losing the safety net. Options: `assert!` only on the invariant that matters (currently forbidden by D2 in simulation paths, so an ADR is required), or a dedicated invariant pass run in test only, or a `cfg(debug_assertions)` shim that the test runner checks explicitly.
+- **Why it matters:** if the commit cost ever crosses the 30 s threshold (OI-51), the fast profile is the obvious escape, and today it is blocked by a doctrine rule. Knowing that in advance is cheaper than discovering it under pressure.
+- **Prerequisites:** OI-51 reopened (the threshold crossed); an ADR for any `assert!` in a simulation path (D2).
+- **Not now:** the cost is acceptable, and adding invariants is structure without a current need (D3).
