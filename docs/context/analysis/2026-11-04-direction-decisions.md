@@ -164,3 +164,18 @@ assumption is recorded so nobody repeats it.
 - **Goalkeeper and posts (F.3-b3):** `[next]`, not done.
 - **The rules module (OI-48):** restart, offside, side change. The ball
   that goes out stops the match (declared derogation).
+
+---
+
+## 8. Precedence between the direction sources
+
+The direction lives in more than one place, and that is correct: each file answers a different question. But if they ever disagree, the reader must know which one wins **without asking**. The order:
+
+1. **`specs/00-foundations.md`** — the doctrine (pillars, Three Planes, banned things). If a direction source contradicts it, the source is wrong (foundations §0: "if a module contradicts this file, the module is wrong").
+2. **`docs/context/L0-POSITIONAL-SLICE.md` §0** — the vision of this engine (phenomenological, eight categories, every event explains why). It refines foundations for L0; it cannot contradict it.
+3. **`docs/WORLD-MODEL.md` §4–§5** — the simulation/presentation boundary and the levels. It applies the vision to the renderer and to L1–L3.
+4. **This report (and any dated `analysis/`)** — the reasoning of one session. It records decisions and the alternatives they rejected; it is the most recent and the most specific, and it is the one that goes stale first.
+
+**Rule:** a lower number wins. A dated report that contradicts a higher source is a **finding to report**, not a silent override: the report may be right, but the contradiction is the signal that one of the two must be amended, and that is a maintainer decision (D4), not an agent's.
+
+**Why not a single file:** merging them would create one document with three readers (the doctrine reader, the engine reader, the session reader), and the one that changes daily would make the other two stale. The precedence line costs nothing and keeps the three honest.
