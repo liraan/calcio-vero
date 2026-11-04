@@ -7,6 +7,9 @@
 - **Blocks:** 2D implementation of referee positioning behaviour; any engine rule that relies on the referee as a collision body.
 - **Depends on:** ADR-019 (match engine contract, D1 and D9).
 
+
+**Note (2026-11-03) — DEFERRED for the new engine.** The new engine has an **omniscient arbiter** (SESSION-STATE T1.3): no vision cone, no obstructed-perception errors, the match is fair. The perception model described below belongs to the prototype; it is not the model of the new engine. Do not implement from this ADR without reading T1.3 (and T1.3-bis: "fairness over realism" is a declared design value). The parts of this ADR that still hold in the new engine: the arbiter is non-physical, not a collision body, its position is informational for the renderer.
+
 ## Context
 
 ADR-019 D9 currently says:
