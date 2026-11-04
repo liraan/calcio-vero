@@ -3,9 +3,9 @@
 **Version:** 1.1
 **Status:** active
 **Last updated:** 2026-10-26
-**Audience:** developers who write Rust code that extends PCFM
+**Audience:** developers who write Rust code that extends Calcio Vero
 
-This guide is for **plugin developers**: people who write Rust code that extends PCFM. It is **not** for **modders**, who write packs (registry files, themes, assets) without writing Rust. See `STRUCTURE.md` §9 for the difference.
+This guide is for **plugin developers**: people who write Rust code that extends Calcio Vero. It is **not** for **modders**, who write packs (registry files, themes, assets) without writing Rust. See `STRUCTURE.md` §9 for the difference.
 
 If you are a modder, you do not need this guide. Read `L3-registry` and `L3-packs` (planned) instead.
 
@@ -13,7 +13,7 @@ If you are a modder, you do not need this guide. Read `L3-registry` and `L3-pack
 
 ## 1. The two kinds of extension
 
-PCFM has two extension mechanisms, and they are deliberately different.
+Calcio Vero has two extension mechanisms, and they are deliberately different.
 
 | | **Modder** | **Plugin developer** |
 |---|---|---|
@@ -31,7 +31,7 @@ This guide is for the second kind.
 
 ## 2. The crate layout
 
-PCFM is a Cargo workspace. Every crate is in `crates/`, and every crate name starts with `pcfm-`.
+Calcio Vero is a Cargo workspace. Every crate is in `crates/`, and every crate name starts with `pcfm-`.
 
 Current crates (as of 2026-10-26):
 
@@ -93,7 +93,7 @@ The dependency graph is **inward-only**: a crate at level N depends on crates at
 
 ## 3. The simulation / rendering split
 
-The most important pattern in PCFM: **the simulation is shared, the rendering is swappable.**
+The most important pattern in Calcio Vero: **the simulation is shared, the rendering is swappable.**
 
 In `pcfm-match`, the function `pcfm_match::simulate_match(&mut ctx) -> MatchResult` runs the tick loop and the micro-decisions. The `MatchResult` is **pure data**: score, events, statistics, state hash, and an **empty** narrative.
 
