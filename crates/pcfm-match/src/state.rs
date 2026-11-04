@@ -25,6 +25,55 @@ pub(crate) enum Possession {
 /// if it has not landed (MD-37). Arbitrary, declared: 15 ticks = 1.5 s.
 const FLIGHT_TICKS: u64 = 15;
 
+/// Interception radius, in centimetres. A defender within this distance
+/// of the pass line intercepts, if the passer did not see him. Arbitrary,
+/// declared.
+const INTERCEPT_RADIUS_CM: i64 = 200;
+
+/// The squared distance from point `p` to the segment `a`-`b`. Integer
+/// only, deterministic (D2).
+fn point_segment_dist_sq(a: (i32, i32), b: (i32, i32), p: (i32, i32)) -> i64 {
+    let abx = i64::from(b.0 - a.0);
+    let aby = i64::from(b.1 - a.1);
+    let apx = i64::from(p.0 - a.0);
+    let apy = i64::from(p.1 - a.1);
+    let ab_dot = abx * abx + aby * aby;
+    if ab_dot == 0 {
+        return apx * apx + apy * apy;
+    }
+    let a_to_p = apx * abx + apy * aby;
+    if a_to_p <= 0 {
+        return apx * apx + apy * apy;
+    }
+    if a_to_p >= ab_dot {
+        let bpx = i64::from(b.0 - p.0);
+        let bpy = i64::from(b.1 - p.1);
+        return bpx * bpx + bpy * bpy;
+    }
+    let cross = abx * apy - aby * apx;
+    (cross * cross) / ab_dot
+}
+
+/// The first unseen opponent within `INTERCEPT_RADIUS_CM` of the segment
+/// `a`-`b`, in `unseen` order. Deterministic.
+fn find_interceptor(
+    spatial: &SpatialState,
+    unseen: &[PlayerId],
+    a: (i32, i32),
+    b: (i32, i32),
+) -> Option<PlayerId> {
+    let r_sq = INTERCEPT_RADIUS_CM * INTERCEPT_RADIUS_CM;
+    for &id in unseen {
+        let Some(agent) = spatial.agent(id) else {
+            continue;
+        };
+        if point_segment_dist_sq(a, b, agent.position) <= r_sq {
+            return Some(id);
+        }
+    }
+    None
+}
+
 /// A pending fact the engine must resolve at a declared tick (MD-37).
 /// The possession is applied only at resolution: the ball in flight
 /// belongs to nobody (MD-25).
@@ -33,6 +82,10 @@ pub(crate) struct Pending {
     pub due_tick: u64,
     /// Which team has the ball once the flight resolves.
     pub outcome: Possession,
+    /// The opponent who intercepts the pass, if any.
+    pub interceptor: Option<PlayerId>,
+    /// The passer, for the Interception event (None for a shot).
+    pub passer: Option<PlayerId>,
 }
 /// The in-progress state of a match.
 pub struct MatchState {
@@ -205,13 +258,28 @@ impl MatchState {
     #[allow(clippy::too_many_lines)]
     pub fn tick(&mut self, tick: u64, ctx: &mut MatchContext<'_>) {
         // Resolve a due pending first (MD-37): the possession is applied
-        // here, not at launch. Mandatory expiry: no orphan blocks the loop.
+        // here, not at launch. F.4-d: an unseen opponent on the line
+        // intercepts, and the event is emitted at resolution.
         if let Some(p) = &self.pending {
             if tick >= p.due_tick {
                 let outcome = p.outcome;
+                let interceptor = p.interceptor;
+                let passer = p.passer;
                 self.pending = None;
                 self.possession = outcome;
                 self.spatial.set_carrier(None);
+                if let (Some(who), Some(by)) = (interceptor, passer) {
+                    self.emit_event(
+                        ctx,
+                        tick,
+                        Some(ActorId::Player(who)),
+                        EventType::Interception,
+                        serde_json::json!({
+                            "from": by.slot(),
+                            "to": who.slot(),
+                        }),
+                    );
+                }
             }
         }
         self.spatial.advance_ball();
@@ -308,14 +376,26 @@ impl MatchState {
             self.spatial.set_carrier(None);
             self.spatial
                 .set_ball_in_flight(from, outcome.initial_velocity);
-            let expected = if outcome.complete {
-                self.possession
-            } else {
+            // F.4-d: save the opponents the passer did NOT see at launch.
+            // The cone filters the interceptor, not the pass target.
+            let seen = crate::perception::visible_to(&self.spatial, attacker);
+            let unseen: Vec<PlayerId> = opponents
+                .iter()
+                .copied()
+                .filter(|o| !seen.contains(o))
+                .collect();
+            let interceptor =
+                find_interceptor(&self.spatial, &unseen, (from.0, from.1), (to.0, to.1));
+            let expected = if interceptor.is_some() || !outcome.complete {
                 Self::other(self.possession)
+            } else {
+                self.possession
             };
             self.pending = Some(Pending {
                 due_tick: tick + FLIGHT_TICKS,
                 outcome: expected,
+                interceptor,
+                passer: Some(attacker),
             });
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
@@ -385,6 +465,8 @@ impl MatchState {
             self.pending = Some(Pending {
                 due_tick: tick + FLIGHT_TICKS,
                 outcome: Self::other(self.possession),
+                interceptor: None,
+                passer: None,
             });
         } else {
             let ctx_duel = pcfm_hidden::DuelContext {
@@ -643,5 +725,32 @@ mod tests {
             matches!(chosen, ChosenAction::Pass(p) if p == mate),
             "the cone filtered the pass target: {chosen:?}"
         );
+    }
+}
+
+#[cfg(test)]
+mod intercept_tests {
+    use super::*;
+
+    #[test]
+    fn point_on_the_segment_is_zero() {
+        assert_eq!(point_segment_dist_sq((0, 0), (100, 0), (50, 0)), 0);
+    }
+
+    #[test]
+    fn point_beyond_the_end_uses_the_endpoint() {
+        // Beyond b: distance to b, 10 cm.
+        assert_eq!(point_segment_dist_sq((0, 0), (100, 0), (110, 0)), 100);
+    }
+    #[test]
+
+    fn point_before_the_start_uses_the_startpoint() {
+        assert_eq!(point_segment_dist_sq((0, 0), (100, 0), (-10, 0)), 100);
+    }
+
+    #[test]
+    fn perpendicular_distance_is_computed() {
+        // 30 cm above the middle of a 100 cm segment.
+        assert_eq!(point_segment_dist_sq((0, 0), (100, 0), (50, 30)), 900);
     }
 }
