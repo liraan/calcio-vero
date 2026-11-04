@@ -270,5 +270,6 @@ These are components that are referenced across modules but are not crates. They
 | [024](../docs/adr/024-remove-cause-trace-l0.md) | Remove `CauseTrace` at L0 | ✅ accepted | Supersedes ADR-023; removes the empty cause trace; R-01 fix |
 | [025](../docs/adr/025-tui-board-renderer.md) | TUI board renderer for `pcfm-demo` | ✅ accepted | Short ADR for IDEA-INFRA-006 step 12 (board + events, no pitch); view model in `pcfm-demo` (D3), no engine change |
 | [026](../docs/adr/026-match-boundaries-stoppage-time.md) | Match boundaries and stoppage time | ✅ accepted | Two halves, separate clocks, fixed-point stoppage (no cap), `Half` field, `Option<ActorId>`, `balance/stoppage_time.json`, SIM_VERSION 4→6 |
+| [027](../docs/adr/027-project-rename-calcio-vero.md) | Project rename: Calcio Vero / Deep Simulator | ✅ accepted | Supersedes ADR-002: name Calcio Vero, English handle Deep Simulator, attribution by Liraan, non-commercial declared; crate prefix stays pcfm-* |
 
-**Open ADRs:** 017 (proposed). **Accepted:** 001, 002, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 018, 019, 020, 021, 022, 024 (19). **Superseded:** 023 (by ADR-024).
+**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027 (22). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.

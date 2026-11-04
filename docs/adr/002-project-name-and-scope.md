@@ -1,6 +1,6 @@
 # ADR-002 — Project Name and Scope
 
-- **Status:** accepted
+- **Status:** superseded by ADR-027
 - **Date:** 2026-10-25
 - **Supersedes:** none
 - **Superseded by:** none
@@ -81,3 +81,7 @@ This ADR sets the **target platforms** (Windows, Linux, macOS): unchanged. This 
 - `README.md` — product description
 - `specs/00-foundations.md` §6, §7 — product goal and non-goals
 - ADR-006 — trademark
+
+---
+
+**Note (2026-11-04):** this ADR is **superseded by ADR-027**. The project name is now **Calcio Vero** (English handle: *Deep Simulator*, attribution: *by Liraan*). The crate prefix remains `pcfm-*` (ADR-027 explains why). This file is kept as the record of what the name was and why; it is not rewritten.
