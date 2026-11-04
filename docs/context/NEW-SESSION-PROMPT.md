@@ -226,6 +226,8 @@ Runs the fast subset of the gates: A1, A3, A4, B1, B3, B6, B7 (and reports B2 as
 If red: report it to the maintainer **before** proceeding. Do not fix it silently: a broken bookmark is worse than an incomplete one, and the maintainer must decide whether to reopen the previous session (E3a) or proceed with a declared caveat.
 
 **Why these checks run twice.** A1, A3, A4, B1, B3, B6, B7 run here and again at closing step 3, on purpose: here they catch a stale bookmark *before it is used*; at closing they confirm the bookmark is still true *after the session's edits*. The two runs cost under 0.1 s together and catch different failures. 
+
+**Pointers for the session (mechanical).** After the fast gate, run `scripts/gates.sh resume`. It prints, read from the repo: LCV, HEAD, remote state, the `[next]` step, the OI count and the newest OI, the last two B1-bis lessons, the ideas count, the analysis reports, and whether the tree is dirty. It is not a check (it does not go red): it is the list of what to read before proposing anything, generated instead of remembered. If it disagrees with the bookmark you read in step 2, trust the repo and report the divergence.
 ### 3. Read foundations (doctrine, rules)
 
 Two reads, in this order, both required.

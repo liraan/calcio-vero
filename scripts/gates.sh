@@ -3,8 +3,9 @@
 # Exit 0 = green (all mechanical checks pass), 1 = red.
 # Run from the repo root.
 #
-# Usage: scripts/gates.sh [startup|closing]
+# Usage: scripts/gates.sh [startup|closing|resume]
 #   closing (default) - full set: A1, A3, B1, B3, B6, B7 + manual B2
+#   resume            - pointers for a fresh session (LCV, next step, OIs)
 #   startup           - fast set: A1, A3, B1, B3, B6, B7 + manual B2
 #                        (B2 is only meaningful after work has been done)
 #
@@ -21,7 +22,7 @@ say_fail()   { printf '  FAIL    %s\n' "$1"; fail=1; }
 say_manual() { printf '  manual  %s\n' "$1"; }
 
 case "$MODE" in
-  startup|closing) : ;;
+  startup|closing|resume) : ;;
   *) echo "gates: unknown mode '$MODE' (expected startup or closing)" >&2; exit 2 ;;
 esac
 
@@ -113,6 +114,7 @@ fi
 echo "Gate B - fresh-session simulation (mechanical subset)"
 
 SS=docs/context/SESSION-STATE.md
+NSP=docs/context/NEW-SESSION-PROMPT.md
 
 # B1 (2026-11-02, revised): only [next] counts as "the next step".
 # No fallback to [open]: that fallback returned 11 (a [deferred] step)
@@ -223,6 +225,28 @@ if [ "$b8_missing" -eq 0 ]; then
 else
   say_fail "B8 $b8_missing simplification(s) without a non-empty Removed-by: (MD-32)"
 fi
+
+# ---------- Resume mode: mechanical pointers for a fresh session ----------
+if [ "$MODE" = "resume" ]; then
+  echo ""
+  echo "Resume - pointers read from the repo, not from chat"
+  echo "LCV:    $(grep -m1 'Last commit verified' "$SS" 2>/dev/null | cut -c1-120)"
+  echo "HEAD:   $(git rev-parse --short HEAD 2>/dev/null)"
+  echo "REMOTE: $(git status -sb 2>/dev/null | head -1)"
+  echo ""
+  echo "Plan, next steps:"
+  grep -nE '^\| \[(next|wip|urgent)\]' "$SS" 2>/dev/null | cut -c1-160
+  echo ""
+  echo "Open items: $(grep -cE '^\| OI-[0-9]+ ' "$SS" 2>/dev/null) total"
+  echo "  newest: $(grep -oE 'OI-[0-9]+' "$SS" 2>/dev/null | sort -t- -k2 -n | tail -1)"
+  echo "Method lessons (B1-bis), last 2:"
+  awk '/Tool fallbacks \(observed\)/{f=1} /^- \*\*B2 —/{f=0} f && /^    - \*\*/' "$NSP" 2>/dev/null | tail -2 | cut -c1-140
+  echo "Ideas backlog: $(grep -cE '^### IDEA-' docs/context/IDEAS.md 2>/dev/null) entries"
+  echo "Analysis reports: $(ls docs/context/analysis/*.md 2>/dev/null | wc -l) in docs/context/analysis/"
+  echo ""
+  echo "Dirty tree: $(git status --short 2>/dev/null | wc -l) file(s)"
+fi
+
 if [ "$fail" -eq 0 ]; then
   if [ "$MODE" = "closing" ]; then
     echo "gates: GREEN (closing; manual: B2 - do it in the closing report)"
