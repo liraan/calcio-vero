@@ -11,7 +11,7 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 9
+SIM_VERSION = 11
 ```
 
 `SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). 6: two halves with separate clocks, `Half` field, four-phase loop, fixed-point stoppage time, boundary events emitted (ADR-026 phase 2). 7: stoppage contributions calibrated (goal 60s, foul 20s, duel 10s). 8: slice B2 — the acting agent comes from space (`pick_from_space`), `Tackle` emitted when a duel is won by the defender, `SpatialState.carrier` tracked, stream names with `match_id` (OI-22). OI-22 closed: RNG stream names now carry `match_id` (`match:{id}:actions`, `match:{id}:action_kind`), so two matches with the same world seed no longer share the engine streams. The current value is the reference against which all future bumps are measured.
@@ -20,7 +20,10 @@ SIM_VERSION = 9
 
 10: A1 — one RNG stream per noise consumer in `pcfm-hidden` (`hidden:{match_id}:{latents,duel,shot,pass,save,injury,set_piece,pressure}`), replacing the single shared stream. Adding a new consumer no longer shifts the outcomes of the others (`00-foundations` §4, `01-rng.md` §2.3). Closes OI-39. Golden hash regenerated.
 
+11: F.3-b2 — the ball crosses the goal line as a geometric fact: `Shot` carries `goal` and `on_target` (was: `goal` only, on the shot). `Goal` is emitted only from a `Fact::LineCrossing { kind: GoalLine }`, not from the shot. `Pass` is emitted for the first time (was: `resolve_pass` called, no event). `Fact::Trajectory` carries `kind` and `success`; `Fact::LineCrossing` carries `actor` and `point`. `classify` extended; six unit tests. Golden hash regenerated. Behavior change: a `Pass` event appears in the stream, and `Shot.goal` now comes from the line crossing. F.3-b1 (BallState 3D) did not bump: no behaviour change (golden identical).
+
 **Known gap (OI-14):** the 10-season golden test (an L1 artefact) is not implemented. The L0 golden test (N matches, seeds 42..51) exists and is regenerated on every bump.
+
 
 `SIM_VERSION` is defined in `pcfm-match` (`crates/pcfm-match/src/save.rs`) and embedded in every save (see `L0.07` §2.1).
 

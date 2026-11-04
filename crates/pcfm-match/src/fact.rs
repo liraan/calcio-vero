@@ -14,41 +14,46 @@ use pcfm_stats::EventType;
 /// zero or more `MatchEvent`s.
 #[derive(Debug, Clone)]
 pub enum Fact {
-    /// Two agents contest the ball. The narrator emits `Duel` (always) and
-    /// `Tackle` (when the defender wins).
+    /// Two agents contest the ball. Emits `Duel` (always) and `Tackle`
+    /// (when the defender wins).
     Contact {
-        /// The agent who had the ball.
         attacker: PlayerId,
-        /// The agent contesting it.
         defender: PlayerId,
-        /// The agent who won.
         winner: PlayerId,
     },
-    /// An action sent the ball along a trajectory. The narrator emits
-    /// `Shot` (always) and `Goal` (when `goal` is true).
+    /// An action sent the ball along a trajectory.
     Trajectory {
-        /// The agent who produced it.
         actor: PlayerId,
-        /// Whether a goal resulted.
-        goal: bool,
+        kind: TrajectoryKind,
+        /// `Pass`: whether the pass was completed.
+        /// `Shot`: whether the shot was a goal (unused; `Goal` comes from `LineCrossing`).
+        success: bool,
+        /// `Shot` only: whether the shot was on target. Ignored for `Pass`.
+        on_target: bool,
+    },
+    /// The ball crossed the goal line.
+    GoalLineCrossing {
+        actor: Option<ActorId>,
+        point: (i32, i32, i32),
     },
 }
 
-/// One classified event: a `MatchEvent` in everything but the header
-/// (id, match, half, tick) the emitter adds. The classification is pure:
-/// it depends only on the fact, so it is testable and deterministic.
+/// The kind of trajectory a `Fact::Trajectory` carries.
+#[derive(Debug, Clone, Copy)]
+pub enum TrajectoryKind {
+    Pass,
+    Shot,
+}
+
+/// One classified event.
 #[derive(Debug, Clone)]
 pub struct Classified {
-    /// The actor of the event.
     pub actor: Option<ActorId>,
-    /// The event type.
     pub event_type: EventType,
-    /// The event fields.
     pub fields: serde_json::Value,
 }
 
-/// Classifies a fact into events, in emission order. The order is part of
-/// the contract: `Duel` before `Tackle`, `Shot` before `Goal`.
+/// Classifies a fact into events, in emission order.
 pub fn classify(fact: &Fact) -> Vec<Classified> {
     match fact {
         Fact::Contact {
@@ -74,21 +79,102 @@ pub fn classify(fact: &Fact) -> Vec<Classified> {
             }
             out
         }
-        Fact::Trajectory { actor, goal } => {
-            let mut out = Vec::with_capacity(2);
-            out.push(Classified {
+        Fact::Trajectory {
+            actor,
+            kind,
+            success,
+            on_target,
+        } => match kind {
+            TrajectoryKind::Pass => vec![Classified {
+                actor: Some(ActorId::Player(*actor)),
+                event_type: EventType::Pass,
+                fields: serde_json::json!({ "complete": success }),
+            }],
+            TrajectoryKind::Shot => vec![Classified {
                 actor: Some(ActorId::Player(*actor)),
                 event_type: EventType::Shot,
-                fields: serde_json::json!({ "goal": goal }),
-            });
-            if *goal {
-                out.push(Classified {
-                    actor: Some(ActorId::Player(*actor)),
-                    event_type: EventType::Goal,
-                    fields: serde_json::json!({}),
-                });
-            }
-            out
-        }
+                fields: serde_json::json!({ "goal": success, "on_target": on_target }),
+            }],
+        },
+        Fact::GoalLineCrossing { actor, point } => vec![Classified {
+            actor: *actor,
+            event_type: EventType::Goal,
+            fields: serde_json::json!({
+                "x": point.0,
+                "y": point.1,
+                "z": point.2,
+            }),
+        }],
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pcfm_core::ids::PlayerId;
+
+    fn p(slot: u32) -> PlayerId {
+        PlayerId::new(slot, 0)
+    }
+
+    #[test]
+    fn contact_winner_is_attacker_emits_only_duel() {
+        let c = classify(&Fact::Contact {
+            attacker: p(1),
+            defender: p(2),
+            winner: p(1),
+        });
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0].event_type, EventType::Duel);
+    }
+
+    #[test]
+    fn contact_winner_is_defender_emits_duel_then_tackle() {
+        let c = classify(&Fact::Contact {
+            attacker: p(1),
+            defender: p(2),
+            winner: p(2),
+        });
+        assert_eq!(c.len(), 2);
+        assert_eq!(c[0].event_type, EventType::Duel);
+        assert_eq!(c[1].event_type, EventType::Tackle);
+    }
+
+    #[test]
+    fn pass_trajectory_emits_pass_with_complete_field() {
+        let c = classify(&Fact::Trajectory {
+            actor: p(1),
+            kind: TrajectoryKind::Pass,
+            success: true,
+            on_target: false,
+        });
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0].event_type, EventType::Pass);
+        assert_eq!(c[0].fields["complete"], true);
+    }
+
+    #[test]
+    fn shot_trajectory_emits_shot_with_goal_and_on_target() {
+        let c = classify(&Fact::Trajectory {
+            actor: p(1),
+            kind: TrajectoryKind::Shot,
+            success: false,
+            on_target: true,
+        });
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0].event_type, EventType::Shot);
+        assert_eq!(c[0].fields["goal"], false);
+        assert_eq!(c[0].fields["on_target"], true);
+    }
+
+    #[test]
+    fn goal_line_crossing_emits_goal_with_position() {
+        let c = classify(&Fact::GoalLineCrossing {
+            actor: Some(ActorId::Player(p(1))),
+            point: (10500, 3400, 0),
+        });
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0].event_type, EventType::Goal);
+        assert_eq!(c[0].fields["x"], 10500);
     }
 }

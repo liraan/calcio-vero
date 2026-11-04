@@ -163,6 +163,15 @@ impl MatchState {
         if action_kind_roll < 0.6 {
             let ctx_pass = pcfm_hidden::PassContext { passer: attacker };
             let outcome = ctx.hidden.resolve_pass(&ctx_pass);
+            let fact = crate::fact::Fact::Trajectory {
+                actor: attacker,
+                kind: crate::fact::TrajectoryKind::Pass,
+                success: outcome.complete,
+                on_target: false,
+            };
+            for c in crate::fact::classify(&fact) {
+                self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
+            }
             if !outcome.complete {
                 self.flip_possession();
                 self.spatial.set_carrier(None);
@@ -172,7 +181,9 @@ impl MatchState {
             let outcome = ctx.hidden.resolve_shot(&ctx_shot);
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
-                goal: outcome.goal,
+                kind: crate::fact::TrajectoryKind::Shot,
+                success: outcome.goal,
+                on_target: outcome.on_target,
             };
             for c in crate::fact::classify(&fact) {
                 self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
@@ -189,6 +200,17 @@ impl MatchState {
                 match self.possession {
                     Possession::Home => self.score.home += 1,
                     Possession::Away => self.score.away += 1,
+                }
+                let goal_line = match self.possession {
+                    Possession::Home => (i32::from(ctx.match_.pitch.length_m) * 100, 0, 0),
+                    Possession::Away => (0, 0, 0),
+                };
+                let fact = crate::fact::Fact::GoalLineCrossing {
+                    actor: Some(ActorId::Player(attacker)),
+                    point: goal_line,
+                };
+                for c in crate::fact::classify(&fact) {
+                    self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
                 }
             }
             self.flip_possession();
