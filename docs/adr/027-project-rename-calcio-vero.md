@@ -58,3 +58,7 @@ The crate prefix stays **`pcfm-*`**. Renaming 9 crates, 177 `use` statements, 11
 - The abbreviation: **DS** was chosen in the pause, but it is not normative and may change with the logo.
 - The logo (IDEA-PROJ-002): the mark must work for "Calcio Vero" and be readable as "Deep Simulator". Open.
 - The GitHub repository name: derived from "Calcio Vero", decided by the maintainer when the rename is executed.
+
+---
+
+**Note (2026-11-04):** the sentence "Deep Simulator — the handle used in English: documentation, GitHub, commit messages, ADRs" is clarified: **"GitHub" means the published content** (README, documentation, releases, commit messages), **not the repository name**. The repository is named **`calcio-vero`**: the repo is the project, and the project name is Calcio Vero. A long URL (`calcio-vero-deep-simulator`) repeats what the README already says in its first line and truncates in badges and links. The English handle stays a documentation convention, not a second name for the URL.

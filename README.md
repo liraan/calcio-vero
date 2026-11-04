@@ -7,8 +7,8 @@
 **An open football management simulation.**
 *Transparent by design. Deterministic by construction. Yours by default.*
 
-[![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/pcfootballmanager)
-[![Tests](https://img.shields.io/badge/tests-168_passing-brightgreen)](https://github.com/liraan/pcfootballmanager)
+[![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/calcio-vero)
+[![Tests](https://img.shields.io/badge/tests-168_passing-brightgreen)](https://github.com/liraan/calcio-vero)
 [![License](https://img.shields.io/badge/license-MIT_OR_Apache--2.0-blue)](LICENSE-MIT)
 [![Built with](https://img.shields.io/badge/docs-AI--assisted-purple)](#ai-disclosure)
 
@@ -184,7 +184,7 @@ Dependencies are pinned and justified in ADRs. No `*` versions in `Cargo.toml`. 
 ## Repository layout
 
 ```
-pcfootballmanager/
+calcio-vero/
 ├── specs/          # specification, concentric L0–L3
 │   ├── 00-foundations.md
 │   └── L0-match/     # 11 cells, ratified + implemented
@@ -215,13 +215,13 @@ Requires **Rust 1.85+ (stable)**.
 Commands are tested on Linux. On Windows, use Git Bash or WSL; the Rust toolchain and `cargo` are the same.
 
 ```bash
-git clone https://github.com/liraan/pcfootballmanager.git
-cd pcfootballmanager
+git clone https://github.com/liraan/calcio-vero.git
+cd calcio-vero
 cargo build --release
 cargo run --release --bin pcfm-test-runner -- --check --seed 42
 ```
 
-If `--check` prints `6/6 checks passed`, the framework is healthy. If it doesn't, something in the simulation contract is broken — please [open an issue](https://github.com/liraan/pcfootballmanager/issues).
+If `--check` prints `6/6 checks passed`, the framework is healthy. If it doesn't, something in the simulation contract is broken — please [open an issue](https://github.com/liraan/calcio-vero/issues).
 
 **Inspect the test harness:**
 
@@ -364,8 +364,8 @@ See [AI disclosure](#ai-disclosure). Short version: drafted by AI, reviewed by a
 
 ## Contact
 
-- **Discussions** — [GitHub Discussions](https://github.com/liraan/pcfootballmanager/discussions)
-- **Bugs / features** — [GitHub Issues](https://github.com/liraan/pcfootballmanager/issues)
+- **Discussions** — [GitHub Discussions](https://github.com/liraan/calcio-vero/discussions)
+- **Bugs / features** — [GitHub Issues](https://github.com/liraan/calcio-vero/issues)
 - **Community chat** — *to be decided*
 
 No private emails, no Telegram, no WhatsApp. Everything happens publicly on GitHub.
