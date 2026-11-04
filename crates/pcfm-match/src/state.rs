@@ -30,6 +30,9 @@ const FLIGHT_TICKS: u64 = 15;
 /// declared.
 const INTERCEPT_RADIUS_CM: i64 = 200;
 
+/// Goalkeeper reach in centimetres (F.3-b3). Arbitrary, declared: 2 m.
+const GK_REACH_CM: i32 = 200;
+
 /// The squared distance from point `p` to the segment `a`-`b`. Integer
 /// only, deterministic (D2).
 fn point_segment_dist_sq(a: (i32, i32), b: (i32, i32), p: (i32, i32)) -> i64 {
@@ -74,10 +77,21 @@ fn find_interceptor(
     None
 }
 
+/// Info about a pending shot (F.3-b3). The crossing detection reads
+/// the attacker to attribute the Goal event.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ShotPending {
+    /// The shooter.
+    pub attacker: PlayerId,
+}
+
 /// A pending fact the engine must resolve at a declared tick (MD-37).
 /// The possession is applied only at resolution: the ball in flight
 /// belongs to nobody (MD-25).
 pub(crate) struct Pending {
+    /// F.3-b3: if this pending is a shot, the info needed to detect
+    /// a goal-line crossing during the flight.
+    pub shot: Option<ShotPending>,
     /// The tick at which the pending resolves even if not landed.
     pub due_tick: u64,
     /// Which team has the ball once the flight resolves.
@@ -282,7 +296,10 @@ impl MatchState {
                 }
             }
         }
+        let prev_ball = self.spatial.ball_3d();
         self.spatial.advance_ball();
+        let curr_ball = self.spatial.ball_3d();
+        self.check_shot_crossing(ctx, tick, prev_ball, curr_ball);
         self.spatial.move_agents(
             i32::from(ctx.match_.pitch.length_m) * 100,
             i32::from(ctx.match_.pitch.width_m) * 100,
@@ -396,12 +413,13 @@ impl MatchState {
                 outcome: expected,
                 interceptor,
                 passer: Some(attacker),
+                shot: None,
             });
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
-                kind: crate::fact::TrajectoryKind::Pass,
-                success: outcome.complete,
-                on_target: false,
+                kind: crate::fact::TrajectoryKind::Pass {
+                    success: outcome.complete,
+                },
             };
             for c in crate::fact::classify(&fact) {
                 self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
@@ -415,24 +433,41 @@ impl MatchState {
                 Possession::Home => (i32::from(ctx.match_.pitch.length_m) * 100, 3400, 244),
                 Possession::Away => (0, 3400, 244),
             };
+            // Difficulty: min distance to an opponent, scaled. Arbitrary,
+            // declared: 0 cm -> 100 (max pressure), 1500 cm -> 0.
+            let difficulty = opponents
+                .iter()
+                .filter_map(|o| {
+                    self.spatial
+                        .agent(*o)
+                        .map(|a| distance_squared(a.position, (from.0, from.1)).isqrt())
+                })
+                .min()
+                .map_or(0, |d| {
+                    i32::try_from(((1500 - d).max(0) * 100) / 1500).unwrap_or(0)
+                });
             let ctx_shot = pcfm_hidden::ShotContext {
                 shooter: attacker,
                 from,
                 to,
+                difficulty,
             };
             let outcome = ctx.hidden.resolve_shot(&ctx_shot);
-            // MD-25/F.4-c: the carrier is released at launch, the ball flies,
-            // the pending resolves the possession (MD-37). The goal is the
-            // die's outcome (MD-20); the LineCrossing is emitted at launch,
-            // declared simplification (no interception yet, OI-37).
+            // F.3-b3: carrier released, ball flies. Goal (or Save) is
+            // emitted at the crossing tick by `check_shot_crossing`, not
+            // at launch: the goal is geometric, not the die's outcome.
             self.spatial.set_carrier(None);
             self.spatial
                 .set_ball_in_flight(from, outcome.initial_velocity);
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
-                kind: crate::fact::TrajectoryKind::Shot,
-                success: outcome.goal,
-                on_target: outcome.on_target,
+                kind: crate::fact::TrajectoryKind::Shot {
+                    on_target: outcome.on_target,
+                    from,
+                    to: outcome.to,
+                    initial_velocity: outcome.initial_velocity,
+                    shot_type: outcome.shot_type,
+                },
             };
             for c in crate::fact::classify(&fact) {
                 self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
@@ -445,28 +480,12 @@ impl MatchState {
                     self.shots.1 += 1;
                 }
             }
-            if outcome.goal {
-                match self.possession {
-                    Possession::Home => self.score.home += 1,
-                    Possession::Away => self.score.away += 1,
-                }
-                let goal_line = match self.possession {
-                    Possession::Home => (i32::from(ctx.match_.pitch.length_m) * 100, 0, 0),
-                    Possession::Away => (0, 0, 0),
-                };
-                let fact = crate::fact::Fact::GoalLineCrossing {
-                    actor: Some(ActorId::Player(attacker)),
-                    point: goal_line,
-                };
-                for c in crate::fact::classify(&fact) {
-                    self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
-                }
-            }
             self.pending = Some(Pending {
                 due_tick: tick + FLIGHT_TICKS,
                 outcome: Self::other(self.possession),
                 interceptor: None,
                 passer: None,
+                shot: Some(ShotPending { attacker }),
             });
         } else {
             let ctx_duel = pcfm_hidden::DuelContext {
@@ -595,6 +614,106 @@ impl MatchState {
             agents,
             skill,
         }
+    }
+
+    /// Checks whether the in-flight ball crossed a goal plane this tick
+    /// (F.3-b3). The goal is born from the geometric crossing, not from
+    /// the die's outcome: `on_target` is the die's intent, the crossing
+    /// is what happens.
+    ///
+    /// If a shot is pending and the ball crossed a goal plane:
+    /// - outside the goal mouth: possession to the defending team
+    ///   (declared derogation MD-38, ball out stops the match);
+    /// - inside, goalkeeper reaches (`GK_REACH_CM`): save via
+    ///   `resolve_save`, possession to the defender;
+    /// - inside, no save: `Goal` emitted, score updated.
+    ///
+    /// The pending is cleared in all three cases. Pure geometry plus one
+    /// `resolve_save`; no other RNG.
+    fn check_shot_crossing(
+        &mut self,
+        ctx: &mut MatchContext<'_>,
+        tick: u64,
+        prev: (i32, i32, i32),
+        curr: (i32, i32, i32),
+    ) {
+        let attacker = match self.pending.as_ref().and_then(|p| p.shot.as_ref()) {
+            Some(s) => s.attacker,
+            None => return,
+        };
+        let pitch_length = i32::from(ctx.match_.pitch.length_m) * 100;
+        let width = i32::from(ctx.match_.pitch.width_m) * 100;
+
+        let (plane_x, defending) = if prev.0 < pitch_length && curr.0 >= pitch_length {
+            (pitch_length, Possession::Away)
+        } else if prev.0 > 0 && curr.0 <= 0 {
+            (0, Possession::Home)
+        } else {
+            return;
+        };
+        let dx = i64::from(curr.0 - prev.0);
+        if dx == 0 {
+            return;
+        }
+        let t_num = i64::from(plane_x - prev.0);
+        let y_at = prev.1 + i32::try_from((i64::from(curr.1 - prev.1) * t_num) / dx).unwrap_or(0);
+        let z_at = prev.2 + i32::try_from((i64::from(curr.2 - prev.2) * t_num) / dx).unwrap_or(0);
+        let goal_half_w = 366;
+        let goal_h = 244;
+        let goal_center_y = width / 2;
+        let inside = (y_at - goal_center_y).abs() < goal_half_w && (0..goal_h).contains(&z_at);
+
+        self.pending = None;
+        self.spatial.set_carrier(None);
+
+        if !inside {
+            self.possession = defending;
+            return;
+        }
+
+        let gk = match defending {
+            Possession::Home => PlayerId::new(0, 0),
+            Possession::Away => PlayerId::new(100, 0),
+        };
+        let saved = if let Some(gk_agent) = self.spatial.agent(gk) {
+            let dy = (y_at - gk_agent.position.1).abs();
+            if dy <= GK_REACH_CM {
+                let save_ctx = pcfm_hidden::SaveContext {
+                    goalkeeper: gk,
+                    point: (plane_x, y_at, z_at),
+                };
+                ctx.hidden.resolve_save(&save_ctx).saved
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+
+        if saved {
+            self.emit_event(
+                ctx,
+                tick,
+                Some(ActorId::Player(gk)),
+                EventType::Save,
+                serde_json::json!({ "x": plane_x, "y": y_at, "z": z_at }),
+            );
+            self.possession = defending;
+            return;
+        }
+
+        let fact = crate::fact::Fact::GoalLineCrossing {
+            actor: Some(ActorId::Player(attacker)),
+            point: (plane_x, y_at, z_at),
+        };
+        for c in crate::fact::classify(&fact) {
+            self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
+        }
+        match defending {
+            Possession::Home => self.score.away += 1,
+            Possession::Away => self.score.home += 1,
+        }
+        self.possession = defending;
     }
 
     fn emit_event(

@@ -1,18 +1,19 @@
-//! Context types for `resolve_*` calls.
+//! Inputs to the `resolve_*` functions (Plane B).
 //!
-//! Contexts are Plane B/C data: observed inputs to the resolution. They
-//! carry no latent value.
+//! These structs are constructed by the engine and passed to
+//! `pcfm-hidden`. They carry only Plane B data (positions, ids); latents
+//! are read inside the crate.
 
 use pcfm_core::ids::PlayerId;
 
 /// The type of a duel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DuelType {
-    /// Aerial duel.
-    Aerial,
-    /// Ground duel.
+    /// Ground duel (tackle, dribble).
     Ground,
-    /// Duel with the goalkeeper.
+    /// Aerial duel (header).
+    Aerial,
+    /// Contest with the goalkeeper (cross, shot under pressure).
     WithGoalkeeper,
 }
 
@@ -36,6 +37,10 @@ pub struct ShotContext {
     pub from: (i32, i32, i32),
     /// The goal centre, in centimetres, 3D.
     pub to: (i32, i32, i32),
+    /// A `0..=100` value the caller computes from the situation
+    /// (opponents near the shooter, distance to goal). Declared model
+    /// choice: the die widens its deviation under pressure. Not a latent.
+    pub difficulty: i32,
 }
 
 /// The context of a pass resolution.
@@ -68,6 +73,10 @@ pub struct InjuryContext {
 pub struct SaveContext {
     /// The goalkeeper.
     pub goalkeeper: PlayerId,
+    /// The point where the ball crossed the goal plane, in centimetres, 3D.
+    /// The engine computes it from the trajectory; it is the geometric
+    /// input the goalkeeper's reaction depends on.
+    pub point: (i32, i32, i32),
 }
 
 /// The context of a set piece resolution.

@@ -8,6 +8,7 @@
 //! are emitted (CHANGELOG-SIM.md, "When to bump", point 2).
 
 use pcfm_core::ids::{ActorId, PlayerId};
+use pcfm_hidden::ShotType;
 use pcfm_stats::EventType;
 
 /// A fact the engine produces in a tick. The narrator classifies it into
@@ -25,11 +26,6 @@ pub enum Fact {
     Trajectory {
         actor: PlayerId,
         kind: TrajectoryKind,
-        /// `Pass`: whether the pass was completed.
-        /// `Shot`: whether the shot was a goal (unused; `Goal` comes from `LineCrossing`).
-        success: bool,
-        /// `Shot` only: whether the shot was on target. Ignored for `Pass`.
-        on_target: bool,
     },
     /// The ball crossed the goal line.
     GoalLineCrossing {
@@ -41,8 +37,17 @@ pub enum Fact {
 /// The kind of trajectory a `Fact::Trajectory` carries.
 #[derive(Debug, Clone, Copy)]
 pub enum TrajectoryKind {
-    Pass,
-    Shot,
+    /// A pass. `success` is whether it was completed.
+    Pass { success: bool },
+    /// A shot. The payload is what F.3-b3 requires (see
+    /// `docs/context/analysis/2026-11-04-match-stats-and-traits.md` §3).
+    Shot {
+        on_target: bool,
+        from: (i32, i32, i32),
+        to: (i32, i32, i32),
+        initial_velocity: (i16, i16, i16),
+        shot_type: ShotType,
+    },
 }
 
 /// One classified event.
@@ -79,21 +84,32 @@ pub fn classify(fact: &Fact) -> Vec<Classified> {
             }
             out
         }
-        Fact::Trajectory {
-            actor,
-            kind,
-            success,
-            on_target,
-        } => match kind {
-            TrajectoryKind::Pass => vec![Classified {
+        Fact::Trajectory { actor, kind } => match kind {
+            TrajectoryKind::Pass { success } => vec![Classified {
                 actor: Some(ActorId::Player(*actor)),
                 event_type: EventType::Pass,
-                fields: serde_json::json!({ "complete": success }),
+                fields: serde_json::json!({ "complete": *success }),
             }],
-            TrajectoryKind::Shot => vec![Classified {
+            TrajectoryKind::Shot {
+                on_target,
+                from,
+                to,
+                initial_velocity,
+                shot_type,
+            } => vec![Classified {
                 actor: Some(ActorId::Player(*actor)),
                 event_type: EventType::Shot,
-                fields: serde_json::json!({ "goal": success, "on_target": on_target }),
+                fields: serde_json::json!({
+                    "on_target": *on_target,
+                    "from": { "x": from.0, "y": from.1, "z": from.2 },
+                    "to": { "x": to.0, "y": to.1, "z": to.2 },
+                    "initial_velocity": {
+                        "x": initial_velocity.0,
+                        "y": initial_velocity.1,
+                        "z": initial_velocity.2
+                    },
+                    "shot_type": shot_type.as_str(),
+                }),
             }],
         },
         Fact::GoalLineCrossing { actor, point } => vec![Classified {
@@ -144,9 +160,7 @@ mod tests {
     fn pass_trajectory_emits_pass_with_complete_field() {
         let c = classify(&Fact::Trajectory {
             actor: p(1),
-            kind: TrajectoryKind::Pass,
-            success: true,
-            on_target: false,
+            kind: TrajectoryKind::Pass { success: true },
         });
         assert_eq!(c.len(), 1);
         assert_eq!(c[0].event_type, EventType::Pass);
@@ -154,17 +168,29 @@ mod tests {
     }
 
     #[test]
-    fn shot_trajectory_emits_shot_with_goal_and_on_target() {
+    fn shot_trajectory_emits_shot_with_new_fields() {
         let c = classify(&Fact::Trajectory {
             actor: p(1),
-            kind: TrajectoryKind::Shot,
-            success: false,
-            on_target: true,
+            kind: TrajectoryKind::Shot {
+                on_target: true,
+                from: (5000, 3400, 0),
+                to: (10500, 3500, 244),
+                initial_velocity: (300, 5, 14),
+                shot_type: ShotType::Power,
+            },
         });
         assert_eq!(c.len(), 1);
         assert_eq!(c[0].event_type, EventType::Shot);
-        assert_eq!(c[0].fields["goal"], false);
         assert_eq!(c[0].fields["on_target"], true);
+        assert_eq!(c[0].fields["from"]["x"], 5000);
+        assert_eq!(c[0].fields["to"]["y"], 3500);
+        assert_eq!(c[0].fields["initial_velocity"]["x"], 300);
+        assert_eq!(c[0].fields["shot_type"], "power");
+        assert!(
+            c[0].fields.get("goal").is_none(),
+            "goal removed from Shot: {:?}",
+            c[0].fields
+        );
     }
 
     #[test]

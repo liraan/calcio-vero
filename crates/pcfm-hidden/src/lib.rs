@@ -31,7 +31,7 @@ pub use context::{
 pub use observation::ObservationEvent;
 pub use outcome::{
     DuelOutcome, InjuryOutcome, PassOutcome, PressureOutcome, SaveOutcome, SetPieceOutcome,
-    ShotOutcome,
+    ShotOutcome, ShotType,
 };
 
 use std::collections::BTreeMap;
@@ -199,13 +199,50 @@ impl GroundTruth {
     }
 
     /// Resolves a shot.
+    ///
+    /// The die answers "how well the shot went" through its **deviation**
+    /// of the arrival point (report `match-stats-and-traits` §3):
+    /// `spread = (1 - finishing) * SPREAD_BASE + difficulty * SPREAD_DIFF`.
+    /// A strong finisher deviates less; a pressured shooter deviates more.
+    /// The goal is geometric: the deviation decides whether the ball stays
+    /// inside the goal mouth. Without deviation every shot is central:
+    /// that is the bug this fixes.
     pub fn resolve_shot(&mut self, ctx: &ShotContext) -> ShotOutcome {
         let shooter = self.latents_for(ctx.shooter);
-        let noise = next_unit(&mut self.streams.shot);
-        let goal_probability = noise.mul_add(0.3, shooter.finishing).clamp(0.0, 1.0);
-        let goal = goal_probability > 0.6;
-        let on_target = goal || noise > 0.3;
-        let dir = Self::direction_3d(ctx.from, ctx.to);
+
+        // Bidirectional deviation: two independent axes, signed by two
+        // different noise draws. All f64, deterministic (cast = truncation).
+        let spread_base = (1.0 - f64::from(shooter.finishing)) * 400.0;
+        let spread_diff = f64::from(ctx.difficulty) * 2.0;
+        let spread = spread_base + spread_diff;
+        let y_rand = f64::from(next_unit(&mut self.streams.shot));
+        let z_rand = f64::from(next_unit(&mut self.streams.shot));
+        #[allow(clippy::cast_possible_truncation)]
+        let dy = ((y_rand - 0.5) * spread) as i32;
+        #[allow(clippy::cast_possible_truncation)]
+        let dz = (((z_rand - 0.5) * spread * 0.5) as i32).max(-200);
+        let to = (ctx.to.0, ctx.to.1 + dy, ctx.to.2 + dz);
+
+        // on_target is geometric: the arrival point is inside the goal
+        // mouth (7.32 m wide, 2.44 m tall). Derived, not a field of the die.
+        let goal_half_width_cm: i32 = 366;
+        let goal_height_cm: i32 = 244;
+        let on_target =
+            (to.1 - ctx.to.1).abs() < goal_half_width_cm && to.2 < goal_height_cm && to.2 >= 0;
+
+        // shot_type: geometric, declared model choice (report §3: choice,
+        // not outcome). Distance > 20 m -> Power; wide deviation -> Placed;
+        // otherwise Normal.
+        let dist_cm = (ctx.to.0 - ctx.from.0).abs();
+        let shot_type = if dist_cm > 2000 {
+            ShotType::Power
+        } else if (to.1 - ctx.to.1).abs() > goal_half_width_cm / 2 {
+            ShotType::Placed
+        } else {
+            ShotType::Normal
+        };
+
+        let dir = Self::direction_3d(ctx.from, to);
         let speed = Self::speed_from_success(on_target);
         let initial_velocity = (
             dir.0.saturating_mul(speed) / 1000,
@@ -213,13 +250,14 @@ impl GroundTruth {
             dir.2.saturating_mul(speed) / 1000,
         );
         let outcome = ShotOutcome {
-            goal,
+            to,
             on_target,
             initial_velocity,
+            shot_type,
         };
         self.observations.push(ObservationEvent::Shot {
             shooter: ctx.shooter,
-            goal,
+            on_target,
         });
         outcome
     }
@@ -283,6 +321,13 @@ impl GroundTruth {
     }
 
     /// Resolves a save.
+    ///
+    /// The reach check (is the goalkeeper close enough to the crossing
+    /// point?) is geometric and lives in the engine (`state.rs`): the die
+    /// answers "how well did the dive go", not "was the goalkeeper there".
+    /// `ctx.point` carries the crossing point so the engine can build the
+    /// `Save` event with the right position, and so a future model can use
+    /// it (F.5, L2) without changing the signature.
     pub fn resolve_save(&mut self, ctx: &SaveContext) -> SaveOutcome {
         let keeper = self.latents_for(ctx.goalkeeper);
         let noise = next_unit(&mut self.streams.save);
@@ -295,6 +340,7 @@ impl GroundTruth {
             saved,
         });
 
+        let _ = ctx.point; // read by the engine for the Save event; not by the die.
         outcome
     }
 

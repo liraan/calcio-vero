@@ -60,20 +60,33 @@ fn functional_l0_the_engine_emits_the_claimed_shape() {
         }
     }
 
-    // 4. Every Shot carries `goal` and (from F.3-b2) `on_target`.
-    for e in events.iter().filter(|e| e.event_type == EventType::Shot) {
-        assert!(
-            e.fields.get("goal").is_some(),
-            "Shot without `goal`: {:?}",
-            e.fields
-        );
-        assert!(
-            e.fields.get("on_target").is_some(),
-            "Shot without `on_target` (F.3-b2): {:?}",
-            e.fields
+    // 4. Shots: F.3-b3 replaced `goal` with `from`/`to`/`initial_velocity`/`shot_type`.
+    //    If the seed produces no shots, the test says so; the fields are
+    //    exercised in `shot_forced.rs` (resolve_shot called directly).
+    let shot_count = events
+        .iter()
+        .filter(|e| e.event_type == EventType::Shot)
+        .count();
+    if shot_count == 0 {
+        eprintln!(
+            "NOTE: seed 42 produced 0 Shot events; Shot fields are exercised by shot_forced.rs"
         );
     }
-
+    for e in events.iter().filter(|e| e.event_type == EventType::Shot) {
+        assert!(
+            e.fields.get("goal").is_none(),
+            "Shot carries `goal` (removed in F.3-b3): {:?}",
+            e.fields
+        );
+        for k in ["from", "to", "initial_velocity", "shot_type", "on_target"] {
+            assert!(
+                e.fields.get(k).is_some(),
+                "Shot without `{}` (F.3-b3): {:?}",
+                k,
+                e.fields
+            );
+        }
+    }
     // 5. Every Goal carries a 3D position (from the LineCrossing fact).
     for e in events.iter().filter(|e| e.event_type == EventType::Goal) {
         assert!(

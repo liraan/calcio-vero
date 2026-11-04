@@ -89,6 +89,15 @@ const MAX_STEP_CM: i32 = 120;
 /// ~45 cm shoulder half-width; two agents closer than 2R are pushed apart.
 const BODY_RADIUS_CM: i32 = 45;
 
+/// Distance from the goal line at which the goalkeeper stands (F.3-b3).
+/// Arbitrary, declared: 2 m off the line.
+const GK_LINE_OFFSET_CM: i32 = 200;
+
+/// An agent whose `x` is within this distance of either goal line is not
+/// moved by `move_agents` (F.3-b3). Declared simplification: the
+/// goalkeeper stays home, everyone else moves.
+const GK_ANCHOR_CM: i32 = 250;
+
 /// One agent's work tuple for the movement pass: id, current position,
 /// formation slot. A named type keeps the borrow simple and the signature
 /// readable (clippy: complex type).
@@ -111,7 +120,9 @@ impl SpatialState {
     /// Builds the initial spatial state from a pitch and two squads.
     ///
     /// Home players are placed on the 4-4-2 grid; away players are the same
-    /// grid mirrored on the `x` axis. The ball starts at the centre, loose.
+    /// grid mirrored on the `x` axis. The goalkeeper (slot 0) starts on the
+    /// goal line (F.3-b3), not on the 4-4-2 grid slot. The ball starts at
+    /// the centre, loose.
     ///
     /// # Panics
     ///
@@ -124,10 +135,15 @@ impl SpatialState {
         let mut agents = BTreeMap::new();
         for (i, player) in home.players.iter().enumerate() {
             let (px, py) = GRID_4_4_2[i];
+            let position = if i == 0 {
+                (GK_LINE_OFFSET_CM, width / 2)
+            } else {
+                (length * px / 100, width * py / 100)
+            };
             agents.insert(
                 player.id,
                 AgentState {
-                    position: (length * px / 100, width * py / 100),
+                    position,
                     velocity: (0, 0),
                     heading: 90,
                 },
@@ -135,10 +151,15 @@ impl SpatialState {
         }
         for (i, player) in away.players.iter().enumerate() {
             let (px, py) = GRID_4_4_2[i];
+            let position = if i == 0 {
+                (length - GK_LINE_OFFSET_CM, width / 2)
+            } else {
+                (length - length * px / 100, width * py / 100)
+            };
             agents.insert(
                 player.id,
                 AgentState {
-                    position: (length - length * px / 100, width * py / 100),
+                    position,
                     velocity: (0, 0),
                     heading: 270,
                 },
@@ -295,6 +316,12 @@ impl SpatialState {
     /// Step bounded by `MAX_STEP_CM`. After the step, a minimal separation
     /// (`BODY_RADIUS_CM`) pushes overlapping agents apart (MD-12).
     ///
+    /// **F.3-b3:** an anchored agent (the goalkeeper, `x` within
+    /// `GK_ANCHOR_CM` of a goal line) is excluded from the pass entirely:
+    /// it does not move and it is not separated. Declared simplification:
+    /// the goalkeeper stays home, everyone else moves. It reaches the ball
+    /// only via `resolve_save` (F.3-b3, engine side).
+    ///
     /// Deterministic: no RNG (S1). The variation comes from the inputs
     /// (positions, ball, slots), not from a die.
     pub fn move_agents(&mut self, pitch_length_cm: i32, pitch_width_cm: i32) {
@@ -305,10 +332,17 @@ impl SpatialState {
 
         // Snapshot: agents and slots in deterministic (BTreeMap) order.
         // Same operations as the direct version, no per-pair map lookup.
+        // F.3-b3: anchored agents (goalkeepers) are skipped.
         let mut work: Vec<Work> = self
             .slots
             .iter()
-            .filter_map(|(id, slot)| self.agents.get(id).map(|a| (*id, a.position, *slot)))
+            .filter_map(|(id, slot)| {
+                let a = self.agents.get(id)?;
+                if a.position.0 <= GK_ANCHOR_CM || a.position.0 >= pitch_length_cm - GK_ANCHOR_CM {
+                    return None;
+                }
+                Some((*id, a.position, *slot))
+            })
             .collect();
 
         let nearest = work
@@ -444,12 +478,24 @@ mod tests {
     }
 
     #[test]
-    fn goalkeepers_at_the_extremes() {
+    fn goalkeepers_are_on_the_goal_lines() {
         let s = make_state();
         let home_gk = s.agent(PlayerId::new(0, 0)).unwrap();
         let away_gk = s.agent(PlayerId::new(100, 0)).unwrap();
-        assert_eq!(home_gk.position.0, 10500 * 5 / 100);
-        assert_eq!(away_gk.position.0, 10500 - 10500 * 5 / 100);
+        assert_eq!(home_gk.position.0, GK_LINE_OFFSET_CM);
+        assert_eq!(away_gk.position.0, 10500 - GK_LINE_OFFSET_CM);
+    }
+
+    #[test]
+    fn move_agents_does_not_move_the_goalkeeper() {
+        let mut s = make_state();
+        let home_gk = PlayerId::new(0, 0);
+        let away_gk = PlayerId::new(100, 0);
+        let h_before = s.agent(home_gk).unwrap().position;
+        let a_before = s.agent(away_gk).unwrap().position;
+        s.move_agents(10500, 6800);
+        assert_eq!(s.agent(home_gk).unwrap().position, h_before);
+        assert_eq!(s.agent(away_gk).unwrap().position, a_before);
     }
 
     #[test]

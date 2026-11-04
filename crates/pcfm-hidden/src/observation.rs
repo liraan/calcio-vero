@@ -29,7 +29,8 @@ pub enum ObservationEvent {
         /// The shooter.
         shooter: PlayerId,
         /// Whether the shot resulted in a goal.
-        goal: bool,
+        /// Whether the shot was on target (geometric, not a die outcome).
+        on_target: bool,
     },
     /// A pass was resolved.
     Pass {

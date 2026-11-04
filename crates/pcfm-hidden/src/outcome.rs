@@ -1,33 +1,58 @@
-//! Outcome types for `resolve_*` calls.
-//!
-//! Outcomes are Plane B data: observed results that the engine interprets.
-//! They carry no latent value and no cause trace: since ADR-023
-//! (accepted 2026-10-31) the engine builds the cause from the observed fields.
-
-use pcfm_core::ids::PlayerId;
-
+//! Outcomes of the `resolve_*` functions (Plane B).
 /// The outcome of a duel.
 #[derive(Debug, Clone)]
 pub struct DuelOutcome {
     /// The winner.
-    pub winner: PlayerId,
-    /// Whether the attacker retained the ball.
+    pub winner: pcfm_core::ids::PlayerId,
+    /// Whether the attacker kept the ball.
     pub ball_retained: bool,
-    /// Whether a foul was committed, and by whom.
-    pub foul_committed: Option<PlayerId>,
+    /// The foul committed, if any.
+    pub foul_committed: Option<()>,
 }
 
 /// The outcome of a shot.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ShotOutcome {
-    /// Whether the shot resulted in a goal.
-    pub goal: bool,
-    /// Whether the shot was on target.
+    /// The point of arrival on the goal plane, after the die's deviation,
+    /// in centimetres, 3D. The engine derives the trajectory and the
+    /// crossing from this point.
+    pub to: (i32, i32, i32),
+    /// Whether the shot was on target (the deviation stayed within the
+    /// goal mouth). Derived geometrically inside `pcfm-hidden`, not a
+    /// separate field of the die.
     pub on_target: bool,
-    /// The ball's initial velocity, in centimetres per tick, 3D
-    /// (MD-19: initial velocity is the outcome of the die, not a field
-    /// of intent; the direction is geometry, the speed is the die).
+    /// The ball's initial velocity, in centimetres per tick, 3D (MD-19:
+    /// initial velocity is the outcome of the die, not a field of intent;
+    /// the direction is geometry, the speed is the die).
     pub initial_velocity: (i16, i16, i16),
+    /// The shot type (choice, not outcome): derived geometrically from the
+    /// shot position by the engine, not by the die. Lives here so the
+    /// event can carry it (report `match-stats-and-traits` §3).
+    pub shot_type: ShotType,
+}
+
+/// The kind of shot. Reported in `Shot`, derived geometrically (report
+/// `match-stats-and-traits` §3: "`ShotType` is a choice, not an outcome").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShotType {
+    /// A powerful shot, typically from distance.
+    Power,
+    /// A placed shot, typically from a tight angle.
+    Placed,
+    /// An ordinary shot.
+    Normal,
+}
+
+impl ShotType {
+    /// The shot type as a stable string, for the event fields.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Power => "power",
+            Self::Placed => "placed",
+            Self::Normal => "normal",
+        }
+    }
 }
 
 /// The outcome of a pass.
