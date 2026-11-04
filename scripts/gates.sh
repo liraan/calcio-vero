@@ -119,7 +119,7 @@ SS=docs/context/SESSION-STATE.md
 # whenever no [next] was declared, which is misleading. A Plan with no
 # [next] is a valid state (between slices): B1 says so, green, and the
 # maintainer sees it.
-first_line=$(awk -F'|' 'NF>=7 && $2 ~ /\[next\]/ && $3 ~ /^[[:space:]]*([0-9]+[ab]?|[A-Z]([.][0-9]+)?)[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
+first_line=$(awk -F'|' 'NF>=7 && $2 ~ /\[next\]/ && $3 ~ /^[[:space:]]*([A-Za-z0-9]+([.][0-9]+)?[a-z0-9]*(-[A-Za-z0-9]+)*)[[:space:]]*$/ {print; exit}' "$SS" 2>/dev/null)
 kind="next"
 if [ -z "$first_line" ]; then
   say_ok "B1 no [next] step declared (valid between slices)"
