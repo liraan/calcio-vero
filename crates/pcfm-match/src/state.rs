@@ -206,23 +206,17 @@ impl MatchState {
                 duel_type: pcfm_hidden::DuelType::Ground,
             };
             let outcome = ctx.hidden.resolve_duel(&ctx_duel);
-            self.emit_event(
-                ctx,
-                tick,
-                Some(ActorId::Player(attacker)),
-                EventType::Duel,
-                serde_json::json!({ "winner_slot": outcome.winner.slot() }),
-            );
+            let fact = crate::fact::Fact::Contact {
+                attacker,
+                defender,
+                winner: outcome.winner,
+            };
+            for c in crate::fact::classify(&fact) {
+                self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
+            }
             if outcome.winner == defender {
                 self.flip_possession();
                 self.spatial.set_carrier(Some(defender));
-                self.emit_event(
-                    ctx,
-                    tick,
-                    Some(ActorId::Player(defender)),
-                    EventType::Tackle,
-                    serde_json::json!({ "from": attacker.slot(), "to": defender.slot() }),
-                );
             }
         } else {
             let ctx_duel = pcfm_hidden::DuelContext {

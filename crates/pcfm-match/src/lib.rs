@@ -28,6 +28,7 @@ pub mod balance;
 pub mod context;
 pub mod driver;
 pub mod engine;
+mod fact;
 pub mod narrative;
 pub mod orchestrator;
 pub mod perception;
