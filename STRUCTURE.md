@@ -127,7 +127,7 @@ archive/
 └── legacy/           (.gitkeep)
 ```
 
-**Code (172 tests passing):**
+**Code (174 tests passing):**
 
 ```
 crates/

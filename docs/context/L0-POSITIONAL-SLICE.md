@@ -550,6 +550,22 @@ with data; it does not block the model.
 - L2 phenomena (#5–#7): they shape the events, they are not L0 events.
 ## 7. Where we are, and the next sessions
 
+**Stato reale al 2026-11-05 (nota datata; il testo sotto resta il record del 2026-11-01).**
+L0 ha 172 test verdi, 9 crate `pcfm-*`, `SIM_VERSION` 18, C2 e gates verdi. Le foglie del
+Plan chiuse dopo questa nota: F.1 (primitivi spaziali), F.2 (bench movimento), F.3-a/b1/b2/b3
+(fact layer, BallState 3D, Pass/Goal geometrico, portiere e gol da attraversamento), F.4-a/b/c1/c2/d
+(movimento ogni tick, cono, pendenti + volo, decisione situata, intercettazione), F.5 (Pressure
+come relazione di copertura via `Fact::RelationEnterExit`). Aperte: F.2-bis (`resolve_*` micro-bench),
+F.6 (movimento off-ball, l'agente percepisce la palla), OI-52 (rimbalzo pali/traversa), OI-53
+(decisione tick record / IDEA-INFRA-018 e IDEA-INFRA-021). **Fatto dichiarato che sorprende:** con
+seed 42–51 il motore emette **0 `Shot`** (19 `Pass`, 19 `Pressure`): il golden non esercita lo
+schema di `Shot`, la copertura è nei test `shot_forced.rs` (3 test su `resolve_shot` chiamato
+diretto). Il filtro partita vera ha guidato F.5: `Pressure` è la relazione di copertura che cambia,
+non un evento "accanto all'azione". `PositionChange`/`HeadingChange` non sono `Fact`: sono campi
+del tick record (IDEA-INFRA-018), sfondo per 2D/3D. `RelationEnterExit` è l'unico fatto di
+movimento con un consumatore-evento (T1-bis emendato il 2026-11-05).
+
+
 **Done:**
 - Slice A (`39c444b`): `spatial.rs`, `AgentState`, `SpatialState`, 4-4-2
   grid, 6 tests.

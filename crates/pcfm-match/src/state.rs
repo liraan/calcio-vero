@@ -8,6 +8,7 @@ use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
 use pcfm_model::Squad;
 use pcfm_stats::{EventChain, EventType, Half, MatchEvent};
+use std::collections::BTreeSet;
 
 use crate::context::MatchContext;
 use crate::perception::distance_squared;
@@ -116,6 +117,14 @@ pub struct MatchState {
     /// The spatial state: positions, ball, carrier (slice B2).
     spatial: SpatialState,
     /// The pending flight, if any (MD-37). At most one at a time today.
+    /// F.5: the opponents currently covering the carrier. The set is
+    /// persistent across ticks; `update_coverage` diffs it and emits
+    /// `RelationEnterExit` for the new members (MD-04). Discarded on
+    /// possession change: the previous coverage referred to the other
+    /// team.
+    coverage: BTreeSet<PlayerId>,
+    /// The possession the current `coverage` set refers to.
+    coverage_possession: Possession,
     pending: Option<Pending>,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
@@ -225,6 +234,8 @@ impl MatchState {
             half_start_tick: 0,
             spatial: SpatialState::from_squads(&match_.pitch, &match_.home, &match_.away),
             pending: None,
+            coverage: BTreeSet::new(),
+            coverage_possession: Possession::Home,
             actions_stream: StreamName::new(format!("match:{}:actions", match_.id.slot()))
                 .expect("stream name is non-empty"),
         }
@@ -304,6 +315,7 @@ impl MatchState {
             i32::from(ctx.match_.pitch.length_m) * 100,
             i32::from(ctx.match_.pitch.width_m) * 100,
         );
+        self.update_coverage(ctx, tick);
         match self.possession {
             Possession::Home => self.home_possession_ticks += 1,
             Possession::Away => self.away_possession_ticks += 1,
@@ -337,39 +349,6 @@ impl MatchState {
 
         // The action belongs to the nearest agent; the ball follows.
         self.spatial.set_carrier(Some(attacker));
-
-        // Pressure beside the action (decision 2026-11-02, step toward the
-        // outcome): the most influential opponent on the ball's point presses,
-        // if it is within the space threshold. The rank is the order from
-        // resolve_influence; no scalar enters the event.
-        {
-            let weights = crate::balance::InfluenceWeightsJson::load().to_weights();
-            let infl_ctx = self.build_influence_ctx(
-                ctx,
-                self.spatial.ball(),
-                pcfm_hidden::SkillKind::Tackling,
-            );
-            let order = ctx.hidden.resolve_influence(&infl_ctx, &weights);
-            if let Some(&presser) = order.first() {
-                if let Some(a) = self.spatial.agent(presser) {
-                    if distance_squared(a.position, self.spatial.ball())
-                        <= i64::from(weights.space_threshold_cm)
-                            * i64::from(weights.space_threshold_cm)
-                    {
-                        self.emit_event(
-                            ctx,
-                            tick,
-                            Some(ActorId::Player(presser)),
-                            EventType::Pressure,
-                            serde_json::json!({
-                                "from": presser.slot(),
-                                "to": attacker.slot(),
-                            }),
-                        );
-                    }
-                }
-            }
-        }
 
         if let ChosenAction::Pass(receiver) = chosen {
             let from = match self.spatial.agent(attacker) {
@@ -582,38 +561,55 @@ impl MatchState {
         }
     }
 
-    /// Builds the influence context for the defenders of the current
-    /// possession (the opponents of the carrier), on `point`.
-    ///
-    /// `skill` is the latent used as modulator. The agents are the
-    /// defenders' squad: pressure is a contest of the opponents on the
-    /// carrier (03-entities-minimal §2.9, use 2).
-    fn build_influence_ctx(
-        &self,
-        ctx: &MatchContext<'_>,
-        point: (i32, i32),
-        skill: pcfm_hidden::SkillKind,
-    ) -> pcfm_hidden::InfluenceContext {
-        let (_, defenders) = self.squads(ctx);
-        let agents = defenders
-            .players
-            .iter()
-            .filter_map(|p| {
-                self.spatial
-                    .agent(p.id)
-                    .map(|a| pcfm_hidden::InfluenceAgent {
-                        id: p.id,
-                        position: a.position,
-                        #[allow(clippy::cast_possible_truncation)]
-                        fatigue_milli: (p.physical.fatigue * 1000.0) as i32,
-                    })
-            })
-            .collect();
-        pcfm_hidden::InfluenceContext {
-            point,
-            agents,
-            skill,
+    /// Emits `RelationEnterExit` when an opponent enters (or exits) the
+    /// coverage of the carrier (MD-04). Coverage is "opponent within
+    /// `space_threshold_cm` of the ball": a geometric relation, not a
+    /// per-tick event. The narrator classifies the enter fact as
+    /// `Pressure` (T1); the engine emits the fact, not the event.
+    fn update_coverage(&mut self, ctx: &mut MatchContext<'_>, tick: u64) {
+        let weights = crate::balance::InfluenceWeightsJson::load().to_weights();
+        let threshold_sq =
+            i64::from(weights.space_threshold_cm) * i64::from(weights.space_threshold_cm);
+        let ball = self.spatial.ball();
+
+        // Compute the current coverage set (immutable phase).
+        let (nominal_carrier, current): (PlayerId, BTreeSet<PlayerId>) = {
+            let (own, opp) = self.squads(ctx);
+            let mut set: BTreeSet<PlayerId> = BTreeSet::new();
+            for p in &opp.players {
+                if let Some(a) = self.spatial.agent(p.id) {
+                    if distance_squared(a.position, ball) <= threshold_sq {
+                        set.insert(p.id);
+                    }
+                }
+            }
+            let carrier = nearest_in_squad(&self.spatial, own, ball);
+            (carrier, set)
+        };
+
+        // Possession flipped: the previous coverage referred to the other
+        // team, discard it (do not emit enters against a stale reference).
+        if self.possession != self.coverage_possession {
+            self.coverage.clear();
+            self.coverage_possession = self.possession;
         }
+
+        // Diff after the flip handling, so a possession change starts from
+        // an empty reference and every current member is an enter.
+        let enters: Vec<PlayerId> = current.difference(&self.coverage).copied().collect();
+
+        for opponent in enters {
+            let fact = crate::fact::Fact::RelationEnterExit {
+                carrier: nominal_carrier,
+                opponent,
+                entered: true,
+            };
+            for c in crate::fact::classify(&fact) {
+                self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
+            }
+        }
+
+        self.coverage = current;
     }
 
     /// Checks whether the in-flight ball crossed a goal plane this tick

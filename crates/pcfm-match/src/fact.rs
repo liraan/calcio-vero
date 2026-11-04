@@ -32,6 +32,19 @@ pub enum Fact {
         actor: Option<ActorId>,
         point: (i32, i32, i32),
     },
+    /// A coverage relation started or ended between the carrier and an
+    /// opponent (MD-04). Classified as `Pressure`: an opponent entering
+    /// the carrier's coverage is a pressure event; an exit is not an event
+    /// (the pressure ended, nothing new started). Emitted at the change,
+    /// not at every tick: `Pressure` is a relation, not a state.
+    RelationEnterExit {
+        /// The carrier (the player under coverage).
+        carrier: PlayerId,
+        /// The opponent who entered or exited the coverage.
+        opponent: PlayerId,
+        /// `true` = entered the coverage, `false` = exited.
+        entered: bool,
+    },
 }
 
 /// The kind of trajectory a `Fact::Trajectory` carries.
@@ -121,6 +134,24 @@ pub fn classify(fact: &Fact) -> Vec<Classified> {
                 "z": point.2,
             }),
         }],
+        Fact::RelationEnterExit {
+            carrier,
+            opponent,
+            entered,
+        } => {
+            if *entered {
+                vec![Classified {
+                    actor: Some(ActorId::Player(*opponent)),
+                    event_type: EventType::Pressure,
+                    fields: serde_json::json!({
+                        "from": carrier.slot(),
+                        "to": opponent.slot(),
+                    }),
+                }]
+            } else {
+                Vec::new()
+            }
+        }
     }
 }
 
@@ -202,5 +233,28 @@ mod tests {
         assert_eq!(c.len(), 1);
         assert_eq!(c[0].event_type, EventType::Goal);
         assert_eq!(c[0].fields["x"], 10500);
+    }
+
+    #[test]
+    fn relation_enter_emits_pressure() {
+        let c = classify(&Fact::RelationEnterExit {
+            carrier: p(9),
+            opponent: p(105),
+            entered: true,
+        });
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0].event_type, EventType::Pressure);
+        assert_eq!(c[0].fields["from"], 9);
+        assert_eq!(c[0].fields["to"], 105);
+    }
+
+    #[test]
+    fn relation_exit_emits_nothing() {
+        let c = classify(&Fact::RelationEnterExit {
+            carrier: p(9),
+            opponent: p(105),
+            entered: false,
+        });
+        assert_eq!(c.len(), 0);
     }
 }
