@@ -10,13 +10,13 @@
 [![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/pcfootballmanager)
 [![Tests](https://img.shields.io/badge/tests-168_passing-brightgreen)](https://github.com/liraan/pcfootballmanager)
 [![License](https://img.shields.io/badge/license-MIT_OR_Apache--2.0-blue)](LICENSE-MIT)
-[![Built with](https://img.shields.io/badge/docs-AI--assisted-purple)](#-ai-disclosure)
+[![Built with](https://img.shields.io/badge/docs-AI--assisted-purple)](#ai-disclosure)
 
 </div>
 
 ---
 
-**Contents:** [Why this project exists](#why-this-project-exists) · [Three Planes](#the-core-idea-three-planes) · [The paradigm](#the-paradigm-phenomenological-simulation) · [Determinism](#determinism-taken-seriously) · [Status](#project-status) · [The engine in one glance](#the-match-engine-in-one-glance) · [What makes it different](#what-makes-it-different) · [Technology](#technology) · [Getting started](#getting-started) · [Try it in 30 seconds](#try-it-in-30-seconds) · [Reading order](#reading-order-for-newcomers) · [Contributing](#contributing) · [License](#license) · [AI disclosure](#-ai-disclosure) · [FAQ](#faq)
+**Contents:** [Why this project exists](#why-this-project-exists) · [Three Planes](#the-core-idea-three-planes) · [The paradigm](#the-paradigm-phenomenological-simulation) · [Determinism](#determinism-taken-seriously) · [Status](#project-status) · [The engine in one glance](#the-match-engine-in-one-glance) · [What makes it different](#what-makes-it-different) · [Technology](#technology) · [Getting started](#getting-started) · [Try it in 30 seconds](#try-it-in-30-seconds) · [Reading order](#reading-order-for-newcomers) · [Contributing](#contributing) · [License](#license) · [AI disclosure](#ai-disclosure) · [FAQ](#faq)
 
 ## Why this project exists
 
@@ -358,7 +358,7 @@ For ADR status, see [`STRUCTURE.md`](STRUCTURE.md) §5.
 A small crate that defines the `Scenario` trait and the `TestRegistry`. It has **no dependency on any other `pcfm-*` crate**, so core modules, plugins, and tools can all contribute test scenarios without coupling. `pcfm-test-runner --check` runs them; `--list` and `--coverage` inspect them.
 
 **How much was written by AI?**
-See [AI disclosure](#-ai-disclosure). Short version: drafted by AI, reviewed by a human. Every technical claim should be verified before you depend on it.
+See [AI disclosure](#ai-disclosure). Short version: drafted by AI, reviewed by a human. Every technical claim should be verified before you depend on it.
 
 ---
 
