@@ -86,74 +86,175 @@ has no latent for it.
 It accumulates during a match and recovers between matches. It lives in
 `PhysicalStateMinimal` and is governed by MD-40 (one source, two delays).
 
-## 4. The formula decides, the `resolve_*` applies
+## 4. Three components: custodian, calculator, orchestrator
 
-This is the core of the model. The engine does not decide, inside each
-`resolve_*`, which characteristics to use. The **formula** decides, and
-the `resolve_*` applies it.
+This section explains how a player's characteristics become an outcome on
+the pitch. It assumes no knowledge of the rest of the project: every term
+is defined the first time it appears.
 
-### 4.1 The shape
+### 4.1 The problem, in plain words
 
-- A `resolve_*` receives a **context** with the variable data of that
-  action: who, where, under what pressure, with what fatigue, at what
-  distance.
-- The `resolve_*` reads the latents it needs from `GroundTruth` (inside
-  `pcfm-hidden`, never exposed) and combines them with the context using a
-  **formula loaded from `balance/*.json`**.
-- The formula declares the **terms** (which characteristic, which context
-  datum), the **weights**, and the **combination**. It is a weighted sum
-  of known terms, not a free expression language: enumerable terms,
-  weights in `balance/`, integer or fixed-point arithmetic, no floats on
-  the simulation path.
+A player has characteristics that the manager cannot see directly:
+passing, finishing, strength, vision, reading of the game. They are stored
+hidden. When an action happens — a shot, a pass, a duel, a movement — the
+engine must combine those hidden characteristics with the situation (where
+the player is, how tired he is, who is near him) and produce an outcome
+(on target or not, complete or not, won or lost).
 
-**Example (shot, illustrative).** The shot formula is a weighted sum:
+The question this section answers is: **who does what, and who is allowed
+to see what?**
+
+### 4.2 Three components, three responsibilities
+
+| Component | Where it lives | What it holds | What it does | Sees the hidden values |
+|---|---|---|---|---|
+| **Custodian** | `pcfm-hidden` | The hidden characteristics | Answers "what is the value of this characteristic for this player?" | yes |
+| **Calculator** | a new crate | The formulas from `balance/*.json` | Applies a formula to a situation and a player, returns the outcome | yes, in input |
+| **Orchestrator** | `resolve_*` | Which formula, which situation, when | Calls the calculator, returns the outcome to the engine | no |
+
+The **custodian** is the only place where the true values live. It does not
+calculate, does not decide, does not expose. It answers one question at a
+time.
+
+The **calculator** is the only place where the formulas are applied. It
+receives the values from the custodian and the situation from the
+orchestrator, applies the formula, returns the outcome. It does not know
+who asked or why.
+
+The **orchestrator** is the door the engine uses. It decides when to call
+the calculator, with which situation, for which formula. It does not
+calculate.
+
+The **engine** (`pcfm-match`) calls `resolve_*` and nothing else. It never
+sees a hidden value, never sees a formula.
+
+### 4.3 The three APIs, and who may call them
+
+Each component exposes one API, and only one component may call it. The
+visibility is a compile-time boundary, not a convention: if the engine
+tried to call the custodian, it would not compile.
+
+| API | Callable by | Returns |
+|---|---|---|
+| Custodian: `value(player, characteristic)` | only the calculator | the true value of that characteristic for that player |
+| Calculator: `apply(formula, situation, player)` | only the orchestrator | the outcome (observable, not hidden) |
+| Orchestrator: `resolve_*` | the engine | the outcome (observable, not hidden) |
+
+The custodian has **no** "give me all the values" method. The caller must
+know what to ask for, one characteristic at a time. The engine does not
+know the custodian or the calculator exist; it knows only `resolve_*`.
+
+**Why the boundary matters.** The hidden values are the secret the manager
+must discover by watching matches. If the engine could read them directly,
+the secret would leak into every part of the game. The three-API boundary
+makes the leak impossible at compile time, not by promise.
+
+### 4.4 The calculator does not choose
+
+The calculator has no freedom of choice. The **formula** declares which
+characteristics and which situation data it uses, and the calculator asks
+the custodian for exactly those, no more:
+
+1. The orchestrator chooses **which formula** (from the action: shot, pass,
+   duel, movement).
+2. The formula in `balance/*.json` **declares its terms**: which
+   characteristic, which situation datum, with which weight.
+3. The calculator reads the formula, and for every term that is a
+   characteristic, asks the custodian for **that one**, for that player.
+4. The calculator combines the values with the situation data and returns
+   the outcome.
+
+**"Which characteristics does the shot use" is a maintainer decision,
+written in the formula.** It is not the calculator's decision (it
+executes), not the orchestrator's (it chooses the formula, not its terms),
+not the engine's (it sees nothing). It is data, and changing it is a
+declared version bump.
+
+**Mechanical verification.** A mock custodian records every call; the test
+verifies that the calculator asked for exactly the formula's terms, no
+more and no less. If it asks for something not declared, the test fails.
+The rule "the calculator reads more than it needs" becomes a red test, not
+a promise.
+
+### 4.5 The shape of a formula
+
+A formula is a weighted sum of known terms, not a free expression language.
+The terms are enumerated; the weights live in `balance/`; the arithmetic
+is integer or fixed-point, never floating point on the simulation path.
+
+The shot formula, illustrative (the weights are prototype values, not
+calibrated):
 
     outcome_score = w_finishing * finishing
-                  + w_composure * composure_state
-                  + w_distance  * distance_term(context)
-                  + w_pressure  * pressure_term(context)
-                  + w_fatigue   * fatigue_term(context)
-                  - w_opponent  * opponent_term(context)
+                  + w_composure * composure
+                  + w_distance  * distance_term(situation)
+                  + w_pressure  * pressure_term(situation)
+                  + w_fatigue   * fatigue_term(situation)
+                  - w_opponent  * opponent_term(situation)
 
-The weights live in `balance/shot.json` with `_note: prototype, not
-calibrated`. Changing which characteristics the shot uses is editing the
-formula and bumping `SIM_VERSION`, not rewriting `resolve_shot`.
+The terms fall into two kinds: **characteristics** (read from the
+custodian, hidden) and **situation data** (position, distance, pressure,
+fatigue — visible to anyone watching). The formula combines the two; it
+never reads a hidden value directly, only through the custodian's API.
 
-### 4.2 What this buys
+**Validation at load time, not at run time.** The calculator validates a
+formula against the catalogue of available terms — the custodian's
+characteristics plus the fields of that situation — and rejects a formula
+with unknown terms before applying it. A formula that names a
+characteristic the custodian does not have, or a situation field the
+situation does not carry, fails at load time with a clear error, not in
+the middle of a match.
 
-- **Adding a characteristic does not rewrite the function.** It is a term
-  in the formula of the actions that use it.
-- **The contract is visible.** `10-ground-truth.md` says "`resolve_shot`
-  applies `balance/shot.json`"; the formula lists the terms.
-- **The decision is data.** Two players with the same `finishing` shoot
-  differently because the context differs: same formula, different data.
-  This is already the pattern of `influence.json` (formula fixed, data
-  varying).
+### 4.6 Why three components, not one
 
-### 4.3 What it forbids
+With a single component (the prototype's approach), adding a formula
+touches the function, adding a characteristic touches the function,
+changing the orchestration touches the function: three reasons to change,
+all in the same place.
+
+With three components:
+
+- **Adding a characteristic** is a value in the custodian and a term in the
+  formulas that use it. No function changes.
+- **Adding a formula** is a new file in `balance/`. Neither the orchestrator
+  nor the custodian changes.
+- **Changing the orchestration** (when, in which situation) touches only
+  the orchestrator. The formulas and the custodian do not change.
+
+Three components, three reasons to change, separated.
+
+### 4.7 What it forbids
 
 - **A free expression language.** The terms are enumerated; a formula
   cannot invent a new operator.
-- **Float arithmetic on the simulation path.** Fixed-point or integers,
-  deterministic (D2).
-- **A latent inside the context.** The formula reads the latent inside
-  `pcfm-hidden`; the context carries only observable data (position,
-  distance, pressure, fatigue).
+- **Floating point on the simulation path.** Fixed-point or integers,
+  deterministic.
+- **The engine reading the custodian or the calculator.** It calls
+  `resolve_*` and nothing else.
+- **A "give me all the values" door.** The custodian answers one
+  characteristic per call.
 
-### 4.4 Prerequisite: keyed latents (OI-53)
+### 4.8 Prerequisite: hidden values must be independent of generation order
 
-"All characteristics in L0, the formula decides" is sustainable only if
-adding a characteristic does not shift the random sequence of the other
-players. Today `PlayerLatents::from_rng` consumes one draw per field in
-sequence; adding a field shifts every player generated after the first.
-The fix is OI-53: latents derived by key,
-`hash(world_seed, match_id, player_id, purpose)`, an extension of OI-44
-(the same defect for event noise). Until OI-53 is closed, every added
-characteristic is a `SIM_VERSION` bump that changes every match.
+This structure is sustainable only if adding a characteristic does not
+change the hidden values of the other players.
 
-**This is a prerequisite, not an option.** Without it, "all
-characteristics in L0" is a cost paid at every addition, not a model that
-grows.
+Today the hidden values are generated in sequence: the first player
+generated consumes the first random draws, the second player consumes the
+next ones, and so on. Adding a characteristic consumes one more draw for
+every player, so every player generated after the first ends up with
+different values. Every match changes.
+
+The fix, tracked as OI-53, is to derive each value from a key instead of a
+sequence: `hash(world_seed, match_id, player_id, characteristic)`. A value
+then depends on the player and the characteristic, not on how many players
+were generated before him. This is the same defect already found for event
+noise (OI-44), and the fix is the same.
+
+**This is a prerequisite, not an option.** Until OI-53 is closed, every
+added characteristic shifts the whole match and is a version bump that
+changes every result. With OI-53 closed, adding a characteristic is a
+local change: the other players are untouched.
 
 ## 5. Contexts, one per action family
 
@@ -175,9 +276,10 @@ characteristic exists. `composure` enters `ShotContext` because the shot
 formula reads it; it does not enter `DuelContext` because the duel formula
 does not.
 
-**The context carries observable data, not latents.** The formula reads
-the latent inside `pcfm-hidden`; the context carries position, distance,
-pressure, fatigue — everything a scout in the stand could see.
+**The context carries observable data, not latents.** The calculator
+reads the hidden value through the custodian API (one characteristic
+per call); the context carries position, distance, pressure, fatigue —
+everything a scout in the stand could see.
 
 ## 6. What enters the engine, and when (map of fidelity)
 
@@ -307,23 +409,34 @@ makes scouting a game.
 
 ## 9. Where each characteristic lives
 
-- **`Player` (`pcfm-model`)** — observable characteristics. Today:
-  `height_cm`, `preferred_foot`. `height_cm` is here because it is seen.
-- **`PlayerLatents` (`pcfm-hidden`)** — non-observable characteristics read
-  by formulas. This cell does not decide the Rust shape (one struct or
-  several); that is a decision for the ADR on the player model. This cell
-  decides what belongs to each family and when it enters the engine.
+- **`Player` (`pcfm-model`)** — the visible data: dimensions and anatomical
+  facts. `height_cm`, `weight_kg`, `preferred_foot`. They are measured with
+  a simple instrument, they do not change during a match, and they are not
+  performances: they are properties of the body. The engine reads them
+  directly; the custodian does not hold them.
+- **`PlayerLatents` (`pcfm-hidden`, the custodian)** — the hidden
+  characteristics: body performances and learned skills. Read only through
+  the custodian API, one characteristic per call.
 - **`PhysicalStateMinimal` / `PsychologicalStateMinimal`** — states, not
-  characteristics. They change within a match; characteristics do not.
-- **Derived values** (weight from height and maximal force) — computed,
-  not stored.
+  characteristics. They change within a match or between matches; the
+  characteristics do not. This cell does not decide the Rust shape (one
+  struct or several); that is a decision for the ADR on the player model.
+- **Nothing is "derived and hidden".** A value is either measured and
+  visible (`Player`), or hidden and read through the custodian
+  (`PlayerLatents`), or a state. A derived value that the engine needs is
+  computed by the calculator inside a formula, never stored in a third
+  place.
 
-**`strength` (F.7).** It is a physical characteristic, stable, objectively
-measurable, non-observable in the sense of ADR-028 (you cannot see it, you
-infer it from effects). Its placement in `PlayerLatents` is correct by
-ADR-028 (non-observable), but its family is physical, not technical. The
-distinction between "non-observable" and "technical" is the point of this
-cell: they are not the same axis.
+**`strength` (F.7).** It is a hidden physical characteristic: a
+performance, not a dimension. You cannot measure it with a ruler; a test
+(dynamometer, jump, sprint) estimates it, and the estimate has error. Its
+placement in `PlayerLatents` is correct because it is a performance the
+engine reads through the custodian, not a visible property like height.
+Its family is physical, and its access is instrumental (a test, low noise)
+— which is different from a technical skill like passing, which has no
+instrument and is discovered by watching matches (high noise). The
+distinction between "instrumental" and "observational" access is the point
+of this cell.
 
 ## 10. Divergence with the prototype (declared)
 
@@ -352,7 +465,7 @@ This cell makes the new engine aware.
 Each requires a maintainer decision; listed so a new session does not
 restart from zero.
 
-1. **Trait by state: how do they combine?** The formula reads the state;
+1. **Trait by state: how do they combine?** The calculator reads the state;
    the trait sets the baseline. But how exactly? Does fatigue degrade the
    capability (a tired player passes worse) or the body (a tired player
    arrives later)? The choice determines whether T3's "no double
@@ -402,12 +515,24 @@ restart from zero.
 
 - `specs/00-foundations.md` §3 (Three Planes), §5 (banned: no CA/PA)
 - `docs/adr/003-plane-a-enforcement.md` (Plane A, the only door)
-- `docs/adr/028-observability-plane-criterion.md` (observability as the A/B
-  criterion; no model value in a `.rs` without a derivation or `balance/`)
+- `docs/adr/028-observability-plane-criterion.md` — **to be rewritten.** The
+  criterion "observable in a match" is insufficient: height is not seen
+  with precision without a ruler, weight needs a scale, and a dynamometer
+  measures strength in half an hour. The criterion that holds is
+  **dimension vs performance**: a dimension is a property of the body
+  (height, weight), a performance is something the player does (strength,
+  passing). Dimensions live in `Player`; performances live hidden and are
+  read through the custodian. The three-component structure (§4) is the
+  other half of the rewrite.
+  Old line: "observability as the A/B criterion; no model value in a
+  `.rs` without a derivation or `balance/`" — the second half stays valid.
 - `specs/L0-match/03-entities-minimal.md` §2.1–2.3 (Player,
   PhysicalStateMinimal, PsychologicalStateMinimal) and §3.2 (the latents
   are the shadow of the prototype functions)
-- `specs/L0-match/10-ground-truth.md` (the `resolve_*` contract)
+- `specs/L0-match/10-ground-truth.md` — the `resolve_*` contract. **Note:**
+  it describes the prototype contract (the `resolve_*` that reads the
+  latent and applies a hardcoded formula). The new contract has three
+  components (§4); `10-ground-truth.md` will need the same rewrite.
 - `docs/context/SESSION-STATE.md` MD-23 (fidelity first, cost as
   constraint), MD-24 (amended), MD-40 (fatigue), MD-53 (one module, one
   function), MD-54 (the observability lens)
