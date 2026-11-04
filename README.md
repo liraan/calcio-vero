@@ -4,7 +4,6 @@
 
 # Calcio Vero — Deep Simulator
 
-**An open football management simulation.**
 **An open football management simulation.**<br>
 *Transparent by design. Deterministic by construction. Yours by default.*
 
