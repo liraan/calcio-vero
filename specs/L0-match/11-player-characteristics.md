@@ -47,10 +47,11 @@ defined the first time it appears.
 
 ### 2.1 The criterion, in one sentence
 
-> **A characteristic is a hidden datum that is stable over months and is a
-> performance, not a dimension. Everything else is a dimension, a state, a
-> behaviour, a composite, or out of scope — and none of those is a
-> characteristic.**
+> **A characteristic is a hidden datum that is stable over months and
+> produces an effect (it is a performance, not a dimension). A modulator is
+> a datum — trait or state — that changes how a characteristic behaves
+> without producing an effect of its own. Everything else is a dimension, a
+> state, a behaviour, a composite, or out of scope.**
 
 The criterion has two halves, and both must hold:
 
@@ -58,23 +59,73 @@ The criterion has two halves, and both must hold:
    read it by watching, you infer it from effects (a dynamometer for
    strength, many matches for passing). Visible-and-measured data is a
    *dimension*, not a characteristic.
-2. **Stable and a performance.** The value changes over months or years
-   (age, training, experience), never within a match. A value that changes
-   within a match is a *state*. A dimension (height, weight) is a property
-   of the body, not a performance: it does not change with effort and it
-   is not something the player *does*.
+2. **Stable.** The value changes over months or years (age, training,
+   experience), never within a match. A value that changes within a match
+   is a *state*. A dimension (height, weight) is a property of the body,
+   not a performance: it does not change with effort and it is not
+   something the player *does*.
+
+**And then one orthogonal property: does it produce an effect, or does it
+modulate one?** A datum that produces an effect is a **characteristic**
+(passing produces a completed pass). A datum that modulates is a
+**modulator**: it changes the spread, the weight or the effectiveness of
+an effect, and produces no result of its own (consistency changes how
+variable the passing is; fatigue changes how much the body and the
+capability deliver; confidence changes the risk the player takes).
+
+**A modulator is not a sixth kind of datum.** It is a property that a
+datum can have, and it crosses the kinds: a **trait modulator** (stable,
+Plane A) — consistency, resilience, emotional control, aggressiveness,
+courage — and a **state modulator** (Plane B, the moment) — fatigue,
+confidence, concentration, composure. The kinds stay five (§2.2); the
+produce/modulate property is declared per datum, and the calculator
+treats the two differently: an effect is a term in the sum, a modulator is
+a parameter of the distribution or of the weight.
 
 ### 2.2 The five kinds of datum
 
 | Kind | What it is | Changes | Example | Lives in |
 |---|---|---|---|---|
-| **Characteristic** | Hidden, stable, a performance | Over months or years | passing, strength, vision | `pcfm-hidden`, read through the custodian |
+| **Characteristic** | Hidden, stable, produces an effect | Over months or years | passing, strength, vision | `pcfm-hidden`, read through the custodian |
 | **Dimension** | Visible, measured, a property of the body | Over years (growth), not with effort | height, weight, preferred foot | `Player` (`pcfm-model`), read directly |
 | **State** | A condition of the moment | Within a match, or between matches | fatigue, confidence, morale | `PhysicalStateMinimal`, `PsychologicalStateMinimal` |
 | **Behaviour** | Something the player *does* | Every action or tick | scanning, positioning, pressing | The decision code, never a saved datum |
 | **Composite** | A name that hides several things | — | set pieces (free kicks, penalties, corners) | Not a datum: it is split or declared a label |
 
-**A composite is not a sixth kind of datum: it is a warning.** `set pieces`
+**And one property, orthogonal to the kinds: produces an effect, or
+modulates one.**
+
+| | Produces an effect | Modulates an effect |
+|---|---|---|
+| **Stable (trait, Plane A)** | passing, strength, vision, game reading, decision making | consistency, resilience, emotional control, aggressiveness, courage |
+| **Of the moment (state, Plane B)** | *(none today: a state does not produce an action)* | fatigue, confidence, morale, pressure load, concentration, composure, condition |
+
+**The two are treated differently by the calculator.** An effect is a term
+in the sum: `w_passing * passing`. A modulator is a parameter of the
+distribution or of the weight: consistency sets the spread from which the
+calculator samples; fatigue sets a multiplier on the body term or on the
+capability term, per action family (§4.8). Treating a modulator as an
+effect would invent a result that does not exist ("resilience 0.8
+producing a completed pass"); treating an effect as a modulator would lose
+the result.
+
+**Consistency, the first trait modulator.** In a real match a consistent
+player is almost always a 7 (rarely a 5, rarely a 9); an inconsistent one
+is sometimes a 9 and sometimes a 4. Consistency describes *how the
+performance varies*, not the performance. The calculator does not read a
+fixed value: it **samples** from the player's distribution (mean from the
+characteristic, spread from the consistency), using a dedicated
+deterministic random stream (same seed → same sample). See §4.7.
+
+**Fatigue, the first state modulator.** It acts on two things, never on
+the same one twice: the **body** (the tired player runs less, arrives
+later, dives shorter — geometry) and the **capability** (the tired player
+misplaces the easy pass, shoots less accurately — quality). Each formula
+declares which of the two it uses, with a coefficient per action family
+(§4.8). Reading fatigue twice for the same effect would be the double
+counting the project already flagged (MD-40).
+
+**A composite is not a sixth kind: it is a warning.** `set pieces`
 looks like one capability but hides four different skills. `instinct` /
 `anticipation` is reading + experience + concentration. A composite is
 either split into its parts or declared a label that describes an effect,
@@ -269,23 +320,109 @@ calibrated):
                   + w_composure * composure
                   + w_distance  * distance_term(situation)
                   + w_pressure  * pressure_term(situation)
-                  + w_fatigue   * fatigue_term(situation)
+                  + w_fatigue_body     * fatigue_body_term(situation)
+                  + w_fatigue_cap      * fatigue_cap_term(situation)
                   - w_opponent  * opponent_term(situation)
 
-The terms fall into two kinds: **characteristics** (read from the
-custodian, hidden) and **situation data** (position, distance, pressure,
-fatigue — visible to anyone watching). The formula combines the two; it
-never reads a hidden value directly, only through the custodian's API.
+### 4.6 The catalogue of terms
 
-**Validation at load time, not at run time.** The calculator validates a
-formula against the catalogue of available terms — the custodian's
-characteristics plus the fields of that situation — and rejects a formula
-with unknown terms before applying it. A formula that names a
-characteristic the custodian does not have, or a situation field the
-situation does not carry, fails at load time with a clear error, not in
-the middle of a match.
+The calculator validates a formula against a closed catalogue before
+applying it. A term not in the catalogue fails at load time, with a clear
+error. The catalogue has three parts.
 
-### 4.6 Why three components, not one
+**Terms from Plane A (hidden performances, 23).**
+`explosive_force`, `maximal_force`, `acceleration`, `max_speed`,
+`resistance`, `joint_mobility`, `reactivity`, `body_control`,
+`first_touch`, `passing`, `shooting`, `dribbling`, `heading`, `tackling`,
+`goalkeeping`, `resilience`, `emotional_control`, `aggressiveness`,
+`courage`, `vision`, `game_reading`, `decision_making`, `risk_management`.
+
+**Terms from Plane B (3 dimensions, 7 states).**
+`height`, `weight`, `preferred_foot`, `fatigue`, `condition`,
+`confidence`, `morale`, `pressure_load`, `concentration_level`,
+`composure_level`.
+
+**Situation terms, per action family.** These are the data the context
+carries (§5); a formula can use only the ones its context provides.
+
+| Action family | Situation terms |
+|---|---|
+| Shooting | `distance`, `angle`, `pressure`, `time_available` |
+| Passing | `distance`, `line_pressure`, `receiver_freedom` |
+| Duel | `distance`, `duel_type`, `relative_position` |
+| Save | `crossing_distance`, `time_available` |
+| Movement | `distance_to_target`, `current_velocity` |
+| Influence | `point`, `distance_to_point` |
+
+**`preferred_foot` is the only categorical term.** The formula uses it as
+a boolean multiplier (strong foot / wrong foot), never as a number.
+
+**The catalogue is not the model.** It is the set of terms the calculator
+knows how to read. Adding a characteristic to the model (§7) is not enough:
+the term must also be added to the catalogue, and the formula that uses it
+must be validated against the new catalogue. This is the point where the
+model and the code meet, and it is deliberately narrow.
+
+### 4.7 Modulators: the calculator samples, it does not read a fixed value
+
+A modulator is a datum that changes how a characteristic behaves without
+producing an effect of its own (§2.2). The calculator treats it
+differently from an effect term.
+
+**Trait modulators (consistency, resilience, emotional control,
+aggressiveness, courage).** The calculator does not read a fixed value: it
+**samples** from the player's distribution — the mean comes from the
+characteristic, the spread from the trait modulator — using a **dedicated
+deterministic random stream**. Same seed and same input → same sample. The
+stream is named per purpose (`modulator:{match_id}:{characteristic}`), so
+adding a modulator does not shift the samples of the others (the same rule
+as `01-rng.md` §2.3).
+
+**State modulators (fatigue, confidence, concentration, composure).** The
+calculator reads the state and applies it as a **multiplier** on a term,
+not as a term of its own. Which term depends on the action family: the
+body (geometry: movement, dive reach) or the capability (quality: pass
+precision, shot precision). The coefficient is per action family, in
+`balance/*.json`.
+
+**Why sampling and not a fixed value.** A player with a high mean passing
+and a wide spread is not "a worse passer": he is a passer who sometimes
+delivers a 9 and sometimes a 4. A fixed mean would make consistency
+invisible, which is false on a real pitch. Sampling makes it visible, and
+the dedicated stream keeps it deterministic.
+
+### 4.8 Fatigue: one source, two effects, never the same one twice
+
+In a real match fatigue does two distinct things, and the distinction is
+physical, not conventional:
+
+- **on the body**: the tired player runs less, accelerates less, arrives
+  later, dives shorter. This is geometry: distance covered and arrival
+  time change.
+- **on the capability**: the tired player misplaces the easy pass,
+  controls worse, shoots less accurately. This is quality of execution:
+  precision changes, not position.
+
+They are two effects on two different quantities. **The double count is
+avoided this way:** fatigue is one source, and **each formula reads it
+once**, with a declared coefficient that says which of the two it acts on.
+
+| Action family | Fatigue acts on | Why |
+|---|---|---|
+| Movement | body (geometry) | the tired player arrives late, he does not "pass worse" |
+| Passing | capability (quality) | the tired player misplaces the touch; he is not slower than the ball |
+| Shooting | capability | precision under fatigue |
+| Duel (aerial) | body | a tired header is mostly a header that does not arrive |
+| Duel (ground) | capability, mostly | the late tackle, the foul, the foot a moment behind |
+| Duel (shoulder-to-shoulder) | body | maximal force drops |
+| Save | body (reactivity, dive reach) | the tired goalkeeper reaches less far |
+
+**`duel.json` declares the coefficients per duel type**, with two separate
+terms (body and capability) and different weights. Two effects on two
+different quantities, each read once. Reading fatigue twice for the same
+effect would be the double counting MD-40 already flagged.
+
+### 4.9 Why three components, not one
 
 With a single component (the prototype's approach), adding a formula
 touches the function, adding a characteristic touches the function,
@@ -303,7 +440,7 @@ With three components:
 
 Three components, three reasons to change, separated.
 
-### 4.7 What it forbids
+### 4.10 What it forbids
 
 - **A free expression language.** The terms are enumerated; a formula
   cannot invent a new operator.
@@ -314,7 +451,7 @@ Three components, three reasons to change, separated.
 - **A "give me all the values" door.** The custodian answers one
   characteristic per call.
 
-### 4.8 Prerequisite: hidden values must be independent of generation order
+### 4.11 Prerequisite: hidden values must be independent of generation order
 
 This structure is sustainable only if adding a characteristic does not
 change the hidden values of the other players.
@@ -448,16 +585,32 @@ the rules module (OI-48) and will be split, not stored as one number.
 
 ### 7.3 Psychological traits (Plane A)
 
-| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
+| Name | Plane | Persist. | Produces / modulates | Est. | Consumed by |
 |---|---|---|---|---|---|
-| Resilience | A | trait | Q | none yet (L2) | action after a mistake |
-| Emotional control | A | trait | Q | duel (foul commit), card | foul, card |
-| Aggressiveness | A | trait | Q | duel (commitment) | duel intensity |
-| Courage | A | trait | Q | duel (going for the ball) | duel outcome |
+| Consistency | A | trait | **modulates** (spread of a performance) | Q | every characteristic (sampled, §4.7) |
+| Resilience | A | trait | **modulates** (reaction after a mistake) | Q | none yet (L2) |
+| Emotional control | A | trait | **modulates** (foul risk under provocation) | Q | duel, card |
+| Aggressiveness | A | trait | **modulates** (commitment in the duel) | Q | duel |
+| Courage | A | trait | **modulates** (going for the ball) | Q | duel |
 
-These are **traits**: stable thresholds, hidden. They are not the state of
-the moment: that is a separate datum, in Plane B, computed from the trait
-plus fatigue plus events (§7.6).
+**All psychological traits today are modulators, not characteristics.**
+None of them produces an effect of its own: consistency does not make a
+player pass better, it changes how variable the passing is; resilience
+does not make him tackle better, it changes how he reacts after a mistake.
+A formula reads a trait modulator as a parameter of the distribution (the
+spread, §4.7), never as a term of the sum.
+
+**Consistency, the first trait modulator.** In a real match a consistent
+player is almost always a 7 (rarely a 5, rarely a 9); an inconsistent one
+is sometimes a 9 and sometimes a 4. Consistency is a trait (stable over
+months) **and has a state** (the consistency of the day, lower when the
+player is tired). The trait is here, in Plane A; the state is in §7.6.
+
+**Trait and state are two datums, not two planes of the same datum.**
+Emotional control, concentration and composure have a stable threshold
+(the trait, here in A) and a level of the day (the state, in §7.6,
+computed from the trait plus context). Two datums, two planes, one
+criterion.
 
 ### 7.4 Cognitive (Plane A)
 
@@ -504,39 +657,45 @@ them.
 of this cell derived it from height and maximal force; that was wrong:
 a player can be heavy and weak, or light and strong.
 
-### 7.6 States (Plane B, not characteristics)
+### 7.6 States (Plane B)
 
-A state is a condition of the moment. It changes within a match (or
-between matches) and it is not a characteristic. States are **computed**:
-the trait (Plane A, through the custodian) plus fatigue plus events,
-inside the calculator, produce the state. The engine holds the state; the
-manager estimates it (often with low confidence).
+A state is a condition of the moment: it changes within a match (or
+between matches). **Every state today is a modulator**: none of them
+produces an action. They change how a characteristic or a body term
+behaves, and the calculator reads them as multipliers (§4.8), never as
+terms of the sum.
 
-| Name | Plane | Persist. | Est. | Computed from | Observable effect |
-|---|---|---|---|---|---|
-| Fatigue | B | state | observation | effort over the match (MD-40) | slower movement, later arrival |
-| Condition | B | state | observation | recent load, recovery | baseline of the day |
-| Confidence | B | state | Q | trait threshold + events (error, goal) | risk taking, shot choice |
-| Morale | B | state | Q | results, context | commitment |
-| Pressure load | B | state | Q | accumulated pressure events | composure under pressure |
-| Concentration (level) | B | state | Q | trait threshold + fatigue + events | errors, distraction |
-| Composure (level) | B | state | Q | trait threshold + pressure load | on-target under pressure |
+States are **computed**: the trait (Plane A, through the custodian) plus
+fatigue plus events, inside the calculator, produce the state. The engine
+holds the state; the manager estimates it (often with low confidence).
 
-**The three "double" cases are resolved here.** Concentration,
-composure and emotional control looked like they belonged to two planes.
-They do not: **the trait is a characteristic in Plane A; the level of the
-moment is a state in Plane B, computed from the trait plus context.**
-Two datums, two planes, one criterion. The trait is what the player *is*
-(hidden, stable); the state is what he *is like today* (visible in its
-effects, computed).
+| Name | Plane | Modulates | Computed from | Effect |
+|---|---|---|---|---|
+| Fatigue | B | **body** (geometry) and **capability** (quality), per action family | effort over the match (MD-40) | slower movement, later arrival, misplaced pass |
+| Condition | B | the baseline of the day (on fatigue and on physical delivery) | recent load, recovery | how much the body gives |
+| Confidence | B | risk taking and shot choice | trait threshold + events (error, goal) | choice of action |
+| Morale | B | commitment | results, context | intensity |
+| Pressure load | B | composure under pressure | accumulated pressure events | precision under pressure |
+| Concentration (level) | B | the degraded image (MD-40) | trait threshold + fatigue + events | errors, distraction |
+| Composure (level) | B | precision under pressure | trait threshold + pressure load | on-target under pressure |
+| Consistency (level of the day) | B | the spread of every performance | trait consistency + fatigue + events | variance of the outcome |
 
-**How the state is computed, and where.** The calculator reads the trait
-(through the custodian), combines it with fatigue and the events, and
-produces the state. The state is an **output** of the calculator, stored
-in the engine's state (`MatchState`), not a latent and not a field of
-`Player`. This is the piece that the prototype did not have: it stored
-psychological traits as states (in `PsychologicalStateMinimal`) without a
-trait behind them.
+**The three "double" cases, resolved.** Concentration, composure and
+emotional control looked like they belonged to two planes. They do not:
+**the trait is in Plane A (§7.3); the level of the moment is a state here
+in Plane B, computed from the trait plus context.** Two datums, two
+planes, one criterion. The trait is what the player *is* (hidden, stable);
+the state is what he *is like today* (visible in its effects, computed).
+
+**Fatigue is the one state the engine holds directly.** It is an
+accumulator the engine updates (MD-40); the others are computed by the
+calculator from the trait and the events. The engine holds fatigue
+because it is the producer, not a read of a trait.
+
+**Where the state lives.** The state is an **output** of the calculator,
+stored in `MatchState`, not a latent and not a field of `Player`. This is
+the piece the prototype did not have: it stored psychological traits as
+states (in `PsychologicalStateMinimal`) without a trait behind them.
 
 ### 7.7 Behaviours (not datums)
 
@@ -575,10 +734,18 @@ it is declared a label that describes an effect of other data.
 
 | Plane | Contains | Count |
 |---|---|---|
-| **A** | Hidden performances: physical, technical, psychological traits, cognitive | 8 + 7 + 4 + 4 = 23 |
-| **B** | Dimensions (3) and states (7) | 10 |
+| **A** | Hidden, stable datums: 8 physical, 7 technical, 5 psychological traits (all modulators), 4 cognitive | 24 |
+| **B** | 3 dimensions (measured, visible) and 8 states (all modulators) | 11 |
 | **C** | Estimates, not datums: the manager's view, with confidence | — (future scouting crate) |
 | Out | L2 (3), composites (2), behaviours (3) | 8 |
+
+**By what it does, not by where it lives:**
+
+| | Produces an effect | Modulates an effect |
+|---|---|---|
+| **Plane A (stable)** | 8 physical + 7 technical + 4 cognitive = 19 characteristics | 5 psychological traits |
+| **Plane B (of the moment)** | none today | 3 dimensions (feed the formulas as inputs) + 8 states |
+| **Plane C** | — | estimates of all of the above, with confidence |
 
 **The plane decides where the datum lives, not how the manager knows it.**
 The manager estimates every datum in C, with a confidence that depends on
@@ -586,6 +753,11 @@ the method (§2.4): a measurement for a dimension, a test for a physical
 performance, many matches for a technical skill. The plane is about who
 reads the true value; the estimate is about what the manager sees. Two
 questions, two answers, no double home.
+
+**One number that matters for the calculator:** 19 characteristics produce
+a term in a formula; 5 trait modulators and 8 state modulators are
+parameters (spread, multiplier), never terms. A formula that confuses the
+two either invents a result that does not exist or loses one that does.
 
 ## 8. What the manager sees, and why scouting is a game
 
@@ -673,58 +845,183 @@ The prototype's `PlayerLatents` has seven `f32`, one per `resolve_*`:
 The prototype is not wrong to be simple; it is wrong to be **unaware**.
 This cell makes the new engine aware.
 
-## 11. Open decisions (not resolved here)
+## 11. Dynamics: how the datums change and combine
 
-Each requires a maintainer decision; listed so a new session does not
-restart from zero.
+This section answers the question the tables do not: how do these datums
+come to be, how do they change, and how does the manager come to know
+them? It is written for a reader who knows nothing about the project; the
+answers are the model, not the plan.
 
-1. **Trait by state: how do they combine?** The calculator reads the state;
-   the trait sets the baseline. But how exactly? Does fatigue degrade the
-   capability (a tired player passes worse) or the body (a tired player
-   arrives later)? The choice determines whether T3's "no double
-   counting" is respected. **This is the first decision to take**, because
-   it touches every formula.
+### 11.1 Correlations: the world is not a bag of independent dice
 
-2. **Correlations between characteristics.** In a real match, vision and
-   passing are correlated; height and explosive force are correlated;
-   finishing and composure are correlated. The prototype draws them
-   independently, producing impossible players (vision 0.1, passing 0.9)
-   with the same probability as coherent ones. How are correlations
-   modelled? (Structural equations? Role profiles? A generator at L3 that
-   samples from a joint distribution?)
+In a real match, vision and passing grow together: a player who sees the
+space tends to develop the pass. Height and explosive force are linked.
+Finishing and composure accompany each other. The prototype drew every
+value independently from a uniform distribution, which produces
+impossible players — vision 0.1 with passing 0.9 — with the same
+probability as coherent ones.
 
-3. **Development window and learning speed.** Technical skills are learned
-   mainly between 8 and 18; after 25 a low passing stays low. Without a
-   potential scalar (CA/PA is banned, `00-foundations` §5), how is growth
-   modelled? What makes two 18-year-olds with the same passing grow at
-   different speeds?
+**The model: a factor structure at L3 (the world generator).** Four latent
+factors — physical, technical, cognitive, psychological. Each
+characteristic is `factor × loading + noise`, with the loadings declared
+in a data file. A player with a high technical factor has passing and
+first touch high together, not by magic but because they share the
+factor. The correlations come from the factor structure, not from a table
+of pairwise coefficients.
 
-4. **Consistency, not just the mean.** A player may have a high average
-   passing and collapse on easy passes. The mean does not capture
-   consistency. Is consistency a characteristic of its own, or noise on top
-   of the mean?
+**No potential scalar.** The factors are the current state, not a ceiling.
+Nothing in the model says "this player will become great": growth is
+context (11.3), not destiny.
 
-5. **The bridge from events to estimates (Plane B -> Plane C).** Scouting
-   estimates `passing` from completed passes, but completed passes depend
-   on teammates, opponents, position. Which statistics feed which
-   estimate, and with what noise? Without this, L0 emits events and L2
-   cannot read them.
+**Today:** the fixture draws uniform values independently. Declared
+placeholder. The factor structure is L3's job, and L3 does not exist.
 
-6. **Age, formation history, and context as inputs.** A player's
-   characteristics are not generated in a vacuum. These are inputs to
-   L1/L2, not characteristics themselves. Where do they live?
+### 11.2 Development window: when a skill can still be learned
 
-7. **Composite characteristics.** `set_pieces` is the first; `vision` may
-   be the second (peripheral vision + scanning + reading). When is a
-   composite better than its parts, and when does it hide which part is
-   acting?
+In a real match a 17-year-old learns fast; a 31-year-old barely learns at
+all. Technical skills are learned mainly between 8 and 18, then maintained
+or slowly lost. Physical characteristics follow a biological curve: growth
+to about 25–28, then decline. Cognitive reading grows with matches played
+and peaks late.
 
-8. **When is a characteristic "dormant" vs "not modelled"?** A
+**The model: a learning rate as a function of age**, multiplied by real
+playing time and by the quality of the training environment. High 14–20,
+medium 20–24, low 25–29, almost nothing after 30 (for technical skills;
+cognitive reading grows longer). Two 18-year-olds with the same passing
+grow differently because one plays and trains and the other does not, not
+because one has a hidden number.
+
+**A single "potential" number is banned** by the project doctrine. Growth
+is emergent from context, and it is tracked, not destined.
+
+### 11.3 The bridge from events to estimates (Plane B → Plane C)
+
+The manager never reads a true value (§2.4). He estimates it from what he
+sees: completed passes for passing, shots for finishing, duels won for
+tackling. But a completed pass depends on teammates, opponents and
+position; the same passer completes more passes in a strong team.
+
+**The model: a Bayesian mean with a prior and a weight that grows with
+observations.** The prior comes from role and age (a centre-back is not
+expected to pass like a playmaker). Each observation updates the estimate;
+the weight depends on the context (a completed pass under pressure counts
+more than one in open space). The manager's confidence is the posterior
+spread.
+
+**Today:** L2 (scouting) does not exist. The bridge is declared here
+because without it the circle L0 → L2 does not close: L0 emits events and
+nothing reads them as evidence.
+
+### 11.4 Consistency: the spread, not only the mean
+
+A player can have a high average passing and collapse on the easy pass.
+The mean does not capture it. Consistency is a trait modulator (§7.3): the
+calculator samples from a distribution whose mean is the characteristic
+and whose spread is the consistency, on a dedicated deterministic stream
+(§4.7). Two players with the same mean and different consistency behave
+differently, and that is visible on a real pitch.
+
+**State of the day.** Consistency has a state too (§7.6): a tired player
+is more variable. The trait sets the baseline spread; fatigue widens it.
+
+### 11.5 Persistence: what is saved, what is rebuilt
+
+In a real match the body and the skills do not change in 90 minutes; the
+states do. Therefore:
+
+| Datum | Saved | Why |
+|---|---|---|
+| Dimensions (height, weight, foot) | once, with the player identity | they do not change |
+| Characteristics and trait modulators | **rebuilt from the seed today** (prototype) | the world generator is deterministic; the save holds the input |
+| The same, once L1/L2 evolve them | **saved**, because the evolution is an input | a 24-year-old who trained is not the 18-year-old regenerated |
+| States | per match, or reconstructed from events (MD-41) | they change every match |
+
+**The declared debt.** Today `GroundTruth` is reconstructed from the seed,
+so no characteristic is saved. That is correct for L0 (nothing evolves),
+and **wrong as soon as L1/L2 exist**: a player who grew must be saved,
+because his growth is not in the seed. The switch is tracked, not done
+here.
+
+### 11.6 What is not in this section, and why
+
+- **The exact numbers** (loadings, learning rates, prior weights): they are
+  calibration, they live in data files, and they are prototype values until
+  measured.
+- **The world generator itself** (L3, `pcfm-gen`): it does not exist. The
+  fixture is a declared placeholder.
+- **The scouting crate** (L2): it does not exist. The bridge (11.3) is the
+  model it will implement.
+
+## 12. Open decisions (not resolved here)
+
+This section lists what is **not** decided, so a new session does not
+restart from zero. The decisions taken in this cell are in the section
+that resolves them, not here.
+
+### 12.1 Resolved in this cell (where)
+
+1. **Trait by state: how do they combine?** Resolved in §2.1, §2.2, §7.3,
+   §7.6 and §4.8. Fatigue acts on **both** the body (geometry: movement,
+   dive reach) and the capability (quality: pass precision, shot
+   precision), but **never twice for the same effect**: each formula
+   declares which of the two it uses, with a coefficient per action family
+   (`duel.json` declares it per duel type). The state is computed from the
+   trait plus context by the calculator; the trait is in Plane A, the
+   state in Plane B. The double counting T3 flagged is avoided by the
+   per-formula declaration, not by choosing one of the two effects.
+
+2. **Correlations between characteristics.** Resolved as a model in §11.1:
+   a factor structure at L3 (four factors: physical, technical, cognitive,
+   psychological), each characteristic `factor × loading + noise`. No
+   potential scalar. The loadings live in a data file. Not implemented:
+   L3 does not exist.
+
+3. **Development window and learning speed.** Resolved as a model in
+   §11.2: a learning rate as a function of age, multiplied by playing time
+   and training quality. No potential scalar. Not implemented: L2 does not
+   exist.
+
+4. **Consistency, not just the mean.** Resolved in §2.2, §4.7, §7.3,
+   §7.6, §11.4: consistency is a **trait modulator** (Plane A) with a
+   state of the day (Plane B). The calculator samples from a distribution
+   (mean from the characteristic, spread from the consistency) on a
+   dedicated deterministic stream.
+
+5. **The bridge from events to estimates.** Resolved as a model in
+   §11.3: a Bayesian mean with a prior (role, age) and a weight that grows
+   with observations, context-weighted. Not implemented: L2 does not
+   exist.
+
+### 12.2 Still open
+
+1. **Age, formation history, and context as inputs.** A player's
+   characteristics are not generated in a vacuum: age, training history,
+   level of competition shape them. These are inputs to L1/L2, not
+   characteristics. **Where do they live, and what is their shape?** This
+   is the next decision to take when L1/L2 are opened, because the growth
+   model (§11.2) needs the inputs before it can be implemented.
+
+2. **Composite characteristics.** `set_pieces` is the first; `vision` may
+   be the second (peripheral vision + scanning + reading). §7.9 says a
+   composite is split when OI-48 exists. **The open part:** for each
+   composite, when is it better than its parts, and when does it hide
+   which part is acting? The answer decides whether `vision` stays one
+   datum or becomes two.
+
+3. **When is a characteristic "dormant" vs "not modelled"?** A
    characteristic with a declared consumer but no formula yet is dormant;
-   a characteristic with no consumer and no leaf is an idea, and belongs in
-   `IDEAS.md`, not here. The boundary is the leaf in §6.
+   a characteristic with no consumer and no leaf is an idea, and belongs
+   in `IDEAS.md`, not here. §6 is the map of when each phenomenon becomes
+   observable. **The open part:** the boundary is a judgement, and the
+   mechanical proxy (a declared leaf) is necessary but not sufficient. The
+   first case that will test it is the cognitive family in F.6.
 
-## 12. References
+4. **The Rust shape of the custodian.** The cell decides what belongs to
+   each family and how the calculator reads it (§4), but not whether
+   `PlayerLatents` stays one struct or becomes several. That is a decision
+   for the ADR on the player model, together with ADR-028's rewrite.
+
+## 13. References
 
 - `specs/00-foundations.md` §3 (Three Planes), §5 (banned: no CA/PA)
 - `docs/adr/003-plane-a-enforcement.md` (Plane A, the only door)
