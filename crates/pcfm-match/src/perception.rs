@@ -88,6 +88,71 @@ pub fn nearest_to_point(spatial: &SpatialState, point: (i32, i32)) -> Option<Pla
         .map(|(_, id)| id)
 }
 
+/// Half-angle of the vision cone, in degrees (MD-34). 55 = the "useful
+/// field of view" of a footballer (110 degrees total); the 180-degree
+/// passive field is not the selection. Arbitrary, declared, recalibratable.
+const VISION_HALF_ANGLE_DEG: i32 = 55;
+
+/// `cos(55 degrees)` in thousandths, for the integer cone test.
+const COS_HALF_ANGLE_MILLI: i64 = 574;
+const _: () = assert!(VISION_HALF_ANGLE_DEG == 55 && COS_HALF_ANGLE_MILLI == 574);
+
+/// The vision cone of an agent (MD-34).
+///
+/// A 110-degree forward cone (half-angle `VISION_HALF_ANGLE_DEG`). Binary
+/// visibility, no range limit at L0. The agent does not see itself.
+///
+/// Pure function on positions and headings: no RNG, no latent, no `atan2`,
+/// no float (determinism, D2). The test is the dot product between the
+/// observer->other vector and the heading vector, compared against
+/// `cos(55)` times the distance (integer `isqrt`).
+#[must_use]
+pub fn visible_to(spatial: &SpatialState, from: PlayerId) -> Vec<PlayerId> {
+    let Some(observer) = spatial.agent(from) else {
+        return Vec::new();
+    };
+    let origin = observer.position;
+    let (hx, hy) = heading_vector(observer.heading);
+    spatial
+        .iter()
+        .filter_map(|(id, other)| {
+            if *id == from {
+                return None;
+            }
+            let dx = other.position.0 - origin.0;
+            let dy = other.position.1 - origin.1;
+            if dx == 0 && dy == 0 {
+                return None;
+            }
+            let dot = i64::from(dx) * i64::from(hx) + i64::from(dy) * i64::from(hy);
+            let dist = (i64::from(dx) * i64::from(dx) + i64::from(dy) * i64::from(dy)).isqrt();
+            if dot > dist * COS_HALF_ANGLE_MILLI {
+                Some(*id)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// The heading as an integer vector `(hx, hy)`, scaled by 1000.
+///
+/// `0` = north (+y), clockwise. A 36-entry table, one per 10 degrees; the
+/// heading is rounded to the nearest entry. Enough for a 55-degree cone,
+/// integer only, no `sin`/`cos` in the simulation path (D2).
+fn heading_vector(heading: u16) -> (i32, i32) {
+    const SIN: [i32; 36] = [
+        0, 174, 342, 500, 643, 766, 866, 940, 985, 1000, 985, 940, 866, 766, 643, 500, 342, 174, 0,
+        -174, -342, -500, -643, -766, -866, -940, -985, -1000, -985, -940, -866, -766, -643, -500,
+        -342, -174,
+    ];
+    let deg = i32::from(heading % 360);
+    let idx = usize::try_from((deg + 5) / 10).unwrap_or(0) % 36;
+    let hx = SIN[idx];
+    let hy = SIN[(idx + 9) % 36];
+    (hx, hy)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,5 +221,52 @@ mod tests {
         let a = nearest_to_point(&s, s.ball());
         let b = nearest_to_point(&s, s.ball());
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn visible_to_sees_an_agent_in_front() {
+        let (home, away) = (make_squad(0), make_squad(100));
+        let mut s = SpatialState::from_squads(&Pitch::default(), &home, &away);
+        s.set_position(PlayerId::new(1, 0), (10000, 3400));
+        s.set_position(PlayerId::new(100, 0), (10000, 4000));
+        s.agent_mut(PlayerId::new(1, 0)).unwrap().heading = 0;
+        let seen = visible_to(&s, PlayerId::new(1, 0));
+        assert!(
+            seen.contains(&PlayerId::new(100, 0)),
+            "front not seen: {seen:?}"
+        );
+    }
+
+    #[test]
+    fn visible_to_does_not_see_an_agent_behind() {
+        let (home, away) = (make_squad(0), make_squad(100));
+        let mut s = SpatialState::from_squads(&Pitch::default(), &home, &away);
+        s.set_position(PlayerId::new(1, 0), (10000, 3400));
+        s.set_position(PlayerId::new(100, 0), (10000, 2800));
+        s.agent_mut(PlayerId::new(1, 0)).unwrap().heading = 0;
+        let seen = visible_to(&s, PlayerId::new(1, 0));
+        assert!(
+            !seen.contains(&PlayerId::new(100, 0)),
+            "behind seen: {seen:?}"
+        );
+    }
+
+    #[test]
+    fn visible_to_does_not_see_beyond_the_half_angle() {
+        let (home, away) = (make_squad(0), make_squad(100));
+        let mut s = SpatialState::from_squads(&Pitch::default(), &home, &away);
+        s.set_position(PlayerId::new(1, 0), (10000, 3400));
+        s.set_position(PlayerId::new(100, 0), (10400, 3400));
+        s.agent_mut(PlayerId::new(1, 0)).unwrap().heading = 0;
+        let seen = visible_to(&s, PlayerId::new(1, 0));
+        assert!(
+            !seen.contains(&PlayerId::new(100, 0)),
+            "east seen from north: {seen:?}"
+        );
+    }
+
+    #[test]
+    fn visible_to_half_angle_constant_is_read() {
+        assert_eq!(VISION_HALF_ANGLE_DEG, 55);
     }
 }

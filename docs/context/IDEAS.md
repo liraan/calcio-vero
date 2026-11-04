@@ -864,3 +864,29 @@
   3. Where does it live (`assets/`, `docs/`), and is it `export-ignore` for packaging?
   4. Does it survive a rename, or is it tied to the name?
 - **Prerequisites:** the user shows the logo in pause; the name discussion (IDEA-PROJ-001) at least opened, because name and logo are one identity.
+
+### IDEA-PERCEPTION-001 — Gaze/run misalignment: the speed cost
+- **Status:** sketch
+- **Category:** Match engine (L0 movement, F.4-c or after)
+- **Source:** conversation 2026-11-04 (user). Deferred: `heading` does not change yet, so the cost would be always zero (D3).
+- **Idea:** when the direction of running and the direction of gaze differ, the athlete is slower (backward and lateral running are slower than forward; head rotation degrades speed). The phenomenon is real and observable in a match (D6).
+- **Where it would live:** a declared arbitrary parameter (`gaze_run_misalignment_permille` in `balance/`) modulating `MAX_STEP_CM` by the angle between velocity and heading. **Risk to decide first:** double counting with fatigue (T3) — a slower, more tired player is already penalised; the cost must live in one place, not two.
+- **Alternative (cleaner, needs F.4-c):** the cost emerges from the decision (the agent does not run where it does not look), no parameter at all (D7).
+- **Test:** two agents, same slot, same ball; one aligned, one at 90 degrees; the second covers fewer cm in the same ticks. Measurable, not "looks slower".
+- **Prerequisites:** F.4-c (heading updated by the decision).
+
+### IDEA-PERCEPTION-002 — Head/body separation (head yaw)
+- **Status:** sketch
+- **Category:** Match engine (L0, after F.4-c) / L2 (shoulder check)
+- **Source:** conversation 2026-11-04 (user). Deferred: no consumer today (the decision does not exist).
+- **Idea:** the human head rotates ±60-70° in yaw, ±40° in pitch relative to the body; the "shoulder check" before receiving is the visible form. Today body + head + eyes collapse into a single `heading` (MD-34, declared).
+- **Cost:** a second field in `AgentState` (body heading + gaze offset), hence a state change and a `SIM_VERSION` bump when introduced. Reversible but not free.
+- **When:** when a decision needs "where do I look" as distinct from "where do I run" (L2 tactics, anticipation).
+- **Not doing:** saccades and foveal sharpness — below the resolution of the L0 model, no consumer, not even as a mature idea.
+
+### IDEA-PERCEPTION-003 — Second cone (90°) for motion detection
+- **Status:** sketch
+- **Category:** Match engine (L0 perception)
+- **Source:** conversation 2026-11-04 (user). Deferred: no consumer (D3).
+- **Idea:** two thresholds — 55° for recognising/deciding, 90° for detecting motion in the periphery. Physiologically grounded, but without a consumer for the second threshold it is structure without content.
+- **When:** if a phenomenon needs "I saw the movement but not the detail" (anticipation, reaction to a run). Tracked, not planned.
