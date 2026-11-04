@@ -1,10 +1,12 @@
 # Movement — design note
 
-**Status:** design note (not a spec, not an ADR).
+**Status:** design note (not a spec, not an ADR). **§4 is implemented** (`move_agents`, F.4-a); **§3 is still direction** (influence not in the movement).
 **Date:** 2026-11-03.
 **Closes (design):** OI-28, B1 of the 2026-11-03 session.
 **Depends on:** `L0-POSITIONAL-SLICE.md` §2/§7 (movement is not in slice C), `IDEA-DESIGN-001` (influence as the common currency), ADR-019 deferred 1 (iteration order).
 **Note (2026-11-03, after the analysis) — §3 and §4 are direction, not an executable plan.** §3 ("per tick, per agent") requires the per-agent loop and OI-44 (event-keyed noise) decided; §4 ("slot default, most-influential goes to the ball") requires the ball to move. Without a moving ball, "move only the acting agent" produces a clump at the centre that freezes once the target is reached (verified in the 2026-11-03 analysis): rejected, it is not football. A variant with the target = slot is a no-op (agents start on their slots). **Decision (G):** movement is not implemented now. Sequence: OI-44 (ADR event-keyed noise) -> per-agent -> movement of all 22 + ball slice. The code written on 2026-11-03 was for the rejected model ("move only the acting agent") and was lost with `/tmp`: it was not committed (D3). It is rewritten in the per-agent, where the shape is right; not lost work, moved work. **Do not implement §3/§4 from this note alone**; read OI-44 and the bookmark first.
+
+**Note (2026-11-04, after F.4-a) — what is implemented is §4, not §3.** `move_agents` exists (`spatial.rs`, F.4-a, MD-09, MD-12) and implements §4: the formation slot translated by a fraction of the ball offset, the nearest agent deviated to the ball, a bounded step, and a minimal separation. It does **not** implement §3: the target is not the point of highest influence (`resolve_influence` is not called in the movement). So the "proposal" that became code is the placeholder (§4, declared as such), not the model (§3, still direction). This is not a bug: it is a simplification that had never been written down as one, and it is now. Consequences: (a) §4 is documentation of the behaviour, not a proposal; (b) §3 remains direction, open, and its first action is the same as before — decide whether influence enters the movement, with the per-agent loop and OI-44; (c) the death condition of §6 applies to §4 (implemented), not to §3 (not implemented): this note does not die whole, its off-ball part does. The cost measured on the code (not the note): release 87 ms/match, golden debug 5.48 s (OI-51).
 
 ## 1. Why a note, not code
 
@@ -26,7 +28,7 @@ Each row is a sentence a fan says about a real match, the observable input it re
 
 Rows 1–3 are on-ball movement and are covered by slice C + the ball slice. Rows 4–5 are off-ball movement and are the largest part of a real match; §4 says what the engine will do about them today (very little, declared).
 
-## 3. Minimal model (proposal)
+## 3. Minimal model (direction — NOT implemented; §4 is what the code does)
 
 State: `AgentState { position: (i32, i32) cm, velocity: (i16, i16) cm/tick, heading: u16 }` (slice A, already in `spatial.rs`). No physics, no collision, no biomechanics: the position is updated by a deterministic function, not by integration of forces.
 
@@ -43,7 +45,7 @@ Per tick, per agent:
 
 **Cost (S3).** Influence is a per-agent query: 22 queries per tick, 1.19M per match. It is the most expensive part of the model and it is declared here, not hidden. If the measurement shows it is too expensive, the fix is a cheaper formula or a precomputed field — a structure with content, decided with data, not before (D3).
 
-## 4. Off-ball movement (the hard part)
+## 4. Off-ball movement (implemented as placeholder, F.4-a)
 
 Today there is no off-ball model. The minimum that is **honest** (declared as a placeholder, not as a model):
 
