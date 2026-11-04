@@ -1,10 +1,10 @@
-# Architecture — PCFM
+# Architecture — Calcio Vero (Deep Simulator)
 
 **Version:** 1.0
 **Status:** active
 **Last updated:** 2026-10-26
 
-This document explains how the nine crates of PCFM interact, how a match
+This document explains how the nine crates of Calcio Vero interact, how a match
 flows through the system, and what the two architectural patterns
 (simulation/rendering split, testkit contract) are. It is the
 **architectural** counterpart of [`STRUCTURE.md`](../STRUCTURE.md), which
