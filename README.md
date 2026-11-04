@@ -1,8 +1,8 @@
 <div align="center">
 
-# ⚽ Calcio Vero — Deep Simulator
 
-<img src="assets/calcio-vero.png" alt="Calcio Vero" width="280">
+
+<img src="assets/calcio-vero-transparent.png" alt="Calcio Vero" width="280">
 
 **An open football management simulation.**
 *Transparent by design. Deterministic by construction. Yours by default.*
