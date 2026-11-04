@@ -1,4 +1,4 @@
-# Code Tour — PCFM
+# Code Tour — Calcio Vero (Deep Simulator)
 
 **Version:** 1.0
 **Status:** active
@@ -8,7 +8,7 @@
 **Note (2026-11-03): this document describes the code as of 2026-10-26; some citations are stale.** Known stale examples: Stage 2 mentions `cause.rs` with `CauseTrace` and `Factor`, Stage 3a says `outcome.rs` carries a `CauseTrace` — but ADR-024 (accepted 2026-10-31) removed `CauseTrace` at L0, and `outcome.rs` does not carry it. The repository is the source of truth, not this document. The mechanical inventory is tracked in OI-45 (per-agent) and OI-49 (all navigation documents). Do not "fix" the code to match this document: fix the document against the code.
 
 This is the **reading path** for the code. It is for someone who wants to
-contribute to PCFM and does not know where to start.
+contribute to Calcio Vero and does not know where to start.
 
 It is **not** a replacement for the code's documentation. The code has
 doc comments (`///` and `//!`) on every public item. This file says
