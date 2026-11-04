@@ -1,4 +1,4 @@
-# New Session Prompt — PCFM
+# New Session Prompt — Calcio Vero
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
@@ -9,7 +9,7 @@
 ## How to use
 
 1. Open a new chat.
-2. Copy the content of the block below (from `# Resuming the PCFM project` to the last line, without the 4 backticks).
+2. Copy the content of the block below (from `# Resuming the Calcio Vero project` to the last line, without the 4 backticks).
 3. Paste it as the first message.
 4. If the chat is resumed after a long pause, read `docs/context/SESSION-STATE.md` first: it says where we are, what is open, and what the next agreed step is.
 
@@ -18,9 +18,9 @@
 ## Prompt
 
 ````
-# Resuming the PCFM project — new session
+# Resuming the Calcio Vero project — new session
 
-I am resuming work on **PC Football Manager (PCFM)**. The previous chat ended at a precise point. Here is the context so we can pick up without losing anything.
+I am resuming work on **Calcio Vero (Deep Simulator)**. The previous chat ended at a precise point. Here is the context so we can pick up without losing anything.
 
 ## The project
 
