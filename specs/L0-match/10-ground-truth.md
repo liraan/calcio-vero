@@ -5,7 +5,7 @@ cell: "L0-match"
 module_id: "L0.10"
 version: "1.1"
 status: "ratified"
-last_updated: "2026-10-25"
+last_updated: "2026-11-05"
 supersedes: null
 depends_on: ["00-foundations", "L0.01", "L0.03"]
 referenced_by: ["L0.04", "L0.07", "L0.08", "L3-generator"]
@@ -23,6 +23,43 @@ conforms_to: "00-foundations (v2.0)"
   This cell does NOT define Plane A. It defines the *access* to Plane A.
   The definition of what is in Plane A is in 00-foundations §3.
   The definition of the Player entity is in L0.03. This cell is the bridge.
+-->
+
+<!--
+  DATED NOTE — 2026-11-05. The contract in this cell describes the
+  PROTOTYPE, which is still the code in pcfm-hidden today. It is
+  SUPERSEDED for the new engine, and it is not the current contract.
+
+  What changed. ADR-028 (rewritten 2026-11-05) and L0.11 §4 replace the
+  single `resolve_*` (one function that reads the latent and applies a
+  hardcoded formula) with three components: a custodian (pcfm-hidden)
+  that holds the hidden performances and answers one characteristic at a
+  time; a calculator (new crate) that applies a formula from
+  balance/*.json; an orchestrator (`resolve_*`) that decides when. The
+  formula declares its terms; the calculator asks the custodian only for
+  those; a term outside the catalogue fails at load time. The engine sees
+  neither the hidden values nor the formulas.
+
+  What this cell still gets right, and stays. GroundTruth is not
+  Serialize, has no public fields, has a Debug that does not leak, and is
+  reconstructed from (world_seed, match_id). The `drain_observations`
+  contract stays. The rule "no latent value in an outcome" stays.
+
+  What is superseded. The seven `resolve_*` signatures in §2.1, and the
+  idea that a `resolve_*` is the only door: in the new engine the door is
+  the orchestrator, and the custodian is behind it. The context types in
+  §2.2 (`DuelContext` with `pitch_position: (f32, f32)`) are the
+  prototype's shape; the new contexts are in L0.11 §5 and carry integer
+  centimetres, not floats on the simulation path.
+
+  What to read instead. `specs/L0-match/11-player-characteristics.md`
+  (the player model: criterion, three components, catalogue, sampling,
+  dynamics) and `docs/adr/028-dimension-performance-plane-criterion.md`
+  (the criterion and the three components).
+
+  When this cell is rewritten. When the three components exist in code.
+  Until then, this cell is the honest description of the prototype, and
+  the note is what keeps it from being read as the current contract.
 -->
 
 # L0.10 — Ground Truth

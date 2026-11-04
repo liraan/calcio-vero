@@ -1037,10 +1037,12 @@ that resolves them, not here.
 - `specs/L0-match/03-entities-minimal.md` §2.1–2.3 (Player,
   PhysicalStateMinimal, PsychologicalStateMinimal) and §3.2 (the latents
   are the shadow of the prototype functions)
-- `specs/L0-match/10-ground-truth.md` — the `resolve_*` contract. **Note:**
-  it describes the prototype contract (the `resolve_*` that reads the
-  latent and applies a hardcoded formula). The new contract has three
-  components (§4); `10-ground-truth.md` will need the same rewrite.
+- `specs/L0-match/10-ground-truth.md` — the prototype `resolve_*` contract.
+  **Dated note added 2026-11-05:** the cell describes the prototype, which
+  is still the code today. It is superseded for the new engine by this
+  cell (§4) and ADR-028. It will be rewritten when the three components
+  exist in code; until then the note keeps it from being read as the
+  current contract.
 - `docs/context/SESSION-STATE.md` MD-23 (fidelity first, cost as
   constraint), MD-24 (amended), MD-40 (fatigue), MD-53 (one module, one
   function), MD-54 (the observability lens)
