@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚽ Calcio Vero — Deep Simulator
+(https://github.com/liraan/pcfootballmanager/blob/main/assets/calcio%20vero.png)
 
 **An open football management simulation.**
 *Transparent by design. Deterministic by construction. Yours by default.*
