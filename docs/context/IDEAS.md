@@ -843,9 +843,9 @@
 - **Critical note:** non e una decisione, e un'idea. Non si implementa finche F.4 (per-agent + movimento) non e verde, e finche il vocabolario dei fatti non e stabile. D3: struttura dopo contenuto.
 
 ### IDEA-PROJ-001 — Rename the project (DECIDED 2026-11-04)
-- **Status:** promoted → decision (rename not yet executed; ADR-002 amendment pending)
+- **Status:** promoted → decision (executed 2026-11-04: ADR-027 accepted, ADR-002 superseded, repo renamed to calcio-vero, living documents updated)
 - **Category:** Infrastructure / identity (not the engine)
-- **Source:** conversation 2026-11-04 (user). The engine work (F.3-b3, F.5) continues under the old name until the rename is executed.
+- **Source:** conversation 2026-11-04 (user). Executed the same day: ADR-027, ADR-002 superseded, repo `calcio-vero`, README and living documents renamed. The engine work (F.3-b3, F.5) continues under the new name.
 - **Decision:** the project is **"Calcio Vero"** — name, Italian, the tradition of PC Calcio. **"Deep Simulator"** is the English handle: documentation, GitHub, commit, ADRs (the docs are in English). **"by Liraan"** is the attribution. The three-part line "Calcio Vero — Deep Simulator — by Liraan" is the README header, not a fourth name: the name is Calcio Vero, the handle is Deep Simulator, the attribution is by Liraan.
 - **Why "Calcio Vero":** "vero" is the pillar, not an adjective: radical transparency, "why did I lose?", every event explains why, Plane B ≠ Plane A. It says what the project refuses to do (lie to the player) without containing "Football Manager". "Deep Simulator" alone was rejected: "deep simulation" is a genre (Dwarf Fortress, RimWorld), not a distinct name.
 - **Rejected proposals, with the reason:** "My Football Manager" (generic, confusable, already used), "Liraan Football Manager" (personal name in the title does not survive a maintainer change), "Deep Football Manager" (trademark in the tail), "Calcio reale" (Italian translation of Gameloft's registered "Real Soccer"/"Real Football"; also an existing app), "Calcio Vero" as the *only* name (kept: it is the name, but needed the English handle), "Deep Pitch Simulator" (DPS collides with damage-per-second; "pitch" is ambiguous), "La Panchina" / "Il Mister" (evocative but generic in Italy).

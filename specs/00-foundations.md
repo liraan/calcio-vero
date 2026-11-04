@@ -17,7 +17,7 @@ conforms_to: "self"
 
 # Module 00 — Foundations
 
-This is the **canonical doctrine** of PC Football Manager. Every other module is downstream of it. If a module contradicts this file, the module is wrong.
+This is the **canonical doctrine** of Calcio Vero. Every other module is downstream of it. If a module contradicts this file, the module is wrong.
 
 The full historical version — `Prompt Master v7` — will be archived at `archive/prompts/Prompt_Master_v7.md` once the `archive/` directory is populated *(planned)*. This module distils it. When in doubt, this module wins.
 
