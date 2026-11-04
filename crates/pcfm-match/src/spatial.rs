@@ -42,6 +42,20 @@ pub enum BallState {
     /// Free and at rest.
     Loose,
 }
+/// Gravity in centimetres per tick squared (MD-18). Derived: g ≈ 9.8 m/s²
+/// at 10 ticks/s rounds to ~10 cm/tick². A different value is a bug, not
+/// an arbitrary parameter.
+const BALL_GRAVITY: i16 = 10;
+
+/// Horizontal friction numerator per tick (MD-18). Arbitrary, declared.
+const BALL_FRICTION_NUM: i32 = 990;
+
+/// Horizontal friction denominator per tick (MD-18). Arbitrary, declared.
+const BALL_FRICTION_DEN: i32 = 1000;
+
+/// Speed below which a grounded ball stops, in cm/tick (MD-18). Arbitrary,
+/// declared.
+const BALL_STOP_THRESHOLD: i16 = 1;
 
 /// The spatial state of a match: every agent, plus the ball.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -189,6 +203,37 @@ impl SpatialState {
         self.ball_velocity
     }
 
+    /// Advances the ball one tick if it is in flight (MD-17/18).
+    ///
+    /// Applies gravity to `vz`, gravity to `z`, friction to the horizontal
+    /// velocity, and the stop threshold. `Possessed` and `Loose` are
+    /// untouched: only an in-flight ball moves. The constants are declared
+    /// (MD-24): gravity is ~10 cm/tick² (derived from g ≈ 9.8 m/s² at the
+    /// tick rate), friction `f = 990/1000` per tick (arbitrary, declared),
+    /// stop threshold 1 cm/tick (arbitrary, declared).
+    pub fn advance_ball(&mut self) {
+        let BallState::InFlight = self.ball else {
+            return;
+        };
+        let (mut vx, mut vy, mut vz) = self.ball_velocity;
+        let (mut x, mut y, mut z) = self.ball_position;
+        vz = vz.saturating_sub(BALL_GRAVITY);
+        vx = i16::try_from(i32::from(vx) * BALL_FRICTION_NUM / BALL_FRICTION_DEN).unwrap_or(vx);
+        vy = i16::try_from(i32::from(vy) * BALL_FRICTION_NUM / BALL_FRICTION_DEN).unwrap_or(vy);
+        x = x.saturating_add(i32::from(vx));
+        y = y.saturating_add(i32::from(vy));
+        z = z.saturating_add(i32::from(vz));
+        if z < 0 {
+            z = 0;
+            vz = 0;
+        }
+        self.ball_position = (x, y, z);
+        self.ball_velocity = (vx, vy, vz);
+        if z == 0 && vx.abs() <= BALL_STOP_THRESHOLD && vy.abs() <= BALL_STOP_THRESHOLD {
+            self.ball = BallState::Loose;
+            self.ball_velocity = (0, 0, 0);
+        }
+    }
     /// The agent carrying the ball, if any.
     #[must_use]
     pub const fn carrier(&self) -> Option<PlayerId> {
@@ -356,5 +401,41 @@ mod tests {
         assert_eq!(s.ball_3d(), (100, 200, 50));
         assert_eq!(s.ball_state(), BallState::InFlight);
         assert_eq!(s.ball_velocity(), (10, 5, 20));
+    }
+
+    #[test]
+    fn advance_ball_is_a_noop_when_possessed() {
+        let mut s = make_state();
+        let id = PlayerId::new(1, 0);
+        s.set_carrier(Some(id));
+        let before = s.ball_3d();
+        s.advance_ball();
+        assert_eq!(s.ball_3d(), before);
+        assert_eq!(s.ball_state(), BallState::Possessed);
+    }
+
+    #[test]
+    fn advance_ball_moves_z_down_and_x_forward_under_gravity() {
+        let mut s = make_state();
+        s.set_ball_in_flight((5000, 3400, 200), (100, 0, 0));
+        s.advance_ball();
+        // gravity pulls z down by 10 (vz 0 -> -10), x advances by ~99 (friction 0.99)
+        let (x, y, z) = s.ball_3d();
+        assert!(z < 200, "z should fall under gravity, got {z}");
+        assert!(x > 5000, "x should advance, got {x}");
+        assert_eq!(y, 3400);
+        let (_, _, vz) = s.ball_velocity();
+        assert!(vz < 0, "vz should be negative after gravity, got {vz}");
+    }
+
+    #[test]
+    fn advance_ball_lands_and_stops() {
+        let mut s = make_state();
+        s.set_ball_in_flight((5000, 3400, 0), (0, 0, 0));
+        // With zero velocity and zero height, the ball is already at rest
+        // and the first tick should mark it Loose (threshold).
+        s.advance_ball();
+        assert_eq!(s.ball_3d(), (5000, 3400, 0));
+        assert_eq!(s.ball_state(), BallState::Loose);
     }
 }
