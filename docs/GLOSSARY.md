@@ -41,7 +41,7 @@ A player has four kinds of things, and each lives in exactly one place. The tabl
 | **Estimated skill** | "his passing is ~14, with a margin" | **C (estimate)** | **does not exist yet** | the player, with uncertainty |
 
 - **"Hidden" is a crate, not a meaning.** `pcfm-hidden` contains the latent skill layer, plus the RNG and the observations buffer (mechanics, not player properties). "hidden = the attributes" confuses the container with the content.
-- **Layer 3 and layer 4 are never the same thing.** The player never sees the latents: he sees estimates built from events. This is pillar 10 (`Plane B ≠ Plane A`), and it is what separates PCFM from a CA/PA game.
+- **Layer 3 and layer 4 are never the same thing.** The player never sees the latents: he sees estimates built from events. This is pillar 10 (`Plane B ≠ Plane A`), and it is what separates Calcio Vero from a CA/PA game.
 - **The engine decides on truth, the player sees estimates.** `resolve_influence` reads layer 3 (inside the crate) and layer 2 (fatigue, passed as data), and returns an order — which is layer 2 (observable). No hidden scalar leaves.
 ### Doctrine
 
@@ -280,7 +280,8 @@ Translations. Italian is the first planned translation, in `locales/it/`. *(plan
 
 | Abbreviation | Meaning |
 |---|---|
-| **PCFM** | PC Football Manager |
+| **Calcio Vero** | The project name (Italian). English handle: Deep Simulator |
+| **DS** | Deep Simulator, the English handle used in documentation and commit messages |
 | **FM** | Football Manager (the commercial game we are not cloning) |
 | **PC Calcio** | The Italian football management game of the 1990s, a cultural reference |
 | **IR** | Index di Rendimento (Performance Index), a Plane C measurement |
