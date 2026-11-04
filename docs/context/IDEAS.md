@@ -856,28 +856,17 @@
   3. The logo (IDEA-PROJ-002): two names, one logo? The mark should work for "Calcio Vero" and be readable as "Deep Simulator".
 - **Prerequisites for the rename:** ADR-002 amended or superseded (name, scope, non-commercial declared); a dated note on historical identifiers (old commits, `SIM_VERSION`, reports citing "pcfm") — history is not rewritten.
 ### IDEA-PROJ-002 — Project logo
-- **Status:** sketch (assets arrived 2026-11-04; not reviewed, not licensed)
+- **Status:** sketch (assets arrived 2026-11-04; licence verified: Vistaprint AI Logomaker, usage granted, copyright not transferable)
 - **Category:** Infrastructure / identity (not the engine)
-- **Source:** conversation 2026-11-04 (user). The user generated a logo and pushed it from the web: `assets/colored-logo.{svg,png,pdf}` and `assets/transparent-logo.{svg,png,pdf}` (commit `3c4facf`).
-- **What arrived:** six files, two variants (colored, transparent), three formats each. The SVGs are large (~480 KB each, ~10,500 lines of path data): they look like an auto-traced illustration, not a hand-made mark. As a **banner/hero image** they may work; as a **16-px icon** they will not (too many paths and colours). Not evaluated visually by the agent (no renderer in chat).
+- **Source:** conversation 2026-11-04 (user). Generated with **Vistaprint AI Logomaker** and pushed from the web: `assets/calcio-vero-transparent.png` and the other variants (`calcio-vero.{png,svg,pdf}`).
+- **What arrived:** a transparent PNG used in the README (280 px wide), plus PNG/SVG/PDF variants. The SVGs are large (~480 KB, ~10,500 lines of path data): they look like an auto-traced illustration, not a hand-made mark. As a **banner/hero image** they work; as a **16-px icon** they will not (too many paths and colours).
+- **Licence (verified 2026-11-04, Vistaprint terms):** the generated logo may be used (business, marketing, personal) but **copyright is not transferred** and the logo **cannot be registered as a trademark**. The Design Services terms state that Vistaprint retains the rights in the work product; the user holds a licence to use, not ownership.
+- **Consequence for `LICENSE-ASSETS`:** the logo is **not covered by CC BY-NC-SA**. The project cannot license what it does not own. It is used **with permission**, and this must be declared (see `assets/README.md`).
 - **Open questions:**
-  1. **Licence** — generated with which tool, under which terms? `LICENSE-ASSETS` (CC BY-NC-SA) requires that the project has the right to license them. **Blocking**: until this is answered, the files cannot be considered project assets.
-  2. **Weight** — ~2 MB of binaries and ~1 MB of SVG in `assets/`. Acceptable for GitHub, heavy for the README and for the diff. Consider keeping the SVG only, or a resized PNG for the banner.
-  3. **Role** — banner/hero (plausible) vs icon (not plausible as is). If an icon is needed, it must be a separate, simpler mark.
-  4. **Name tie** — the logo predates ADR-027; does it encode the old name or no name at all?
-- **Prerequisites:** licence answer (Q1); a visual review by the maintainer; the decision on the role (Q3).
-### IDEA-PERCEPTION-001 — Gaze/run misalignment: the speed cost
-- **Status:** sketch
-- **Category:** Match engine (L0 movement, F.4-c or after)
-- **Source:** conversation 2026-11-04 (user). Deferred: `heading` does not change yet, so the cost would be always zero (D3).
-- **Idea:** when the direction of running and the direction of gaze differ, the athlete is slower (backward and lateral running are slower than forward; head rotation degrades speed). The phenomenon is real and observable in a match (D6).
-- **Where it would live:** not one parameter. The user's observation (2026-11-04): there are **two regimes**, not one. (a) *Light recovery*: the defender tracks back to keep the shape, medium speed, eyes on the ball; the cost is positional (a step late), paid in *arrival*, not in outcome. (b) *Emergency recovery* (counter-attack): maximum sprint, eyes on the ball, not on the running direction; the cost is paid in **fatigue** (recovery, second effort), not in peak speed — the urgency commands. A single `gaze_run_misalignment_permille` collapses the two regimes and is **wrong** for (b). The regime is a **decision** (MD-01), not a coefficient.
-- **Third option in the emergency regime — the tactical foul.** In a counter-attack the last defender often chooses the tactical foul because it is the only action that stops the move. Today `Foul` exists as a *duel outcome* (slice B2), not as a *situated choice*: "foul or not" is not modelled. It belongs to OI-48 (rule module), not to F.4-c.
-- **Risk to decide first:** double counting with fatigue (T3) — the cost must live in one place, not two. In regime (b) the fatigue cost *is* the cost, so no additional speed penalty.
-- **Alternative (cleaner, needs F.4-c):** the cost emerges from the decision, no parameter at all (D7).
-- **Test:** two agents, same slot, same ball; one aligned, one at 90 degrees; the second covers fewer cm in the same ticks. And a regime test: the emergency runner covers *more* than the light runner despite the misalignment (the urgency dominates).
-- **Prerequisites:** F.4-c (heading updated by the decision).
-
+  1. **Weight** — ~2 MB of binaries and ~1 MB of SVG in `assets/`. Acceptable for GitHub, heavy for the README and for the diff. Consider keeping the transparent PNG only.
+  2. **Role** — banner/hero (works) vs icon (not as is). If an icon is needed later, it must be a separate, simpler mark, ideally drawn by a human so that the project can own it.
+  3. **Name tie** — the logo predates ADR-027; it does not encode a name, so it survives the rename.
+- **Prerequisites for a project-owned logo:** a mark drawn by a person (or an SVG written in the repo), not an output of a service that retains the rights.
 ### IDEA-PERCEPTION-002 — Head/body separation (head yaw)
 - **Status:** sketch
 - **Category:** Match engine (L0, after F.4-c) / L2 (shoulder check)
