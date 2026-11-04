@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `c4442df` — "feat(match): interception — the cone filters the interceptor (F.4-d, SIM_VERSION 16)"
+**Last commit verified:** `8507e83` — "docs(plan): F.3-b3 promoted to [next], LCV c4442df"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -10,7 +10,7 @@
 
 **Legenda:** [wip] in corso · [next] prossimo · [open] aperto · [deferred] rinviato · [urgent] urgente · [done] chiuso
 
-**Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G2/G10 ora OI-23/24; G1/OI-22 chiuso in slice B2), `docs/context/analysis/2026-11-02-engine-gaps.md` (fatti misurati + decisioni 2026-11-02, da annotare sui contratti), `docs/context/analysis/2026-11-03-perception-bench.md` (perception ~0.5 s per partita, F.3), `docs/context/analysis/2026-11-03-movement-bench.md` (movimento 84.58 ms, F.2 verde). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
+**Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G2/G10 ora OI-23/24; G1/OI-22 chiuso in slice B2), `docs/context/analysis/2026-11-02-engine-gaps.md` (fatti misurati + decisioni 2026-11-02, da annotare sui contratti), `docs/context/analysis/2026-11-03-perception-bench.md` (perception ~0.5 s per partita, F.3), `docs/context/analysis/2026-11-03-movement-bench.md` (movimento 84.58 ms, F.2 verde), `docs/context/analysis/2026-11-04-direction-decisions.md` (le decisioni di direzione della sessione 2026-11-04, scritte per un agente che non c era: MD-43, filtro partita vera, dado come resistenza, convergenza fenomenologica, 2D come consumatore deciso, costo misurato). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
 
 **Vision (2026-11-01, read before the Plan):** the project builds a
 **phenomenological** simulation of a football match, not a physics engine

@@ -243,6 +243,7 @@ if [ "$MODE" = "resume" ]; then
   awk '/Tool fallbacks \(observed\)/{f=1} /^- \*\*B2 —/{f=0} f && /^    - \*\*/' "$NSP" 2>/dev/null | tail -2 | cut -c1-140
   echo "Ideas backlog: $(grep -cE '^### IDEA-' docs/context/IDEAS.md 2>/dev/null) entries"
   echo "Analysis reports: $(ls docs/context/analysis/*.md 2>/dev/null | wc -l) in docs/context/analysis/"
+  echo "Direction: docs/context/analysis/2026-11-04-direction-decisions.md (why the engine has this shape)"
   echo ""
   echo "Dirty tree: $(git status --short 2>/dev/null | wc -l) file(s)"
 fi

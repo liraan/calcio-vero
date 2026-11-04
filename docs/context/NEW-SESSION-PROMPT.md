@@ -238,6 +238,13 @@ Two reads, in this order, both required.
 
 At minimum: §1 (pillars), §2 (design pillars), §3 (Three Planes), §5 (banned things).
 
+**Direction (why the engine has this shape).** Not the whole files, the sections that say *why*:
+
+    sed -n '/^## 0\. Vision/,/^## 1\./p' docs/context/L0-POSITIONAL-SLICE.md
+    grep -nE '^## 4|^## 5' docs/WORLD-MODEL.md
+
+The first is the vision (phenomenological simulation, not physics; eight categories; every event carries the fields to explain why). The second is the simulation/presentation boundary: the renderer does not invent events, it shows the ones the engine emits. Then read `docs/context/analysis/2026-11-04-direction-decisions.md` (the reasoning of the last session, written for an agent who was not there). Without these, an agent knows *what* to do and not *why the engine is like this*, and reopens decisions already taken.
+
 **Operating rules.**
 
     cat docs/context/NEW-SESSION-PROMPT.md
