@@ -361,8 +361,9 @@ If an ADR is `proposed` and touches an area, **no code may be written in that ar
 | 025 | TUI board renderer for `pcfm-demo` | ✅ accepted | Short ADR for IDEA-INFRA-006 step 12 (board + events, no pitch); view model in `pcfm-demo` (D3), no engine change |
 | 026 | Match boundaries and stoppage time | ✅ accepted | Two halves, separate clocks, fixed-point stoppage (no cap), `Half` field, `Option<ActorId>`, `balance/stoppage_time.json`, SIM_VERSION 4→6 |
 | 027 | Project rename: Calcio Vero / Deep Simulator | ✅ accepted | Supersedes ADR-002: name Calcio Vero, English handle Deep Simulator, attribution by Liraan, non-commercial declared; crate prefix stays pcfm-* |
+| 028 | Observability as the Plane A/B criterion | ✅ accepted | Physical vs technical was the wrong criterion (`height_cm` public, `strength` latent, both physical); observability settles it; corollary: no model value in a `.rs` without a derivation or a `balance/` include; `GK_REACH_CM` removed in F.7 |
 
-**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027 (22). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.
+**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027, 028 (23). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.
 
 **ADR-012 and ADR-013 are two halves of one decision.** Read them together, in order: [`PLUGINS-WORLDS-READING-GUIDE.md`](docs/PLUGINS-WORLDS-READING-GUIDE.md). ADR-013 depends on ADR-012.
 
