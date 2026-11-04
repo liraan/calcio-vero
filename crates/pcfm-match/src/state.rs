@@ -111,6 +111,10 @@ impl MatchState {
     #[allow(clippy::too_many_lines)]
     pub fn tick(&mut self, tick: u64, ctx: &mut MatchContext<'_>) {
         self.spatial.advance_ball();
+        self.spatial.move_agents(
+            i32::from(ctx.match_.pitch.length_m) * 100,
+            i32::from(ctx.match_.pitch.width_m) * 100,
+        );
         match self.possession {
             Possession::Home => self.home_possession_ticks += 1,
             Possession::Away => self.away_possession_ticks += 1,

@@ -66,6 +66,9 @@ pub struct SpatialState {
     ball_velocity: (i16, i16, i16),
     /// The agent carrying the ball, if any.
     carrier: Option<PlayerId>,
+    /// The formation slot of each agent, in centimetres. The default
+    /// (`GRID_4_4_2`, mirrored) is a placeholder: L2 replaces it (MD-09).
+    slots: BTreeMap<PlayerId, (i32, i32)>,
 }
 
 /// The 4-4-2 grid, as `(x percent, y percent)` per slot.
@@ -73,6 +76,23 @@ pub struct SpatialState {
 /// Slot order: GK, LB, CB, CB, RB, LM, CM, CM, RM, ST, ST. It matches
 /// `Squad.players` **by index**. The formation parser is deferred (D3): a
 /// non-4-4-2 formation falls back to this grid.
+/// How much of the ball's displacement from the pitch centre translates
+/// the formation (MD-09). Arbitrary, declared: 30% of the ball's offset.
+const TRANSLATION_NUM: i32 = 30;
+const TRANSLATION_DEN: i32 = 100;
+
+/// Maximum distance an agent moves in one tick, in centimetres. Arbitrary,
+/// declared: 120 cm/tick (a jog; sprint arrives with the per-agent model).
+const MAX_STEP_CM: i32 = 120;
+
+/// The body radius used for minimal separation (MD-12). Derived from a
+/// ~45 cm shoulder half-width; two agents closer than 2R are pushed apart.
+const BODY_RADIUS_CM: i32 = 45;
+
+/// One agent's work tuple for the movement pass: id, current position,
+/// formation slot. A named type keeps the borrow simple and the signature
+/// readable (clippy: complex type).
+type Work = (PlayerId, (i32, i32), (i32, i32));
 const GRID_4_4_2: [(i32, i32); 11] = [
     (5, 50),
     (25, 15),
@@ -124,12 +144,22 @@ impl SpatialState {
                 },
             );
         }
+        let mut slots: BTreeMap<PlayerId, (i32, i32)> = BTreeMap::new();
+        for (i, player) in home.players.iter().enumerate() {
+            let (px, py) = GRID_4_4_2[i];
+            slots.insert(player.id, (length * px / 100, width * py / 100));
+        }
+        for (i, player) in away.players.iter().enumerate() {
+            let (px, py) = GRID_4_4_2[i];
+            slots.insert(player.id, (length - length * px / 100, width * py / 100));
+        }
         Self {
             agents,
             ball: BallState::Loose,
             ball_position: (length / 2, width / 2, 0),
             ball_velocity: (0, 0, 0),
             carrier: None,
+            slots,
         }
     }
 
@@ -251,6 +281,96 @@ impl SpatialState {
         }
     }
 
+    /// The formation slot of an agent, or `None` if not on the pitch.
+    #[must_use]
+    pub fn slot(&self, id: PlayerId) -> Option<(i32, i32)> {
+        self.slots.get(&id).copied()
+    }
+
+    /// Moves every agent one tick toward its target (MD-09, MD-10, MD-12).
+    ///
+    /// Target: the formation slot, translated by a declared fraction of the
+    /// ball's displacement from the pitch centre. One agent (the one nearest
+    /// the ball, per team) is deviated toward the ball (placeholder, MD-09).
+    /// Step bounded by `MAX_STEP_CM`. After the step, a minimal separation
+    /// (`BODY_RADIUS_CM`) pushes overlapping agents apart (MD-12).
+    ///
+    /// Deterministic: no RNG (S1). The variation comes from the inputs
+    /// (positions, ball, slots), not from a die.
+    pub fn move_agents(&mut self, pitch_length_cm: i32, pitch_width_cm: i32) {
+        let centre = (pitch_length_cm / 2, pitch_width_cm / 2);
+        let ball = self.ball();
+        let dx = (ball.0 - centre.0) * TRANSLATION_NUM / TRANSLATION_DEN;
+        let dy = (ball.1 - centre.1) * TRANSLATION_NUM / TRANSLATION_DEN;
+
+        // Snapshot: agents and slots in deterministic (BTreeMap) order.
+        // Same operations as the direct version, no per-pair map lookup.
+        let mut work: Vec<Work> = self
+            .slots
+            .iter()
+            .filter_map(|(id, slot)| self.agents.get(id).map(|a| (*id, a.position, *slot)))
+            .collect();
+
+        let nearest = work
+            .iter()
+            .min_by_key(|(_, pos, _)| {
+                let ddx = i64::from(pos.0 - ball.0);
+                let ddy = i64::from(pos.1 - ball.1);
+                ddx * ddx + ddy * ddy
+            })
+            .map(|(id, _, _)| *id);
+
+        for entry in &mut work {
+            let target = if Some(entry.0) == nearest {
+                ball
+            } else {
+                (entry.2.0 + dx, entry.2.1 + dy)
+            };
+            let step_x = (target.0 - entry.1.0).clamp(-MAX_STEP_CM, MAX_STEP_CM);
+            let step_y = (target.1 - entry.1.1).clamp(-MAX_STEP_CM, MAX_STEP_CM);
+            entry.1 = (entry.1.0 + step_x, entry.1.1 + step_y);
+        }
+
+        // Minimal separation (MD-12), on the snapshot: no map lookups.
+        let min_d = i64::from(2 * BODY_RADIUS_CM);
+        let n = work.len();
+        for i in 0..n {
+            for j in (i + 1)..n {
+                let (ax, ay) = work[i].1;
+                let (bx, by) = work[j].1;
+                let ddx = i64::from(bx - ax);
+                let ddy = i64::from(by - ay);
+                let d2 = ddx * ddx + ddy * ddy;
+                if d2 > 0 && d2 < min_d * min_d {
+                    let push = i32::try_from(((min_d - d2.isqrt()) / 2).max(1)).unwrap_or(1);
+                    let nx = if ddx == 0 {
+                        0
+                    } else {
+                        i32::try_from(ddx.signum()).unwrap_or(0)
+                    };
+                    let ny = if ddy == 0 {
+                        0
+                    } else {
+                        i32::try_from(ddy.signum()).unwrap_or(0)
+                    };
+                    work[i].1 = (ax - nx * push, ay - ny * push);
+                    work[j].1 = (bx + nx * push, by + ny * push);
+                }
+            }
+        }
+
+        // Write back once, with velocity derived from the displacement.
+        for (id, new_pos, _) in &work {
+            let Some(agent) = self.agents.get_mut(id) else {
+                continue;
+            };
+            agent.velocity = (
+                i16::try_from(new_pos.0 - agent.position.0).unwrap_or(0),
+                i16::try_from(new_pos.1 - agent.position.1).unwrap_or(0),
+            );
+            agent.position = *new_pos;
+        }
+    }
     /// The number of agents on the pitch.
     #[must_use]
     pub fn len(&self) -> usize {
