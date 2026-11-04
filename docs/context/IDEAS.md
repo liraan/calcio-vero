@@ -829,3 +829,13 @@
         - **Palla libera** (**non in §6-ter**: è un'estensione, non "già previsto"): chi arriva prima sulla palla sciolta. Da aggiungere alla mappa se si adotta.
         - **Portiere**: caso speciale (la porta è un oggetto statico, non un punto), probabilmente dopo. §6-ter non lo copre come caso di influenza.
     - **Cosa non ne beneficia:** esecuzioni (`resolve_*`), ruoli assegnati (designazioni L2), falli/cartellini (§6-ter #8: severità del contatto, non presenza). Se l'influenza decidesse anche questi, smetterebbe di essere "un meccanismo, molti usi" e diventerebbe l'unico meccanismo — il rischio opposto a D7.
+
+### IDEA-DESIGN-002 — Push come fatto, non come "parte del corpo"
+
+- **Status:** sketch
+- **Category:** Match engine (interaction, L2+)
+- **Source:** pausa 2026-11-03 (T6/G11). Rivalutazione di §6-ter, che respinge `Push` perche non esiste un dataset pubblico su quale parte del corpo. Il fatto (spinta) e osservabile; era il dettaglio (parte del corpo) a essere non modellabile.
+- **Idea:** con il vocabolario dei fatti (T1-bis: `Contact`, `Trajectory`, `LineCrossing`, `PossessionChange`), un `Push` e **contatto + spostamento**: due fatti osservabili, nessun bisogno di sapere quale parte del corpo. Il `§6-ter` respingeva il `Push` per il dettaglio (parte del corpo) non per il fatto (spinta). Il fatto e osservabile.
+- **Cosa serve:** due fatti gia in T1-bis (`Contact` + `PositionChange`, quest'ultimo di F.4), un narrator che li compone in `Push` quando ricorrono le condizioni (contatto tra due agenti + spostamento dell'uno nella direzione dell'altro). Il "parte del corpo" resta fuori (nessun dataset, `00-foundations` §5).
+- **Open questions:** (a) `Push` e un evento a se o un caso di `Duel`? (b) la direzione dello spostamento e sufficiente a distinguere spinta e contrasto, o serve altro? (c) come si lega a `Foul` (che ha gia una causa: fallo)? (d) e di F.4 (interazione) o di una foglia successiva?
+- **Critical note:** non e una decisione, e un'idea. Non si implementa finche F.4 (per-agent + movimento) non e verde, e finche il vocabolario dei fatti non e stabile. D3: struttura dopo contenuto.
