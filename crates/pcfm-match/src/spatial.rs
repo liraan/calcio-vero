@@ -30,11 +30,26 @@ pub struct AgentState {
 // (`03-entities-minimal` §2.9): heading (orientation) and time to arrive
 // (velocity). See OI-25 and OI-29.
 
+/// The state of the ball (MD-25). `Possessed` means at the carrier's feet
+/// (velocity zero, no physics). `InFlight` means travelling with its own
+/// velocity. `Loose` means free and at rest.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BallState {
+    /// At the carrier's feet.
+    Possessed,
+    /// Travelling with a velocity.
+    InFlight,
+    /// Free and at rest.
+    Loose,
+}
+
 /// The spatial state of a match: every agent, plus the ball.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SpatialState {
     agents: BTreeMap<PlayerId, AgentState>,
-    ball: (i32, i32),
+    ball: BallState,
+    ball_position: (i32, i32, i32),
+    ball_velocity: (i16, i16, i16),
     /// The agent carrying the ball, if any.
     carrier: Option<PlayerId>,
 }
@@ -62,7 +77,7 @@ impl SpatialState {
     /// Builds the initial spatial state from a pitch and two squads.
     ///
     /// Home players are placed on the 4-4-2 grid; away players are the same
-    /// grid mirrored on the `x` axis. The ball starts at the centre.
+    /// grid mirrored on the `x` axis. The ball starts at the centre, loose.
     ///
     /// # Panics
     ///
@@ -97,7 +112,9 @@ impl SpatialState {
         }
         Self {
             agents,
-            ball: (length / 2, width / 2),
+            ball: BallState::Loose,
+            ball_position: (length / 2, width / 2, 0),
+            ball_velocity: (0, 0, 0),
             carrier: None,
         }
     }
@@ -131,10 +148,45 @@ impl SpatialState {
         true
     }
 
-    /// The ball position, in centimetres.
+    /// The ball position, in centimetres, 2D `(x, y)`.
     #[must_use]
     pub const fn ball(&self) -> (i32, i32) {
+        (self.ball_position.0, self.ball_position.1)
+    }
+
+    /// The ball position, in centimetres, 3D `(x, y, z)`.
+    #[must_use]
+    pub const fn ball_3d(&self) -> (i32, i32, i32) {
+        self.ball_position
+    }
+
+    /// The ball state.
+    #[must_use]
+    pub const fn ball_state(&self) -> BallState {
         self.ball
+    }
+
+    /// Puts the ball in flight from `position` with `velocity`. A no-op if
+    /// the ball is possessed (physics does not run on a possessed ball,
+    /// MD-25): the caller must release the carrier first.
+    pub const fn set_ball_in_flight(
+        &mut self,
+        position: (i32, i32, i32),
+        velocity: (i16, i16, i16),
+    ) {
+        if matches!(self.ball, BallState::Possessed) {
+            return;
+        }
+        self.ball = BallState::InFlight;
+        self.ball_position = position;
+        self.ball_velocity = velocity;
+    }
+
+    /// The ball velocity, in centimetres per tick, 3D `(vx, vy, vz)`.
+    /// Zero when the ball is not in flight.
+    #[must_use]
+    pub const fn ball_velocity(&self) -> (i16, i16, i16) {
+        self.ball_velocity
     }
 
     /// The agent carrying the ball, if any.
@@ -146,6 +198,12 @@ impl SpatialState {
     /// Sets the carrier. `None` means the ball is loose.
     pub const fn set_carrier(&mut self, carrier: Option<PlayerId>) {
         self.carrier = carrier;
+        if carrier.is_some() {
+            self.ball = BallState::Possessed;
+            self.ball_velocity = (0, 0, 0);
+        } else if matches!(self.ball, BallState::Possessed) {
+            self.ball = BallState::Loose;
+        }
     }
 
     /// The number of agents on the pitch.
@@ -216,6 +274,8 @@ mod tests {
     fn ball_at_centre() {
         let s = make_state();
         assert_eq!(s.ball(), (10500 / 2, 6800 / 2));
+        assert_eq!(s.ball_3d(), (10500 / 2, 6800 / 2, 0));
+        assert_eq!(s.ball_state(), BallState::Loose);
     }
 
     #[test]
@@ -267,5 +327,34 @@ mod tests {
         let id = PlayerId::new(1, 0);
         s.agent_mut(id).unwrap().position = (500, 500);
         assert_eq!(s.agent(id).unwrap().position, (500, 500));
+    }
+
+    #[test]
+    fn set_carrier_sets_possessed() {
+        let mut s = make_state();
+        let id = PlayerId::new(1, 0);
+        s.set_carrier(Some(id));
+        assert_eq!(s.ball_state(), BallState::Possessed);
+        assert_eq!(s.ball_velocity(), (0, 0, 0));
+    }
+
+    #[test]
+    fn set_ball_in_flight_is_a_noop_when_possessed() {
+        let mut s = make_state();
+        let id = PlayerId::new(1, 0);
+        s.set_carrier(Some(id));
+        let before = s.ball_3d();
+        s.set_ball_in_flight((100, 200, 50), (10, 5, 20));
+        assert_eq!(s.ball_3d(), before);
+        assert_eq!(s.ball_state(), BallState::Possessed);
+    }
+
+    #[test]
+    fn set_ball_in_flight_works_when_loose() {
+        let mut s = make_state();
+        s.set_ball_in_flight((100, 200, 50), (10, 5, 20));
+        assert_eq!(s.ball_3d(), (100, 200, 50));
+        assert_eq!(s.ball_state(), BallState::InFlight);
+        assert_eq!(s.ball_velocity(), (10, 5, 20));
     }
 }
