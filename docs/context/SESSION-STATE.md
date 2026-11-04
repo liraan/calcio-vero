@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `c0fc1db` — "docs(readme,adr): repository name is calcio-vero, URLs updated"
+**Last commit verified:** `7cdf9b9` — "docs(rules): B1-bis SSH lesson resolved — config with IdentityAgent none is enough"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
