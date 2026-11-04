@@ -54,9 +54,89 @@ pub struct MatchState {
     // construction (literal non-empty strings) and do not change during a
     // match.
     actions_stream: StreamName,
-    action_kind_stream: StreamName,
 }
 
+/// The action an agent chooses from its point of view (MD-01, MD-43).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ChosenAction {
+    /// Pass to the teammate with the most space.
+    Pass(PlayerId),
+    /// Shoot at the opponent goal.
+    Shoot,
+    /// Contest the nearest opponent.
+    Duel,
+}
+
+/// Minimum distance from the nearest opponent for a pass receiver, cm.
+const PASS_FREEDOM_CM: i64 = 800;
+
+/// Shoot below this distance from the opponent goal, cm.
+const SHOOT_RANGE_CM: i64 = 2500;
+
+/// The agent chooses geometrically, from what it sees (MD-43). No die in
+/// The heading (degrees, 0 = north = +y, clockwise) that points from
+/// `from` toward `to`. Integer, deterministic, no trig in the simulation
+/// path (D2). Used to turn the carrier toward the ball before deciding:
+/// a player looks at what he is about to play.
+#[must_use]
+fn heading_from_to(from: (i32, i32), to: (i32, i32)) -> u16 {
+    let dx = to.0 - from.0;
+    let dy = to.1 - from.1;
+    let mut best = 0_u16;
+    let mut best_dot = i64::MIN;
+    for i in 0..36_u16 {
+        let h = i * 10;
+        let (hx, hy) = crate::perception::heading_vector(h);
+        let dot = i64::from(dx) * i64::from(hx) + i64::from(dy) * i64::from(hy);
+        if dot > best_dot {
+            best_dot = dot;
+            best = h;
+        }
+    }
+    best
+}
+/// the choice: the variation is in `resolve_*` and in the degraded image.
+#[must_use]
+fn choose_action(
+    spatial: &SpatialState,
+    attacker: PlayerId,
+    goal: (i32, i32),
+    teammates: &[PlayerId],
+    opponents: &[PlayerId],
+) -> ChosenAction {
+    let Some(pos) = spatial.agent(attacker).map(|a| a.position) else {
+        return ChosenAction::Duel;
+    };
+    if distance_squared(pos, goal).isqrt() < SHOOT_RANGE_CM {
+        return ChosenAction::Shoot;
+    }
+    let mut best: Option<(i64, PlayerId)> = None;
+    for id in teammates {
+        if *id == attacker {
+            continue;
+        }
+        let Some(tpos) = spatial.agent(*id).map(|a| a.position) else {
+            continue;
+        };
+        let freedom = opponents
+            .iter()
+            .filter_map(|o| spatial.agent(*o).map(|a| a.position))
+            .map(|opos| distance_squared(tpos, opos).isqrt())
+            .min()
+            .unwrap_or(i64::MAX);
+        if freedom < PASS_FREEDOM_CM {
+            continue;
+        }
+        let score = distance_squared(pos, tpos).isqrt();
+        if best.is_none_or(|(b, _)| score < b) {
+            best = Some((score, *id));
+        }
+    }
+    if let Some((_, id)) = best {
+        return ChosenAction::Pass(id);
+    }
+    ChosenAction::Duel
+}
 impl MatchState {
     /// Creates the initial state: kickoff, home possession.
     ///
@@ -79,8 +159,6 @@ impl MatchState {
             spatial: SpatialState::from_squads(&match_.pitch, &match_.home, &match_.away),
             pending: None,
             actions_stream: StreamName::new(format!("match:{}:actions", match_.id.slot()))
-                .expect("stream name is non-empty"),
-            action_kind_stream: StreamName::new(format!("match:{}:action_kind", match_.id.slot()))
                 .expect("stream name is non-empty"),
         }
     }
@@ -153,7 +231,24 @@ impl MatchState {
 
         let (attacker, defender) = self.pick_from_space(ctx);
 
-        let action_kind_roll = pcfm_core::rng::next_unit(ctx.rng.stream(&self.action_kind_stream));
+        let (teammates, opponents): (Vec<PlayerId>, Vec<PlayerId>) = {
+            let (own, other) = self.squads(ctx);
+            (
+                own.players.iter().map(|p| p.id).collect(),
+                other.players.iter().map(|p| p.id).collect(),
+            )
+        };
+        let goal = match self.possession {
+            Possession::Home => (i32::from(ctx.match_.pitch.length_m) * 100, 3400),
+            Possession::Away => (0, 3400),
+        };
+        if let Some(a) = self.spatial.agent(attacker) {
+            let h = heading_from_to(a.position, goal);
+            if let Some(am) = self.spatial.agent_mut(attacker) {
+                am.heading = h;
+            }
+        }
+        let chosen = choose_action(&self.spatial, attacker, goal, &teammates, &opponents);
 
         // The action belongs to the nearest agent; the ball follows.
         self.spatial.set_carrier(Some(attacker));
@@ -191,12 +286,17 @@ impl MatchState {
             }
         }
 
-        if action_kind_roll < 0.6 {
+        if let ChosenAction::Pass(receiver) = chosen {
             let from = match self.spatial.agent(attacker) {
                 Some(a) => (a.position.0, a.position.1, 0),
                 None => self.spatial.ball_3d(),
             };
-            let to = (from.0 + 2000, from.1, from.2);
+            let to = self
+                .spatial
+                .agent(receiver)
+                .map_or((from.0 + 2000, from.1, from.2), |a| {
+                    (a.position.0, a.position.1, 0)
+                });
             let ctx_pass = pcfm_hidden::PassContext {
                 passer: attacker,
                 from,
@@ -226,7 +326,7 @@ impl MatchState {
             for c in crate::fact::classify(&fact) {
                 self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
             }
-        } else if action_kind_roll < 0.85 {
+        } else if chosen == ChosenAction::Shoot {
             let from = match self.spatial.agent(attacker) {
                 Some(a) => (a.position.0, a.position.1, 0),
                 None => self.spatial.ball_3d(),
@@ -286,7 +386,7 @@ impl MatchState {
                 due_tick: tick + FLIGHT_TICKS,
                 outcome: Self::other(self.possession),
             });
-        } else if action_kind_roll < 0.97 {
+        } else {
             let ctx_duel = pcfm_hidden::DuelContext {
                 attacker,
                 defender,
@@ -305,22 +405,6 @@ impl MatchState {
                 self.flip_possession();
                 self.spatial.set_carrier(Some(defender));
             }
-        } else {
-            let ctx_duel = pcfm_hidden::DuelContext {
-                attacker,
-                defender,
-                duel_type: pcfm_hidden::DuelType::Ground,
-            };
-            let _outcome = ctx.hidden.resolve_duel(&ctx_duel);
-            self.emit_event(
-                ctx,
-                tick,
-                Some(ActorId::Player(defender)),
-                EventType::Foul,
-                serde_json::json!({}),
-            );
-            self.flip_possession();
-            self.spatial.set_carrier(None);
         }
     }
 
@@ -495,4 +579,69 @@ fn clamp_u8(value: u64, max: u8) -> u8 {
 /// Clamps a `u64` to a `u16`.
 fn clamp_u16(value: u64) -> u16 {
     u16::try_from(value).unwrap_or(u16::MAX)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pcfm_core::ids::SquadId;
+    use pcfm_model::{
+        Foot, FormationId, PhysicalStateMinimal, Pitch, Player, PsychologicalStateMinimal, RoleId,
+    };
+
+    fn make_squad(slot_base: u32) -> Squad {
+        let players: Vec<Player> = (0..11)
+            .map(|i| {
+                Player::try_new(
+                    PlayerId::new(slot_base + i, 0),
+                    format!("P{}", slot_base + i),
+                    RoleId::new("midfielder").unwrap(),
+                    Foot::Right,
+                    180,
+                    PhysicalStateMinimal::default(),
+                    PsychologicalStateMinimal::default(),
+                )
+                .unwrap()
+            })
+            .collect();
+        Squad::try_new(
+            SquadId::new(slot_base, 0),
+            players,
+            vec![],
+            FormationId::new("4-4-2").unwrap(),
+        )
+        .unwrap()
+    }
+
+    fn setup() -> (SpatialState, Vec<PlayerId>, Vec<PlayerId>) {
+        let home = make_squad(0);
+        let away = make_squad(100);
+        let s = SpatialState::from_squads(&Pitch::default(), &home, &away);
+        let mates: Vec<PlayerId> = home.players.iter().map(|p| p.id).collect();
+        let opps: Vec<PlayerId> = away.players.iter().map(|p| p.id).collect();
+        (s, mates, opps)
+    }
+
+    #[test]
+    fn audit_cone_does_not_filter_the_pass_target() {
+        let (mut s, _mates, _opps) = setup();
+        let attacker = PlayerId::new(1, 0);
+        let mate = PlayerId::new(2, 0);
+        s.set_position(attacker, (5000, 3400));
+        s.agent_mut(attacker).unwrap().heading = 0; // north (+y)
+        // The mate is directly south: outside the cone, and the only
+        // candidate. The goal is far (no shoot).
+        s.set_position(mate, (5000, 2400));
+        // Candidates: only the attacker and the mate. No opponent: freedom
+        // is maximal, so the mate qualifies. If the cone filters the target,
+        // the choice falls to Duel and this test fails (A, 2026-11-04:
+        // "filtro partita vera", the target is a choice, not perception).
+        let teammates = [attacker, mate];
+        let opponents: [PlayerId; 0] = [];
+        let chosen = choose_action(&s, attacker, (10500, 3400), &teammates, &opponents);
+        assert!(
+            matches!(chosen, ChosenAction::Pass(p) if p == mate),
+            "the cone filtered the pass target: {chosen:?}"
+        );
+    }
 }

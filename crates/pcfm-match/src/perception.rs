@@ -140,7 +140,7 @@ pub fn visible_to(spatial: &SpatialState, from: PlayerId) -> Vec<PlayerId> {
 /// `0` = north (+y), clockwise. A 36-entry table, one per 10 degrees; the
 /// heading is rounded to the nearest entry. Enough for a 55-degree cone,
 /// integer only, no `sin`/`cos` in the simulation path (D2).
-fn heading_vector(heading: u16) -> (i32, i32) {
+pub(crate) fn heading_vector(heading: u16) -> (i32, i32) {
     const SIN: [i32; 36] = [
         0, 174, 342, 500, 643, 766, 866, 940, 985, 1000, 985, 940, 866, 766, 643, 500, 342, 174, 0,
         -174, -342, -500, -643, -766, -866, -940, -985, -1000, -985, -940, -866, -766, -643, -500,
