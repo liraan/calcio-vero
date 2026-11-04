@@ -1,4 +1,4 @@
-# Ideas — PCFM
+# Ideas — Calcio Vero
 
 **Purpose:** a curated backlog of ideas that are not yet decisions. Unlike `PROJECT-IDEA-LOG.md` (archived historical record), this file holds ideas in motion: sketches, open questions, trade-offs.
 
@@ -115,7 +115,7 @@
 - **Open questions:**
   1. Model shape: two separate per-foot ratings (FM-style) vs a single
      categorical field (left/right/both) plus one weak-foot rating — the
-     latter is more aligned with the minimalist philosophy of PCFM.
+     latter is more aligned with the minimalist philosophy of Calcio Vero.
   2. Which L0 actions read footedness (first touch, pass, shot, dribble
      direction?) and how it modifies them: action cost, success range (see
      IDEA-PM-002), or both.
@@ -663,7 +663,7 @@
 - **Status:** sketch
 - **Category:** UX / Presentation
 - **Source:** conversation 2026-10-28/29 (user)
-- **Idea:** a terminal UI (TUI) as the primary form of presentation for PCFM,
+- **Idea:** a terminal UI (TUI) as the primary form of presentation for Calcio Vero,
   not as a fallback to a future GUI. The TUI reads a **presentation-level
   view model**: a stable, serializable projection of Plane C (estimation)
   and Plane B (observation), never Plane A (`pcfm-hidden`). The prototype
