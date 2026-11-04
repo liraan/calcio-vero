@@ -170,13 +170,13 @@ impl MatchState {
         } else if action_kind_roll < 0.85 {
             let ctx_shot = pcfm_hidden::ShotContext { shooter: attacker };
             let outcome = ctx.hidden.resolve_shot(&ctx_shot);
-            self.emit_event(
-                ctx,
-                tick,
-                Some(ActorId::Player(attacker)),
-                EventType::Shot,
-                serde_json::json!({ "goal": outcome.goal }),
-            );
+            let fact = crate::fact::Fact::Trajectory {
+                actor: attacker,
+                goal: outcome.goal,
+            };
+            for c in crate::fact::classify(&fact) {
+                self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
+            }
             match self.possession {
                 Possession::Home => {
                     self.shots.0 += 1;
@@ -190,13 +190,6 @@ impl MatchState {
                     Possession::Home => self.score.home += 1,
                     Possession::Away => self.score.away += 1,
                 }
-                self.emit_event(
-                    ctx,
-                    tick,
-                    Some(ActorId::Player(attacker)),
-                    EventType::Goal,
-                    serde_json::json!({}),
-                );
             }
             self.flip_possession();
         } else if action_kind_roll < 0.97 {

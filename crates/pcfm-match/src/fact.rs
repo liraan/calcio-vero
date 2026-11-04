@@ -2,8 +2,8 @@
 //! the narrator (T1, T2 in `SESSION-STATE.md`).
 //!
 //! A fact is Plane A -> Plane B: it carries the cause (who, where, under
-//! what condition), not the narrative. It is internal to `pcfm-match` (`pub` in a private module): not part of
-//! `MatchResult`, it is not serialised, and it is not in `pcfm-stats`.
+//! what condition), not the narrative. It is internal to `pcfm-match`:
+//! not part of `MatchResult`, not serialised, not in `pcfm-stats`.
 //! A new fact species is a `SIM_VERSION` bump if it changes which events
 //! are emitted (CHANGELOG-SIM.md, "When to bump", point 2).
 
@@ -24,9 +24,17 @@ pub enum Fact {
         /// The agent who won.
         winner: PlayerId,
     },
+    /// An action sent the ball along a trajectory. The narrator emits
+    /// `Shot` (always) and `Goal` (when `goal` is true).
+    Trajectory {
+        /// The agent who produced it.
+        actor: PlayerId,
+        /// Whether a goal resulted.
+        goal: bool,
+    },
 }
 
-/// One classified event: an `MatchEvent` in everything but the header
+/// One classified event: a `MatchEvent` in everything but the header
 /// (id, match, half, tick) the emitter adds. The classification is pure:
 /// it depends only on the fact, so it is testable and deterministic.
 #[derive(Debug, Clone)]
@@ -40,7 +48,7 @@ pub struct Classified {
 }
 
 /// Classifies a fact into events, in emission order. The order is part of
-/// the contract: `Duel` then `Tackle`, never the reverse.
+/// the contract: `Duel` before `Tackle`, `Shot` before `Goal`.
 pub fn classify(fact: &Fact) -> Vec<Classified> {
     match fact {
         Fact::Contact {
@@ -62,6 +70,22 @@ pub fn classify(fact: &Fact) -> Vec<Classified> {
                         "from": attacker.slot(),
                         "to": defender.slot(),
                     }),
+                });
+            }
+            out
+        }
+        Fact::Trajectory { actor, goal } => {
+            let mut out = Vec::with_capacity(2);
+            out.push(Classified {
+                actor: Some(ActorId::Player(*actor)),
+                event_type: EventType::Shot,
+                fields: serde_json::json!({ "goal": goal }),
+            });
+            if *goal {
+                out.push(Classified {
+                    actor: Some(ActorId::Player(*actor)),
+                    event_type: EventType::Goal,
+                    fields: serde_json::json!({}),
                 });
             }
             out
