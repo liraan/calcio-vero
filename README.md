@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚽ PC Football Manager
+# ⚽ Calcio Vero — Deep Simulator
 
 **An open football management simulation.**
 *Transparent by design. Deterministic by construction. Yours by default.*
@@ -18,7 +18,7 @@
 
 ## Why this project exists
 
-Football Manager and its ancestors built a genre. They also built walls around it: closed datasets, closed formulas, closed ecosystems. PC Football Manager is an attempt to rebuild that experience **without the walls**.
+Football Manager and its ancestors built a genre. They also built walls around it: closed datasets, closed formulas, closed ecosystems. Calcio Vero is an attempt to rebuild that experience **without the walls**.
 
 - ❌ No telemetry. Nothing leaves your machine.
 - ❌ No proprietary data feeds. Open, procedural, and community packs only.
@@ -33,7 +33,7 @@ Football Manager and its ancestors built a genre. They also built walls around i
 
 ## The core idea: Three Planes
 
-The single most important architectural choice in PCFM is the strict separation of *what the simulation knows*, *what the game shows*, and *what people believe*. Collapsing these layers is what turns scouting into a lookup table — the thing every modern management sim accidentally does.
+The single most important architectural choice in Deep Simulator is the strict separation of *what the simulation knows*, *what the game shows*, and *what people believe*. Collapsing these layers is what turns scouting into a lookup table — the thing every modern management sim accidentally does.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -51,7 +51,7 @@ The single most important architectural choice in PCFM is the strict separation 
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Why it matters:** scouting in PCFM is not a lookup — it's an *estimate of an observation of the truth*. The player is meant to be uncertain. That uncertainty is the game.
+**Why it matters:** scouting in Deep Simulator is not a lookup — it's an *estimate of an observation of the truth*. The player is meant to be uncertain. That uncertainty is the game.
 
 Full doctrine → [`specs/00-foundations.md`](specs/00-foundations.md) · Enforcement → [ADR-003](docs/adr/003-plane-a-enforcement.md)
 
@@ -59,7 +59,7 @@ Full doctrine → [`specs/00-foundations.md`](specs/00-foundations.md) · Enforc
 
 ## The paradigm: phenomenological simulation
 
-PCFM does not simulate physics. It models the **observable effects** of conditions and decisions, tick by tick. A slip is an event with a cause (wet grass, acceleration, balance), not a computed friction coefficient. A pass under rain is a perception event, not a trajectory integration.
+Deep Simulator does not simulate physics. It models the **observable effects** of conditions and decisions, tick by tick. A slip is an event with a cause (wet grass, acceleration, balance), not a computed friction coefficient. A pass under rain is a perception event, not a trajectory integration.
 
 This is a deliberate choice, not a shortcut. A physical engine needs fixed-point physics, months of calibration, and data that does not exist publicly. The phenomenological engine is deterministic, calibratable (parameters in `balance/`, declared arbitrary until calibrated), and — most importantly — **explainable**: every event carries the fields to understand why it happened. "He slipped at the 67th minute on the wet grass and lost the ball" is the target, not "the friction coefficient exceeded the threshold".
 
@@ -131,7 +131,7 @@ The rules that make this possible are non-negotiable:
 
 ## The match engine in one glance
 
-PCFM simulates one football match with 22 players, a ball, and (planned) a referee. This is what the engine does today, and where it is going. Today's engine is a **prototype**: it compiles and it is deterministic, but the models are placeholders, not calibrated. No date: the direction is fixed, the calendar is not.
+Deep Simulator simulates one football match with 22 players, a ball, and (planned) a referee. This is what the engine does today, and where it is going. Today's engine is a **prototype**: it compiles and it is deterministic, but the models are placeholders, not calibrated. No date: the direction is fixed, the calendar is not.
 
 | On the pitch | Today | Where it is going |
 |---|---|---|
@@ -151,7 +151,7 @@ PCFM simulates one football match with 22 players, a ball, and (planned) a refer
 
 ## What makes it different
 
-| | Traditional FM | **PC Football Manager** |
+| | Traditional FM | **Calcio Vero** |
 |---|---|---|
 | **Potential** | Secret scalar (`CA/PA`) | Transparent confidence band |
 | **Attributes** | True = displayed | True ≠ displayed; displayed is an estimate |
@@ -315,7 +315,7 @@ Full process → [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 - **Code** — `MIT OR Apache-2.0` → [`LICENSE-MIT`](LICENSE-MIT), [`LICENSE-APACHE`](LICENSE-APACHE)
 - **Assets and documentation** — `CC-BY-NC-SA-4.0` → [`LICENSE-ASSETS`](LICENSE-ASSETS)
-- **Trademarks** — the "PC Football Manager" name and logo are project trademarks; the licenses do not grant trademark rights
+- **Trademarks** — the "Calcio Vero" name and logo are project trademarks; the licenses do not grant trademark rights
 
 Use the code however you want. Share the assets under the same terms, for non-commercial purposes.
 
@@ -337,7 +337,7 @@ Some documentation and code in this repo was **drafted with AI**, then **reviewe
 ## FAQ
 
 **Is this a Football Manager clone?**
-No. It's an alternative with a different philosophy. FM is proprietary, uses closed datasets, and ships telemetry. PCFM is community-driven, transparent, offline-first.
+No. It's an alternative with a different philosophy. FM is proprietary, uses closed datasets, and ships telemetry. Deep Simulator is community-driven, transparent, offline-first.
 
 **Will you use Wyscout / Opta data?**
 No. Bundling licensed datasets is ruled out by design. Provider integration is an *external tool* that produces packs, not a core module → [ADR-008](docs/adr/008-provider-integration-external.md). Open data, procedural data, and community packs (with clear provenance) only.
@@ -372,7 +372,7 @@ No private emails, no Telegram, no WhatsApp. Everything happens publicly on GitH
 
 <div align="center">
 
-**© 2026 PC Football Manager Team**
+**© 2026 Calcio Vero Team**
 
 *Transparent by design. Open data. Your control.*
 
