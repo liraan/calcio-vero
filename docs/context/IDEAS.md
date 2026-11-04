@@ -842,19 +842,19 @@
 - **Open questions:** (a) `Push` e un evento a se o un caso di `Duel`? (b) la direzione dello spostamento e sufficiente a distinguere spinta e contrasto, o serve altro? (c) come si lega a `Foul` (che ha gia una causa: fallo)? (d) e di F.4 (interazione) o di una foglia successiva?
 - **Critical note:** non e una decisione, e un'idea. Non si implementa finche F.4 (per-agent + movimento) non e verde, e finche il vocabolario dei fatti non e stabile. D3: struttura dopo contenuto.
 
-### IDEA-PROJ-001 — Rename the project
-- **Status:** sketch
+### IDEA-PROJ-001 — Rename the project (DECIDED 2026-11-04)
+- **Status:** promoted → decision (rename not yet executed; ADR-002 amendment pending)
 - **Category:** Infrastructure / identity (not the engine)
-- **Source:** conversation 2026-11-04 (user). Explicitly deferred: discussed in pause **after** the engine (F.4-b, F.4-c, F.3-b3, F.5) is done.
-- **Idea:** "pcfootballmanager" is too generic. The user is considering "My Football Manager", "Liraan Football Manager", "Deep Football Manager". Not a decision: the name is a sketch, the choice belongs to the user, and the discussion happens in pause with the logo (IDEA-PROJ-002).
-- **Why it is not cosmetic:** ADR-002 (accepted) defines the project name and scope. A rename requires amending or superseding ADR-002, and it touches repo URL, badges, README, STRUCTURE, CONTRIBUTING, specs/_index, and possibly the crate prefix `pcfm-*`. It is a coordinated change, not a `sed`.
+- **Source:** conversation 2026-11-04 (user). The engine work (F.3-b3, F.5) continues under the old name until the rename is executed.
+- **Decision:** the project is **"Calcio Vero"** — name, Italian, the tradition of PC Calcio. **"Deep Simulator"** is the English handle: documentation, GitHub, commit, ADRs (the docs are in English). **"by Liraan"** is the attribution. The three-part line "Calcio Vero — Deep Simulator — by Liraan" is the README header, not a fourth name: the name is Calcio Vero, the handle is Deep Simulator, the attribution is by Liraan.
+- **Why "Calcio Vero":** "vero" is the pillar, not an adjective: radical transparency, "why did I lose?", every event explains why, Plane B ≠ Plane A. It says what the project refuses to do (lie to the player) without containing "Football Manager". "Deep Simulator" alone was rejected: "deep simulation" is a genre (Dwarf Fortress, RimWorld), not a distinct name.
+- **Rejected proposals, with the reason:** "My Football Manager" (generic, confusable, already used), "Liraan Football Manager" (personal name in the title does not survive a maintainer change), "Deep Football Manager" (trademark in the tail), "Calcio reale" (Italian translation of Gameloft's registered "Real Soccer"/"Real Football"; also an existing app), "Calcio Vero" as the *only* name (kept: it is the name, but needed the English handle), "Deep Pitch Simulator" (DPS collides with damage-per-second; "pitch" is ambiguous), "La Panchina" / "Il Mister" (evocative but generic in Italy).
+- **Trademark (checked, not a legal opinion):** no registered word mark "CALCIO VERO" for software/videogames found in USPTO/EUIPO/UIBM. "Calcio" is descriptive. The residual risks are: (a) an existing online game called "Calcio vero" and an Android app "Vero calcio 2018"; (b) "VERO" alone is registered in class 9 by two software companies; (c) the Italian translation of Gameloft's registered "Real Soccer". **Accepted risk, declared:** the project is non-commercial (hobby, GitHub, no sale), which changes the profile; if a request to rename arrives, renaming an open-source project is an hour, not a disaster. A full prior-art search by a professional is still recommended before any registration.
 - **Open questions:**
-  1. **Trademark (checked first).** "My Football Manager", "Liraan Football Manager", "Deep Football Manager" all contain "Football Manager", a trademark of Sports Interactive/Sega. Not a legal opinion; a risk to verify before committing to a name. If the answer is "confusable", the name is found elsewhere.
-  2. Does the new name still map to the `pcfm-*` crate prefix, or does the prefix change too?
-  3. Order with the logo (IDEA-PROJ-002): name first, or logo first (the logo can suggest the name)?
-  4. What happens to historical identifiers (ADR text, old commit messages, save format `SIM_VERSION`)? History is not rewritten; a dated note points to the rename.
-- **Prerequisites:** engine done; trademark check; ADR-002 amendment or successor; the logo discussion (IDEA-PROJ-002).
-
+  1. Crate prefix: `cv-*` (Italian name, recommended) or `ds-*`/`deep-*` (English handle)? `pcfm-*` stays with a historical note until the coordinated refactor.
+  2. Timing: a dedicated rename session (ADR-002 amendment + repo rename + 9 crates + docs) or later.
+  3. The logo (IDEA-PROJ-002): two names, one logo? The mark should work for "Calcio Vero" and be readable as "Deep Simulator".
+- **Prerequisites for the rename:** ADR-002 amended or superseded (name, scope, non-commercial declared); a dated note on historical identifiers (old commits, `SIM_VERSION`, reports citing "pcfm") — history is not rewritten.
 ### IDEA-PROJ-002 — Project logo
 - **Status:** sketch
 - **Category:** Infrastructure / identity (not the engine)
