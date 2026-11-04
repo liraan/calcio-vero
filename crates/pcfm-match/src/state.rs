@@ -21,6 +21,19 @@ pub(crate) enum Possession {
     Away,
 }
 
+/// How many ticks a ball stays in flight before the pending resolves even
+/// if it has not landed (MD-37). Arbitrary, declared: 15 ticks = 1.5 s.
+const FLIGHT_TICKS: u64 = 15;
+
+/// A pending fact the engine must resolve at a declared tick (MD-37).
+/// The possession is applied only at resolution: the ball in flight
+/// belongs to nobody (MD-25).
+pub(crate) struct Pending {
+    /// The tick at which the pending resolves even if not landed.
+    pub due_tick: u64,
+    /// Which team has the ball once the flight resolves.
+    pub outcome: Possession,
+}
 /// The in-progress state of a match.
 pub struct MatchState {
     score: Score,
@@ -35,6 +48,8 @@ pub struct MatchState {
     half_start_tick: u64,
     /// The spatial state: positions, ball, carrier (slice B2).
     spatial: SpatialState,
+    /// The pending flight, if any (MD-37). At most one at a time today.
+    pending: Option<Pending>,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
     // match.
@@ -62,6 +77,7 @@ impl MatchState {
             half: Half::First,
             half_start_tick: 0,
             spatial: SpatialState::from_squads(&match_.pitch, &match_.home, &match_.away),
+            pending: None,
             actions_stream: StreamName::new(format!("match:{}:actions", match_.id.slot()))
                 .expect("stream name is non-empty"),
             action_kind_stream: StreamName::new(format!("match:{}:action_kind", match_.id.slot()))
@@ -110,6 +126,16 @@ impl MatchState {
     /// on the current simulation".
     #[allow(clippy::too_many_lines)]
     pub fn tick(&mut self, tick: u64, ctx: &mut MatchContext<'_>) {
+        // Resolve a due pending first (MD-37): the possession is applied
+        // here, not at launch. Mandatory expiry: no orphan blocks the loop.
+        if let Some(p) = &self.pending {
+            if tick >= p.due_tick {
+                let outcome = p.outcome;
+                self.pending = None;
+                self.possession = outcome;
+                self.spatial.set_carrier(None);
+            }
+        }
         self.spatial.advance_ball();
         self.spatial.move_agents(
             i32::from(ctx.match_.pitch.length_m) * 100,
@@ -177,8 +203,20 @@ impl MatchState {
                 to,
             };
             let outcome = ctx.hidden.resolve_pass(&ctx_pass);
+            // MD-25/F.4-c: carrier released at launch, ball flies, pending
+            // resolves the possession (MD-37).
+            self.spatial.set_carrier(None);
             self.spatial
                 .set_ball_in_flight(from, outcome.initial_velocity);
+            let expected = if outcome.complete {
+                self.possession
+            } else {
+                Self::other(self.possession)
+            };
+            self.pending = Some(Pending {
+                due_tick: tick + FLIGHT_TICKS,
+                outcome: expected,
+            });
             let fact = crate::fact::Fact::Trajectory {
                 actor: attacker,
                 kind: crate::fact::TrajectoryKind::Pass,
@@ -187,10 +225,6 @@ impl MatchState {
             };
             for c in crate::fact::classify(&fact) {
                 self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
-            }
-            if !outcome.complete {
-                self.flip_possession();
-                self.spatial.set_carrier(None);
             }
         } else if action_kind_roll < 0.85 {
             let from = match self.spatial.agent(attacker) {
@@ -207,6 +241,11 @@ impl MatchState {
                 to,
             };
             let outcome = ctx.hidden.resolve_shot(&ctx_shot);
+            // MD-25/F.4-c: the carrier is released at launch, the ball flies,
+            // the pending resolves the possession (MD-37). The goal is the
+            // die's outcome (MD-20); the LineCrossing is emitted at launch,
+            // declared simplification (no interception yet, OI-37).
+            self.spatial.set_carrier(None);
             self.spatial
                 .set_ball_in_flight(from, outcome.initial_velocity);
             let fact = crate::fact::Fact::Trajectory {
@@ -243,7 +282,10 @@ impl MatchState {
                     self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
                 }
             }
-            self.flip_possession();
+            self.pending = Some(Pending {
+                due_tick: tick + FLIGHT_TICKS,
+                outcome: Self::other(self.possession),
+            });
         } else if action_kind_roll < 0.97 {
             let ctx_duel = pcfm_hidden::DuelContext {
                 attacker,
@@ -314,6 +356,15 @@ impl MatchState {
         }
     }
 
+    /// The opposite possession, without mutating `self`. The expected
+    /// possession is computed at launch and applied only when the pending
+    /// resolves (MD-37): the ball in flight belongs to nobody (MD-25).
+    const fn other(p: Possession) -> Possession {
+        match p {
+            Possession::Home => Possession::Away,
+            Possession::Away => Possession::Home,
+        }
+    }
     const fn flip_possession(&mut self) {
         self.possession = match self.possession {
             Possession::Home => Possession::Away,

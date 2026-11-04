@@ -11,7 +11,7 @@ It is separate from [`CHANGELOG.md`](CHANGELOG.md) (which tracks documentation a
 ## Current SIM_VERSION
 
 ```
-SIM_VERSION = 12
+SIM_VERSION = 13
 ```
 
 `SIM_VERSION = 1` was the initial baseline (no code). 2 removed `CauseTrace` and `xg` (ADR-024). 3 removed `template_key`/`params` from `NarrativeEntry`. 4 removed four gusci fields from `MatchEvent`/`MatchSave`. 5 replaced `player_id` with `actor: Option<ActorId>` and added `KickOff`/`SecondHalf` (ADR-026). 6: two halves with separate clocks, `Half` field, four-phase loop, fixed-point stoppage time, boundary events emitted (ADR-026 phase 2). 7: stoppage contributions calibrated (goal 60s, foul 20s, duel 10s). 8: slice B2 — the acting agent comes from space (`pick_from_space`), `Tackle` emitted when a duel is won by the defender, `SpatialState.carrier` tracked, stream names with `match_id` (OI-22). OI-22 closed: RNG stream names now carry `match_id` (`match:{id}:actions`, `match:{id}:action_kind`), so two matches with the same world seed no longer share the engine streams. The current value is the reference against which all future bumps are measured.
@@ -23,6 +23,7 @@ SIM_VERSION = 12
 11: F.3-b2 — the ball crosses the goal line as a geometric fact: `Shot` carries `goal` and `on_target` (was: `goal` only, on the shot). `Goal` is emitted only from a `Fact::LineCrossing { kind: GoalLine }`, not from the shot. `Pass` is emitted for the first time (was: `resolve_pass` called, no event). `Fact::Trajectory` carries `kind` and `success`; `Fact::LineCrossing` carries `actor` and `point`. `classify` extended; six unit tests. Golden hash regenerated. Behavior change: a `Pass` event appears in the stream, and `Shot.goal` now comes from the line crossing. F.3-b1 (BallState 3D) did not bump: no behaviour change (golden identical).
 
 12: F.4-a — agents move every tick (MD-09, MD-10, MD-12). `move_agents` reads the ball's offset from the pitch centre, translates every formation slot by a declared fraction (30%), deviates the nearest agent to the ball, steps each agent by at most `MAX_STEP_CM` (120), and enforces a minimal separation (`BODY_RADIUS_CM` 45). No RNG in the movement (S1): the variation comes from the inputs. Golden hash regenerated; the match now moves, so the hash changes. The separation pass is a `Vec` snapshot (same operations, same order, no per-pair map lookup): same behaviour, 28 s -> 5.8 s on the golden.
+13: F.4-c — the ball flies and the possession resolves at landing, not at launch. `Pending` (MD-37) with a mandatory expiry (`FLIGHT_TICKS` = 15) and the expected possession; `other()` computes the opposite without mutating; the check at the top of `tick` applies the possession when the pending is due. In the pass and shot branches the carrier is released at launch, `set_ball_in_flight` is no longer a no-op, `advance_ball` runs. Declared simplification: no interception yet (OI-37), the ball lands at the destination or out; the goal stays the die's outcome (MD-20). Golden hash regenerated (behaviour changed: the ball moves between ticks).
 **Known gap (OI-14):** the 10-season golden test (an L1 artefact) is not implemented. The L0 golden test (N matches, seeds 42..51) exists and is regenerated on every bump.
 
 
