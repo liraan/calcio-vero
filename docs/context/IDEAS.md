@@ -6,6 +6,8 @@
 
 **Promotion rule:** when an idea becomes a decision, mark it `promoted → ADR-NNN` (or `promoted → module`) and keep it here for traceability. Do not delete.
 
+**Dormant rule (2026-11-04):** an idea that has been **superseded by an artefact** (an ADR, a merged decision, code that already does it) is marked `dormant (<date>, superseded-by: <artefact>)`. The artefact must be verifiable with `grep` or `git log`, not a feeling. Do not delete (the promotion rule stands): a dormant idea is kept for traceability, like a promoted one. Do not mark `dormant` an idea that is merely old, or that you would not do now: those stay `sketch`, and their time is decided by D3. Rejected ideas remain in their own section with the motivation.
+
 **Categories:** Player model, Match engine, Career (L2), World, UX / Presentation, Infrastructure.
 
 ---
@@ -247,7 +249,7 @@
   until the ADR is accepted.
 
 ### IDEA-INFRA-006 — TUI renderer (event-driven ASCII) for `pcfm-demo`
-- **Status:** sketch
+- **Status:** dormant (2026-11-04, superseded-by: ADR-025, `crates/pcfm-demo/src/board.rs`)
 - **Category:** Infrastructure (rendering / validation)
 - **Source:** conversation 2026-10-28 (user)
 - **Idea:** a terminal UI that renders a match as ASCII: pitch, 22 players,
@@ -443,7 +445,7 @@
 
 ### IDEA-INFRA-009 — CauseTrace at L1 (reintroduction with content)
 
-- **Status:** sketch
+- **Status:** dormant (2026-11-04, superseded-by: ADR-024, CauseTrace removed)
 - **Category:** Infra
 - **Source:** ADR-024 (2026-10-31), which removed `CauseTrace` from L0.
 - **Why:** at L0 the resolver has no observable features (no distance, no pressure, no body part), so any cause trace would be empty. ADR-023 kept an empty type; ADR-024 removed it as ceremony.
@@ -555,7 +557,7 @@
 
 ### IDEA-INFRA-019 — Spatial primitives as step-18 foundation (duplicate BallState to resolve)
 
-- **Status:** sketch
+- **Status:** dormant (2026-11-04, superseded-by: `BallState` in `crates/pcfm-match/src/spatial.rs`, F.3-b1; the uncompiled drafts are gone)
 - **Category:** Infra
 - **Source:** session 2026-11-01 (extracted from `draft/layered-match-2026-11-01`, files `crates/pcfm-model/src/spatial.rs` and `crates/pcfm-match/src/spatial.rs`, draft never compiled: 15 errors).
 - **Idea:** the two `spatial.rs` drafts contain a usable vocabulary for the positional slice (L0 positional with coordinates):
@@ -570,7 +572,7 @@
 
 ### IDEA-INFRA-020 - Luna/dito: la lente dell'obiettivo prima della conformita
 
-- **Status:** sketch
+- **Status:** dormant (2026-11-04, superseded-by: A3 in `NEW-SESSION-PROMPT.md`)
 - **Category:** Infrastructure (process)
 - **Source:** pausa 2026-11-03 (maintainer)
 - **Idea:** quando una scelta di design e conforme alla dottrina ma non avvicina il motore al calcio riconoscibile, la domanda giusta e "quale lettura avvicina il motore al calcio", non "quale e piu fedele alla lettera". La dottrina e il dito; la partita riconoscibile e la luna. La lente non sostituisce il ragionamento: lo orienta.

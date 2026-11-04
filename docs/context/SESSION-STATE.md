@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `72f0cd6` — "docs(context): direction decisions report, startup reads direction, LCV 8507e83"
+**Last commit verified:** `9701876` — "docs(context): MOVEMENT-NOTE — what is implemented is §4, not §3"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
