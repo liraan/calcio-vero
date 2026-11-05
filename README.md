@@ -7,8 +7,8 @@
 **An open football management simulation.**<br>
 *Transparent by design. Deterministic by construction. Yours by default.*
 
-[![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/calcio-vero)
-[![Tests](https://img.shields.io/badge/tests-180_passing-brightgreen)](https://github.com/liraan/calcio-vero)
+[![Status](https://img.shields.io/badge/status-L0_ratified-yellow)](https://github.com/liraan/calciovero)
+[![Tests](https://img.shields.io/badge/tests-180_passing-brightgreen)](https://github.com/liraan/calciovero)
 [![License](https://img.shields.io/badge/license-MIT_OR_Apache--2.0-blue)](LICENSE-MIT)
 [![Built with](https://img.shields.io/badge/docs-AI--assisted-purple)](#ai-disclosure)
 
@@ -295,13 +295,13 @@ Requires **Rust 1.85+ (stable)**.
 Commands are tested on Linux. On Windows, use Git Bash or WSL; the Rust toolchain and `cargo` are the same.
 
 ```bash
-git clone https://github.com/liraan/calcio-vero.git
+git clone https://github.com/liraan/calciovero.git
 cd calcio-vero
 cargo build --release
 cargo run --release --bin pcfm-test-runner -- --check --seed 42
 ```
 
-If `--check` prints `6/6 checks passed`, the framework is healthy. If it doesn't, something in the simulation contract is broken — please [open an issue](https://github.com/liraan/calcio-vero/issues).
+If `--check` prints `6/6 checks passed`, the framework is healthy. If it doesn't, something in the simulation contract is broken — please [open an issue](https://github.com/liraan/calciovero/issues).
 
 **Inspect the test harness:**
 
@@ -443,8 +443,8 @@ See [AI disclosure](#ai-disclosure). Short version: drafted by AI, reviewed by a
 
 ## Contact
 
-- **Discussions** — [GitHub Discussions](https://github.com/liraan/calcio-vero/discussions)
-- **Bugs / features** — [GitHub Issues](https://github.com/liraan/calcio-vero/issues)
+- **Discussions** — [GitHub Discussions](https://github.com/liraan/calciovero/discussions)
+- **Bugs / features** — [GitHub Issues](https://github.com/liraan/calciovero/issues)
 - **Community chat** — *to be decided*
 
 No private emails, no Telegram, no WhatsApp. Everything happens publicly on GitHub.
