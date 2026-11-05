@@ -362,8 +362,9 @@ If an ADR is `proposed` and touches an area, **no code may be written in that ar
 | 026 | Match boundaries and stoppage time | ✅ accepted | Two halves, separate clocks, fixed-point stoppage (no cap), `Half` field, `Option<ActorId>`, `balance/stoppage_time.json`, SIM_VERSION 4→6 |
 | 027 | Project rename: Calcio Vero / Deep Simulator | ✅ accepted | Supersedes ADR-002: name Calcio Vero, English handle Deep Simulator, attribution by Liraan, non-commercial declared; crate prefix stays pcfm-* |
 | 028 | Dimension vs performance: the Plane A/B criterion, and three components | ✅ accepted | Supersedes its own first version ("observable in a match" was wrong: height needs a ruler, weight a scale, strength a dynamometer). A dimension is a property of the body (height, weight, foot, Plane B); a performance is what the player does (strength, passing, Plane A); a state is a condition of the moment. The manager reads an estimate in Plane C, never a true value. Engine split into custodian / calculator / orchestrator; no model value in a `.rs` without a derivation or a `balance/` include; `GK_REACH_CM` removed |
+| 029 | Keyed derivation for latents and noise | ✅ accepted | Same defect in two places: a value that belongs to a player (or an event) derived from a sequence, not from the player. Latents: hash(world_seed, player_id, characteristic), no match_id. Noise: hash(world_seed, match_id, tick, player_id, purpose). Corrects OI-53, decides OI-44; SIM_VERSION bump |
 
-**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027, 028 (23). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.
+**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027, 028, 029 (24). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.
 
 **ADR-012 and ADR-013 are two halves of one decision.** Read them together, in order: [`PLUGINS-WORLDS-READING-GUIDE.md`](docs/PLUGINS-WORLDS-READING-GUIDE.md). ADR-013 depends on ADR-012.
 
