@@ -616,7 +616,7 @@ criterion.
 
 | Name | Plane | Persist. | Est. | Consumed by | Observable effect |
 |---|---|---|---|---|---|
-| Vision | A | trait | I | perception (cone width) | targets considered |
+| Peripheral vision | A | trait | I | perception (cone width) | targets considered |
 | Game reading | A | trait | Q | choice of action (option quality) | action chosen |
 | Decision making | A | trait | Q | choice of action (speed/quality) | action chosen |
 | Risk management | A | trait | Q | choice of action (risk) | action chosen |
@@ -625,11 +625,20 @@ criterion.
 choice of action is geometric: it reads positions and picks. With this
 family, the choice is no longer pure geometry. The leaf is F.6.
 
-**Vision is the exception in this family for the estimate:** a test
-(eye-tracking) measures it, so the manager estimates it instrumentally,
-not qualitatively. The datum is still hidden (the engine reads it through
-the custodian); the estimate is just better than for reading or decision
-making.
+**Vision is not a composite.** It is one datum: the width of the visual
+field, a physical property of the eye, measurable with eye-tracking. It
+is **not** scanning (turning the head before receiving, which is a
+behaviour, §7.7) and **not** game reading (what the player understands,
+a cognitive trait in this table). A player with a narrow visual field and
+high game reading still finds the pass, because he reads earlier; a
+player with a wide field and low reading sees everything and understands
+nothing. The three are separate, and they are separate here.
+
+**Peripheral vision is the exception in this family for the estimate:** a
+test (eye-tracking) measures it, so the manager estimates it
+instrumentally, not qualitatively. The datum is still hidden (the engine
+reads it through the custodian); the estimate is just better than for
+reading or decision making.
 
 ### 7.5 Dimensions (Plane B, in `Player`)
 
@@ -952,11 +961,22 @@ here.
 - **The scouting crate** (L2): it does not exist. The bridge (11.3) is the
   model it will implement.
 
-## 12. Open decisions (not resolved here)
+## 12. Decisions taken, and what remains open
 
-This section lists what is **not** decided, so a new session does not
-restart from zero. The decisions taken in this cell are in the section
-that resolves them, not here.
+This section records the decisions this cell has taken, so a new session
+does not restart from zero, and lists what is still open. A decision
+listed as "resolved" is resolved **as a model**: the section that applies
+it is named, and the code that implements it (if any) is tracked
+elsewhere.
+
+### 12.0 The shape of this section
+
+- **12.1** — five decisions that were open in the first draft of this
+  cell, now resolved.
+- **12.2** — four decisions that were still open in the second draft, now
+  resolved.
+- **12.3** — what remains open after 12.1 and 12.2: calibration, not
+  model. It belongs to L3, and none of it blocks the engine.
 
 ### 12.1 Resolved in this cell (where)
 
@@ -992,34 +1012,65 @@ that resolves them, not here.
    with observations, context-weighted. Not implemented: L2 does not
    exist.
 
-### 12.2 Still open
+### 12.2 Resolved later in this cell (where)
 
-1. **Age, formation history, and context as inputs.** A player's
-   characteristics are not generated in a vacuum: age, training history,
-   level of competition shape them. These are inputs to L1/L2, not
-   characteristics. **Where do they live, and what is their shape?** This
-   is the next decision to take when L1/L2 are opened, because the growth
-   model (§11.2) needs the inputs before it can be implemented.
+These were open in the first draft; the reasoning that closed them is
+here, with the section that applies it.
 
-2. **Composite characteristics.** `set_pieces` is the first; `vision` may
-   be the second (peripheral vision + scanning + reading). §7.9 says a
-   composite is split when OI-48 exists. **The open part:** for each
-   composite, when is it better than its parts, and when does it hide
-   which part is acting? The answer decides whether `vision` stays one
-   datum or becomes two.
+1. **Age, formation history, and context as inputs.** **Age** is a
+   dimension of the player: in `Player` (Plane B), measured, not a
+   performance. **Formation history** is not a value: it is a register of
+   events (played, trained, coached) in L1, which L2 reads to compute
+   growth. **Context** (league, teammates, coach) belongs to the world,
+   L1/L2, not to the player. The growth model (§11.2) needs the register
+   and the context, and neither is a field on the player. At L0 they do
+   not exist and must not exist.
 
-3. **When is a characteristic "dormant" vs "not modelled"?** A
-   characteristic with a declared consumer but no formula yet is dormant;
-   a characteristic with no consumer and no leaf is an idea, and belongs
-   in `IDEAS.md`, not here. §6 is the map of when each phenomenon becomes
-   observable. **The open part:** the boundary is a judgement, and the
-   mechanical proxy (a declared leaf) is necessary but not sufficient. The
-   first case that will test it is the cognitive family in F.6.
+2. **Composite characteristics.** A composite is split when its parts
+   have **different dynamics**: one trains, the other does not; one is
+   measured, the other discovered; one changes with age, the other does
+   not. **Set pieces** is split (free kicks, penalties, corners,
+   throw-ins are different skills). **Vision** is not a composite: it is
+   one datum (the width of the visual field), distinct from scanning (a
+   behaviour, §7.7) and from game reading (a cognitive trait, §7.4). The
+   fact that they are seen together in a match is a reason to explain
+   them together in the event, not to merge them. A composite is kept
+   whole only when its parts are not separable in any observable way —
+   and today there is none.
 
-4. **The Rust shape of the custodian.** The cell decides what belongs to
-   each family and how the calculator reads it (§4), but not whether
-   `PlayerLatents` stays one struct or becomes several. That is a decision
-   for the ADR on the player model, together with ADR-028's rewrite.
+3. **Dormant vs not modelled.** The mechanical proxy (a declared leaf in
+   §6) is necessary but not sufficient. The criterion that decides is
+   **"can you describe the observable effect today?"** If you can write
+   what changes on the pitch, the characteristic is dormant (it waits for
+   its consumer); if you cannot, it is an idea and belongs in `IDEAS.md`.
+   The "Observable effect" column in §7 is the test: it is a judgement,
+   but it is a judgement the maintainer can make by reading a row,
+   without trusting the agent. "Game reading" passes (it shows in the
+   anticipation, the choice, the positioning); "charisma" does not (no
+   observable effect on the pitch), which is why it is L2.
+
+4. **The Rust shape of the custodian.** The internal form must mirror the
+   form of the doctrine (D7): four families → four structs
+   (`PhysicalLatents`, `TechnicalLatents`, `PsychologicalLatents`,
+   `CognitiveLatents`) composed inside `PlayerLatents`. Not because the
+   API needs it — the API stays `value(player, characteristic)`, one
+   characteristic per call — but because whoever opens the file must see
+   that the families exist, and because adding a characteristic touches
+   one family, not a 24-field blob. The calculator never sees the
+   internal shape: it uses the API.
+
+### 12.3 Still open
+
+After 12.1 and 12.2, **no decision in this cell is blocking**. What
+remains is calibration, and it belongs to L3:
+
+- the loadings of the factor structure (§11.1);
+- the learning rates by age (§11.2);
+- the prior weights of the Bayesian bridge (§11.3);
+- the spread of each characteristic from its consistency (§4.7).
+
+All four are prototype values in data files, measured when real data
+exists. None of them changes the model.
 
 ## 13. References
 
