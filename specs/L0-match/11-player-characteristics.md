@@ -663,6 +663,16 @@ to discover them (the estimate is a measurement).
 | Height | B | property | measurement | movement (stride), header (via technique), save (reach) | position, trajectory, save distance |
 | Weight | B | property | measurement | movement (mass vs force), duel (mass) | velocity, duel outcome |
 | Preferred foot | B | property | observation | pass, shot (which foot) | pass/shot direction |
+| Age | B | property | measurement | development (§11.2), decline | none today (no consumer in the engine; L1 uses it) |
+
+**Two dimensions are declared here but not yet in the code.** `weight_kg`
+and `age` are not fields of `Player` in `pcfm-model` at `SIM_VERSION`
+19: the code has `height_cm`, `preferred_foot`, and the two state
+structs, not the weight and not the age. `weight_kg` is added by F.7,
+because the movement formula needs the mass (`a = F/m`). `age` has no
+consumer in the engine today: it is declared here so that L1 (and the
+movement's development model, §11.2) finds it when it needs it, not
+before (D3: a field is added when a concrete consumer exists).
 
 **Why dimensions enter the formulas.** A player of 100 kg and 150 cm with
 average strength accelerates less than one of 75 kg and 180 cm with the
