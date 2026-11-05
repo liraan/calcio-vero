@@ -309,10 +309,19 @@ a promise.
 
 ### 4.5 The shape of a formula
 
-A formula is a weighted sum of known terms, not a free expression language.
-The terms are enumerated; the weights live in `balance/`; the arithmetic
-is deterministic: correctly rounded IEEE 754, no transcendentals on the
-simulation path (see §4.10).
+A formula is an expression on a **fixed grammar** of operators, applied to
+known terms. The terms are enumerated (the catalogue, §4.6); the operators
+are enumerated too: product, ratio, clamp. The sum is the product with
+weight 1. The arithmetic is deterministic: correctly rounded IEEE 754, no
+transcendentals on the simulation path (see §4.10).
+
+The grammar is fixed because the phenomenon decides it, not the code. In a
+real match a stronger player accelerates more and a heavier one
+accelerates less, and the two effects **do not add up, they compensate in
+ratio**: a 95 kg very strong player and a 70 kg strong player do not
+arrive "half way", the ratio decides. A weighted sum cannot express that;
+a ratio can. So the grammar has a ratio, and the formula that needs it
+uses it.
 
 The shot formula, illustrative (the weights are prototype values, not
 calibrated):
@@ -322,9 +331,6 @@ calibrated):
                   + w_distance  * distance_term(situation)
                   + w_pressure  * pressure_term(situation)
                   + w_fatigue_body     * fatigue_body_term(situation)
-                  + w_fatigue_cap      * fatigue_cap_term(situation)
-                  - w_opponent  * opponent_term(situation)
-
 ### 4.6 The catalogue of terms
 
 The calculator validates a formula against a closed catalogue before
@@ -443,8 +449,10 @@ Three components, three reasons to change, separated.
 
 ### 4.10 What it forbids
 
-- **A free expression language.** The terms are enumerated; a formula
-  cannot invent a new operator.
+- **An operator outside the grammar.** The terms and the operators are
+  enumerated: product, ratio, clamp (the sum is the product with weight
+  1). A formula cannot invent an operator; a new operator is an
+  amendment to the model, not a formula.
 - **Non-deterministic floating point on the simulation path.** No
   transcendentals (`sin`, `cos`, `exp`, `ln`, `powf`, `atan2`, ...): they
   depend on the platform libm and diverge across machines. Correctly
