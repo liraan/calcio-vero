@@ -244,6 +244,7 @@ mod tests {
                     RoleId::new("midfielder").unwrap(),
                     Foot::Right,
                     180,
+                    78,
                     PhysicalStateMinimal::default(),
                     PsychologicalStateMinimal::default(),
                 )

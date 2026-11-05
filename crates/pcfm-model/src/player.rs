@@ -19,7 +19,8 @@
 //! - **Identity**, not part of the model: `id`, `name`. `role` is a label
 //!   at L0 (ADR-017); it becomes the expected profile of the generator at
 //!   L3, and the two must not be confused.
-//! - **Dimensions** (Plane B, measured): `preferred_foot`, `height_cm`.
+//! - **Registry data** (Plane B, measured): `preferred_foot`, `height_cm`,
+//!   `weight_kg`. The body, read as inputs by the formulas.
 //! - **States** (Plane B, computed or held): `condition` (freshness),
 //!   `match_sharpness` (match rhythm: a player can be fresh and off the
 //!   pace, so it is distinct from `condition`), `fatigue`, `confidence`,
@@ -181,6 +182,8 @@ pub struct Player {
     pub preferred_foot: Foot,
     /// The height in centimetres.
     pub height_cm: u16,
+    /// The weight in kilograms.
+    pub weight_kg: u16,
     /// The minimal physical state.
     pub physical: PhysicalStateMinimal,
     /// The minimal psychological state.
@@ -194,12 +197,20 @@ impl Player {
     ///
     /// - [`ModelError::EmptyPlayerName`] if `name` is empty.
     /// - [`ModelError::InvalidHeight`] if `height_cm` is zero.
+    /// - [`ModelError::InvalidWeight`] if `weight_kg` is zero.
+    // The eight arguments are the model: identity, registry data, two
+    // state blocks. A builder or a `PlayerSpec` struct would be the
+    // cleaner API the day a ninth field arrives; today the constructor is
+    // the only caller, and the field set is what ADR-028 classifies. See
+    // D3: no structure without a concrete need.
+    #[allow(clippy::too_many_arguments)]
     pub fn try_new(
         id: PlayerId,
         name: impl Into<String>,
         role: RoleId,
         preferred_foot: Foot,
         height_cm: u16,
+        weight_kg: u16,
         physical: PhysicalStateMinimal,
         psychological: PsychologicalStateMinimal,
     ) -> Result<Self, ModelError> {
@@ -210,12 +221,16 @@ impl Player {
         if height_cm == 0 {
             return Err(ModelError::InvalidHeight(height_cm));
         }
+        if weight_kg == 0 {
+            return Err(ModelError::InvalidWeight(weight_kg));
+        }
         Ok(Self {
             id,
             name,
             role,
             preferred_foot,
             height_cm,
+            weight_kg,
             physical,
             psychological,
         })
@@ -242,6 +257,7 @@ mod tests {
             RoleId::new("striker").unwrap(),
             Foot::Right,
             180,
+            78,
             PhysicalStateMinimal::default(),
             PsychologicalStateMinimal::default(),
         )
@@ -253,6 +269,7 @@ mod tests {
         let p = valid_player();
         assert_eq!(p.name, "Alice");
         assert_eq!(p.height_cm, 180);
+        assert_eq!(p.weight_kg, 78);
     }
 
     #[test]
@@ -268,6 +285,7 @@ mod tests {
             RoleId::new("striker").unwrap(),
             Foot::Right,
             180,
+            78,
             PhysicalStateMinimal::default(),
             PsychologicalStateMinimal::default(),
         );
@@ -282,10 +300,26 @@ mod tests {
             RoleId::new("striker").unwrap(),
             Foot::Right,
             0,
+            78,
             PhysicalStateMinimal::default(),
             PsychologicalStateMinimal::default(),
         );
         assert!(matches!(result, Err(ModelError::InvalidHeight(0))));
+    }
+
+    #[test]
+    fn zero_weight_is_rejected() {
+        let result = Player::try_new(
+            PlayerId::new(1, 0),
+            "Alice",
+            RoleId::new("striker").unwrap(),
+            Foot::Right,
+            180,
+            0,
+            PhysicalStateMinimal::default(),
+            PsychologicalStateMinimal::default(),
+        );
+        assert!(matches!(result, Err(ModelError::InvalidWeight(0))));
     }
 
     #[test]

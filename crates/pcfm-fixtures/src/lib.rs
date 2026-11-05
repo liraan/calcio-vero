@@ -64,6 +64,7 @@ fn make_squad(id: u32, label: &str, slot_base: u32) -> Result<Squad, String> {
             RoleId::new("midfielder").map_err(|e| e.to_string())?,
             Foot::Right,
             180,
+            78,
             PhysicalStateMinimal::default(),
             PsychologicalStateMinimal::default(),
         )

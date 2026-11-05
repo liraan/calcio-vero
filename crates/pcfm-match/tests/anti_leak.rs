@@ -32,6 +32,7 @@ fn make_squad(id: u32, slot_base: u32) -> Squad {
                 RoleId::new("midfielder").expect("role"),
                 Foot::Right,
                 180,
+                78,
                 PhysicalStateMinimal::default(),
                 PsychologicalStateMinimal::default(),
             )

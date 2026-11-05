@@ -22,6 +22,10 @@ pub enum ModelError {
     #[error("player height must be positive, got {0}")]
     InvalidHeight(u16),
 
+    /// The player's weight is zero.
+    #[error("player weight must be positive, got {0}")]
+    InvalidWeight(u16),
+
     /// A physical or psychological value is outside [0, 1] or is NaN.
     #[error("value {field} must be in [0, 1], got {value}")]
     InvalidValue {
