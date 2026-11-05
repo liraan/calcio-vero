@@ -12,6 +12,7 @@ members = [
     "crates/pcfm-demo",
     "crates/pcfm-fixtures",
     "crates/pcfm-testkit",   # ← NUOVO
+    "crates/pcfm-calculator",
 ]
 
 [workspace.package]
@@ -20,9 +21,9 @@ edition = "2024"
 rust-version = "1.85"
 authors = ["PC Football Manager Team"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/liraan/pcfootballmanager"
-homepage = "https://github.com/liraan/pcfootballmanager"
-documentation = "https://github.com/liraan/pcfootballmanager/tree/main/modules"
+repository = "https://github.com/liraan/calciovero"
+homepage = "https://github.com/liraan/calciovero"
+documentation = "https://github.com/liraan/calciovero/tree/main/modules"
 
 [workspace.dependencies]
 # Internal
@@ -34,6 +35,7 @@ pcfm-match = { path = "crates/pcfm-match", version = "0.1.0" }
 pcfm-test-runner = { path = "crates/pcfm-test-runner", version = "0.1.0" }
 pcfm-testkit = { path = "crates/pcfm-testkit", version = "0.1.0" }
 pcfm-fixtures = { path = "crates/pcfm-fixtures", version = "0.1.0" }
+pcfm-calculator = { path = "crates/pcfm-calculator", version = "0.1.0" }
 # RNG
 rand_chacha = "0.9"
 rand_core = "0.9"

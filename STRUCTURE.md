@@ -127,7 +127,7 @@ archive/
 └── legacy/           (.gitkeep)
 ```
 
-**Code (182 tests passing):**
+**Code (187 tests passing):**
 
 ```
 crates/
@@ -139,7 +139,8 @@ crates/
 ├── pcfm-testkit/     (public test harness: Scenario, Feature, TestRegistry)
 ├── pcfm-test-runner/ (CLI: --check, --list, --coverage)
 ├── pcfm-demo/        (CLI: simulate a match, render text/JSON/HTML)
-└── pcfm-fixtures/    (hardcoded squads and match fixture)
+├── pcfm-fixtures/    (hardcoded squads and match fixture)
+└── pcfm-calculator/  (formula from balance/*.json, applied to a player)
 ```
 
 `pcfm-testkit` has **no dependency on any other `pcfm-*` crate**. It is the contract that core modules, plugins, and tools all implement.
@@ -198,7 +199,7 @@ pc-football-manager/
 
 **File naming:** `NN-kebab-case-name.md`, two-digit prefix, no Italian, no version in the filename. `04-match-engine.md`, not `Match Engine 04 (rev 1.1).md`. The filename is stable; the revision lives in the frontmatter.
 
-**Crate naming:** the crates in `crates/` use the `pcfm-` prefix. Current: `pcfm-core`, `pcfm-model`, `pcfm-hidden`, `pcfm-match`, `pcfm-stats`, `pcfm-testkit`, `pcfm-test-runner`, `pcfm-demo`, `pcfm-fixtures`. Planned (post-v1.0): `pcfm-packs`, `pcfm-assets`, `pcfm-pack`. `pcfm-testkit` is the public test harness contract: it has **no dependency on any other `pcfm-*` crate**, so core modules, plugins, and tools can all implement `pcfm_testkit::Scenario` without coupling. The historical prefix `fmr-` (from the original "FMR project" name) is deprecated and must not be used in new files. Rust module paths follow the same convention with an underscore: `pcfm_core::rng`, `pcfm_match::simulate`, `pcfm_testkit::Scenario`, etc.
+**Crate naming:** the crates in `crates/` use the `pcfm-` prefix. Current: `pcfm-core`, `pcfm-model`, `pcfm-hidden`, `pcfm-calculator`, `pcfm-match`, `pcfm-stats`, `pcfm-testkit`, `pcfm-test-runner`, `pcfm-demo`, `pcfm-fixtures`. Planned (post-v1.0): `pcfm-packs`, `pcfm-assets`, `pcfm-pack`. `pcfm-testkit` is the public test harness contract: it has **no dependency on any other `pcfm-*` crate**, so core modules, plugins, and tools can all implement `pcfm_testkit::Scenario` without coupling. The historical prefix `fmr-` (from the original "FMR project" name) is deprecated and must not be used in new files. Rust module paths follow the same convention with an underscore: `pcfm_core::rng`, `pcfm_match::simulate`, `pcfm_testkit::Scenario`, etc.
 
 **Modules vs sub-modules:** A **module** is a directory (`L0-match`, `L2-psyche`). A **sub-module** is a file inside a module (`04-match-engine.md`). A sub-sub-module is a section (`##`) inside a file. There is no third level of directories. If a sub-module needs its own children, it becomes a new module at the same level, not a deeper directory.
 
@@ -224,7 +225,7 @@ When the project ships, this folder holds the dashboards that compare internal m
 
 ### `/crates`, `/registry`, `/mods`, `/data`
 
-`crates/` contains code (9 crates as of 2026-10-28). `registry/`, `mods/`, `data/` are empty until code or user packs exist. **Rule:** `data/` contains *examples only*. Never real licensed data. If you need to test with real data, keep it outside the repo.
+`crates/` contains code (10 crates as of 2026-11-05). `registry/`, `mods/`, `data/` are empty until code or user packs exist. **Rule:** `data/` contains *examples only*. Never real licensed data. If you need to test with real data, keep it outside the repo.
 
 ---
 
