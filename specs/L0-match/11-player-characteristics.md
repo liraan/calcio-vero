@@ -584,6 +584,8 @@ the formulas as inputs. See §7.5.
 | Heading | A | trait | S | duel (aerial), shot (header) | duel outcome, on_target |
 | Tackling | A | trait | S | duel formula (defender side) | duel outcome |
 | Goalkeeping | A | trait | S | save formula | save outcome |
+| Left foot | A | trait | S | pass, shot (which foot, how strong) | pass/shot direction and precision |
+| Right foot | A | trait | S | pass, shot (which foot, how strong) | pass/shot direction and precision |
 
 **Heading is not aerial.** Heading is the technique; it is *expressed
 through* height and explosive force. The prototype's `aerial` collapsed
@@ -652,41 +654,75 @@ instrumentally, not qualitatively. The datum is still hidden (the engine
 reads it through the custodian); the estimate is just better than for
 reading or decision making.
 
-### 7.5 Dimensions (Plane B, in `Player`)
+### 7.5 Registry data (Plane B, in `Player`)
 
-These are **not characteristics**: they are properties of the body, they
-are measured, and they are visible enough that the manager does not need
-to discover them (the estimate is a measurement).
+This section lists the data that identify the player (name, date of
+birth, place of birth) and describe the body (height, weight). They are
+not characteristics: a characteristic is a hidden ability the engine
+reads to decide an outcome; these data are visible facts that identify a
+person and describe his body. A scout does not need to discover them: a
+document gives the name and the date of birth, a ruler gives the height,
+a scale gives the weight.
 
-| Name | Plane | Persist. | Est. | Consumed by | Observable effect |
-|---|---|---|---|---|---|
-| Height | B | property | measurement | movement (stride), header (via technique), save (reach) | position, trajectory, save distance |
-| Weight | B | property | measurement | movement (mass vs force), duel (mass) | velocity, duel outcome |
-| Preferred foot | B | property | observation | pass, shot (which foot) | pass/shot direction |
-| Age | B | property | measurement | development (§11.2), decline | none today (no consumer in the engine; L1 uses it) |
+| Name | Plane | Changes | Consumed by | Observable effect |
+|---|---|---|---|---|
+| Name | B | never | every event (the actor) | who did it |
+| Date of birth | B | never | L1 (development, §11.2) | age, and the learning window |
+| Place of birth | B | never | L1 (identity, home-grown rules) | none in the engine today |
+| Height | B | between seasons (young players); constant in a match | movement (stride), header, save (reach) | position, trajectory, save distance |
+| Weight | B | between matches (small), between seasons; constant in a match | movement (mass vs force), duel (mass) | velocity, duel outcome |
 
-**Two dimensions are declared here but not yet in the code.** `weight_kg`
-and `age` are not fields of `Player` in `pcfm-model` at `SIM_VERSION`
-19: the code has `height_cm`, `preferred_foot`, and the two state
-structs, not the weight and not the age. `weight_kg` is added by F.7,
-because the movement formula needs the mass (`a = F/m`). `age` has no
-consumer in the engine today: it is declared here so that L1 (and the
-movement's development model, §11.2) finds it when it needs it, not
-before (D3: a field is added when a concrete consumer exists).
+Inside the 90 minutes, height and weight are constants: the engine reads
+them at kick-off and does not change them. Between matches and between
+seasons, L1 may update them: weight in small amounts (hydration, food),
+height for young players (months, not weeks). How much, and on which
+scale, is L1's decision, not L0's: L0 declares that these are inputs it
+does not produce.
 
-**Why dimensions enter the formulas.** A player of 100 kg and 150 cm with
-average strength accelerates less than one of 75 kg and 180 cm with the
-same strength: acceleration depends on force *and* mass. If the movement
-formula read only `strength`, the model would produce a world where mass
-does not exist — which is false. So `movement.json` reads `strength`
-(Plane A, through the custodian), `height` and `weight` (Plane B, from
-`Player`), and the situation. One formula, inputs from two planes, each
-datum in its own plane. The formula crosses the planes; it does not merge
-them.
+The body has two feet. That is a given, the condition for playing
+football: nobody declares "has two legs", and nobody declares "has two
+feet". What varies from player to player, and has an effect on the pitch,
+is how well each foot is used: that is a hidden performance, like
+passing or shooting, and it lives in Plane A (§7.2, `left_foot`,
+`right_foot`). Which foot a player uses is the outcome of the formula,
+not a stored label: the formula reads the two abilities plus the
+situation (pressing), the state (fatigue) and the cognitive traits (game
+reading, decision making). A strong right foot under pressure and tired
+uses the left more often than the values alone would suggest; a player
+with high game reading finds the angle to use the strong foot anyway.
+The label "right-footed", "left-footed", "both-footed" is **derived** from
+the two numbers, for the UI and the narrative, and it is **not stored**.
+In the interface it is an **estimate** (Plane C), not the true value: the
+manager reads "right-footed" with a confidence, the same way he reads a
+passing estimate. He never reads `right_foot = 0.87`.
 
-**Weight is measured, not derived.** A scale measures it. The prototype
-of this cell derived it from height and maximal force; that was wrong:
-a player can be heavy and weak, or light and strong.
+Why height and weight enter the formulas. A player of 100 kg and 150 cm
+with average strength accelerates less than one of 75 kg and 180 cm with
+the same strength: acceleration depends on force and mass. If the
+movement formula read only the force, the model would produce a world
+where mass does not exist, which is false. So the movement formula reads
+the force (Plane A, through the custodian), the height and the weight
+(Plane B, from `Player`), and the situation. One formula, inputs from
+two planes, each datum in its own plane. The formula crosses the planes;
+it does not merge them.
+
+Weight is measured, not derived. A scale measures it. An earlier version
+of this cell derived it from height and maximal force; that was wrong: a
+player can be heavy and weak, or light and strong.
+
+The code at SIM_VERSION 19. The `Player` struct
+(crates/pcfm-model/src/player.rs) has `id`, `name`, `role`,
+`preferred_foot` (an enum, right or left), `height_cm`, and two state
+structs. It does not have `weight_kg`, `date_of_birth`, `place_of_birth`,
+or the two foot numbers. `weight_kg` is added by F.7, because the
+movement formula needs the mass. `date_of_birth`, `place_of_birth` and
+the two foot numbers have no consumer in the engine today: they are
+declared here so that L1 and the pass/shot formula find them when they
+need them, not before.
+
+`role` is not here. The same player can be a full-back or a winger
+depending on how the manager uses him, and a player's role can change.
+It lives in `Player` as a label, not as identity.
 
 ### 7.6 States (Plane B)
 
@@ -787,30 +823,33 @@ it is declared a label that describes an effect of other data.
 
 ### 7.10 Summary of the planes
 
+A reader who does not know the project can read this table as the map of
+what a player is, in this model.
+
 | Plane | Contains | Count |
 |---|---|---|
-| **A** | Hidden, stable datums: 8 physical, 7 technical, 5 psychological traits (all modulators), 4 cognitive | 24 |
-| **B** | 3 dimensions (measured, visible) and 8 states (all modulators) | 11 |
+| **A** | Hidden, stable datums: 8 physical, 9 technical (7 + left/right foot), 5 psychological traits (all modulators), 4 cognitive | 26 |
+| **B** | 5 registry data (identity and body, constant in a match) and 10 states (all modulators) | 15 |
 | **C** | Estimates, not datums: the manager's view, with confidence | — (future scouting crate) |
-| Out | L2 (3), composites (2), behaviours (3) | 8 |
+| Out | L2 (6), composites (2), behaviours (3) | 11 |
 
-**By what it does, not by where it lives:**
+By what it does, not by where it lives:
 
 | | Produces an effect | Modulates an effect |
 |---|---|---|
-| **Plane A (stable)** | 8 physical + 7 technical + 4 cognitive = 19 characteristics | 5 psychological traits |
-| **Plane B (of the moment)** | none today | 3 dimensions (feed the formulas as inputs) + 8 states |
+| **Plane A (stable)** | 8 physical + 9 technical + 4 cognitive = 21 characteristics | 5 psychological traits |
+| **Plane B (of the moment)** | none today | 5 registry data (height and weight feed the formulas as inputs) + 10 states |
 | **Plane C** | — | estimates of all of the above, with confidence |
 
-**The plane decides where the datum lives, not how the manager knows it.**
+The plane decides where the datum lives, not how the manager knows it.
 The manager estimates every datum in C, with a confidence that depends on
 the method (§2.4): a measurement for a dimension, a test for a physical
 performance, many matches for a technical skill. The plane is about who
 reads the true value; the estimate is about what the manager sees. Two
 questions, two answers, no double home.
 
-**One number that matters for the calculator:** 19 characteristics produce
-a term in a formula; 5 trait modulators and 8 state modulators are
+One number that matters for the calculator: 21 characteristics produce
+a term in a formula; 5 trait modulators and 10 state modulators are
 parameters (spread, multiplier), never terms. A formula that confuses the
 two either invents a result that does not exist or loses one that does.
 
