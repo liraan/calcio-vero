@@ -53,7 +53,6 @@ use pcfm_core::rng::next_unit;
 /// separate because latent generation is persistent state, not a
 /// transient decision: reordering resolves must not change the latents.
 struct Streams {
-    latents: ChaCha20Rng,
     duel: ChaCha20Rng,
     shot: ChaCha20Rng,
     pass: ChaCha20Rng,
@@ -88,7 +87,6 @@ impl GroundTruth {
                 .expect("stream name is always non-empty")
         };
         let streams = Streams {
-            latents: registry.stream(&name("latents")).clone(),
             duel: registry.stream(&name("duel")).clone(),
             shot: registry.stream(&name("shot")).clone(),
             pass: registry.stream(&name("pass")).clone(),
@@ -371,7 +369,7 @@ impl GroundTruth {
         if let Some(l) = self.latents.get(&player) {
             return *l;
         }
-        let new = PlayerLatents::from_rng(&mut self.streams.latents);
+        let new = PlayerLatents::from_key(self.world_seed, player);
         self.latents.insert(player, new);
         new
     }
