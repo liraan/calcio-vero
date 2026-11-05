@@ -1,0 +1,8 @@
+{
+  "accel_ref_cm_per_tick2": 3,
+  "v_max_ref_cm_per_tick": 90,
+  "weight_ref_kg": 78,
+  "height_ref_cm": 180,
+  "_note": "Prototype, not calibrated. The reference values are derived from standard sports-science figures, not from a cited source verified in this session. A term with no derivation does not enter the model; these four are the minimum the movement formula needs.",
+  "_source": "Standard figures: a professional footballer reaches ~9 m/s (90 cm/tick at 10 ticks/s) in ~3 s (30 ticks), median weight ~78 kg, median height ~180 cm. To be replaced by a cited study before calibration (L3)."
+}

@@ -27,6 +27,7 @@
 //! compensate in ratio, they do not add up. A weighted sum cannot
 //! express that.
 
+pub mod movement;
 use std::collections::BTreeSet;
 
 use thiserror::Error;
