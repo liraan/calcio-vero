@@ -311,7 +311,8 @@ a promise.
 
 A formula is a weighted sum of known terms, not a free expression language.
 The terms are enumerated; the weights live in `balance/`; the arithmetic
-is integer or fixed-point, never floating point on the simulation path.
+is deterministic: correctly rounded IEEE 754, no transcendentals on the
+simulation path (see §4.10).
 
 The shot formula, illustrative (the weights are prototype values, not
 calibrated):
@@ -444,8 +445,13 @@ Three components, three reasons to change, separated.
 
 - **A free expression language.** The terms are enumerated; a formula
   cannot invent a new operator.
-- **Floating point on the simulation path.** Fixed-point or integers,
-  deterministic.
+- **Non-deterministic floating point on the simulation path.** No
+  transcendentals (`sin`, `cos`, `exp`, `ln`, `powf`, `atan2`, ...): they
+  depend on the platform libm and diverge across machines. Correctly
+  rounded IEEE 754 operations (`+`, `-`, `*`, `/`, `sqrt`, `mul_add`,
+  casts) are deterministic and allowed; the ratified doctrine is
+  `00-foundations` §4 ("portable transcendentals: libm pinned, or
+  fixed-point for the critical path"). See OI-58.
 - **The engine reading the custodian or the calculator.** It calls
   `resolve_*` and nothing else.
 - **A "give me all the values" door.** The custodian answers one
@@ -523,6 +529,12 @@ and a performance. It lives in **one plane, and one only**. The column
 custodian) or **B** (visible, read by the engine directly). There is no
 "A+B": a datum that looks like it belongs to two planes is not one datum,
 it is a characteristic plus a state (see §7.6).
+
+**Stability over time.** Traits are stable at L0: a player's passing does
+not change during a match, or between two matches of the same week. At
+L1+ they evolve for development, age, severe injuries, and environment.
+The model of the evolution is §11.2 (learning rate by age) and §11.5
+(persistence); the tables below describe the state at L0.
 
 Columns: **Plane** (A or B), **Persist.** (trait = stable over months;
 state = changes within a match), **Est.** (how the manager estimates it:
