@@ -14,7 +14,7 @@
 
 use serde::Deserialize;
 
-use crate::{Characteristic, Formula};
+use crate::{Characteristic, Datum, Formula};
 
 /// The embedded balance file.
 const MOVEMENT_JSON: &str = include_str!("../../../balance/movement.json");
@@ -54,7 +54,7 @@ impl MovementBalance {
             Formula::Term(Characteristic::ExplosiveForce),
             Formula::Ratio(
                 Box::new(Formula::Const(self.weight_ref_kg)),
-                Box::new(Formula::Term(Characteristic::Weight)),
+                Box::new(Formula::Datum(Datum::Weight)),
             ),
         ])
     }
@@ -76,10 +76,10 @@ mod tests {
     #[test]
     fn movement_formula_declares_force_and_weight() {
         let f = MovementBalance::load().formula();
-        let terms = f.declared_terms();
-        assert!(terms.contains(&Characteristic::ExplosiveForce));
-        assert!(terms.contains(&Characteristic::Weight));
-        assert_eq!(terms.len(), 2, "only force and weight: {terms:?}");
+        let chars = f.declared_characteristics();
+        let data = f.declared_data();
+        assert_eq!(chars, vec![Characteristic::ExplosiveForce]);
+        assert_eq!(data, vec![Datum::Weight]);
     }
 
     #[test]

@@ -9,33 +9,33 @@
 //! - the **orchestrator** (`resolve_*`) decides when, with which
 //!   situation, for which formula.
 //!
-//! The calculator does not choose which characteristics to read: the
-//! formula declares its terms, and the calculator asks the custodian for
-//! exactly those. A formula with an unknown term fails at **load time**,
-//! not in the middle of a match. The mechanical test: a mock custodian
-//! records every call, and the test verifies the calculator asked for
-//! exactly the formula's terms.
+//! # Two kinds of input
+//!
+//! A formula reads two kinds of datum, and the calculator keeps them
+//! apart (L0.11 §4.6):
+//!
+//! - **Plane A, characteristics**: hidden performances, read through the
+//!   [`Custodian`] trait, one at a time;
+//! - **Plane B, data**: registry data (height, weight) and states
+//!   (fatigue, confidence), read through the [`Situation`] trait.
+//!
+//! The calculator does not know who holds which: the orchestrator passes
+//! both, and the formula declares its terms.
 //!
 //! # The grammar
 //!
 //! A formula is an expression on a **fixed grammar** of operators
 //! (L0.11 §4.5): product, ratio, clamp. The sum is the product with
 //! weight 1. A formula cannot invent an operator: a new operator is an
-//! amendment to the model, not a formula (L0.11 §4.10). The grammar is
-//! fixed because the phenomenon decides it: in a real match a stronger
-//! player accelerates more and a heavier one less, and the two effects
-//! compensate in ratio, they do not add up. A weighted sum cannot
-//! express that.
+//! amendment to the model, not a formula (L0.11 §4.10).
 
 pub mod movement;
+
 use std::collections::BTreeSet;
 
 use thiserror::Error;
 
-/// A characteristic the custodian knows how to answer.
-///
-/// This is the catalogue of terms, L0.11 §4.6, made code. A formula may
-/// only use terms that appear here; anything else fails at load time.
+/// A Plane A characteristic the custodian knows how to answer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Characteristic {
     /// Explosive force (Plane A, physical).
@@ -46,10 +46,6 @@ pub enum Characteristic {
     Acceleration,
     /// Max speed (Plane A, physical).
     MaxSpeed,
-    /// Height (Plane B, registry data).
-    Height,
-    /// Weight (Plane B, registry data).
-    Weight,
 }
 
 impl Characteristic {
@@ -61,13 +57,10 @@ impl Characteristic {
             Self::MaximalForce => "maximal_force",
             Self::Acceleration => "acceleration",
             Self::MaxSpeed => "max_speed",
-            Self::Height => "height",
-            Self::Weight => "weight",
         }
     }
 
-    /// Parses a name from `balance/*.json`. `None` if the name is not in
-    /// the catalogue (which is a load-time error).
+    /// Parses a name from `balance/*.json`.
     #[must_use]
     pub fn from_name(name: &str) -> Option<Self> {
         match name {
@@ -75,35 +68,64 @@ impl Characteristic {
             "maximal_force" => Some(Self::MaximalForce),
             "acceleration" => Some(Self::Acceleration),
             "max_speed" => Some(Self::MaxSpeed),
-            "height" => Some(Self::Height),
-            "weight" => Some(Self::Weight),
             _ => None,
         }
     }
 }
 
-/// The custodian API, as seen by the calculator.
-///
-/// The calculator does not know the custodian's internal shape: it asks
-/// one characteristic at a time, and it gets a value. The real
-/// implementation wraps `pcfm-hidden::GroundTruth`; the test
-/// implementation records the calls, to verify the formula asked for
-/// exactly its terms.
+/// A Plane B datum the orchestrator can provide (L0.11 §4.6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Datum {
+    /// Height, in cm (registry data).
+    Height,
+    /// Weight, in kg (registry data).
+    Weight,
+    /// Fatigue, 0.0–1.0 (state).
+    Fatigue,
+}
+
+impl Datum {
+    /// The name used in `balance/*.json` and in error messages.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Height => "height",
+            Self::Weight => "weight",
+            Self::Fatigue => "fatigue",
+        }
+    }
+
+    /// Parses a name from `balance/*.json`.
+    #[must_use]
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "height" => Some(Self::Height),
+            "weight" => Some(Self::Weight),
+            "fatigue" => Some(Self::Fatigue),
+            _ => None,
+        }
+    }
+}
+
+/// The custodian API, as seen by the calculator (Plane A).
 pub trait Custodian {
     /// Returns the value of `characteristic` for `player`, in `[0, 1)`.
     fn value(&mut self, player: u32, characteristic: Characteristic) -> f64;
 }
 
+/// The Plane B data, as seen by the calculator.
+pub trait Situation {
+    /// Returns the value of `datum`, in the unit the formula expects.
+    fn datum(&self, datum: Datum) -> f64;
+}
+
 /// A formula, as read from `balance/*.json`.
-///
-/// An expression on a fixed grammar: `Term` (a characteristic),
-/// `Const` (a number), `Product` (a list, applied left to right),
-/// `Ratio` (numerator, denominator), `Clamp` (inner, min, max). The
-/// grammar is enumerated; a formula cannot invent an operator.
 #[derive(Debug, Clone)]
 pub enum Formula {
-    /// A term from the catalogue.
+    /// A Plane A characteristic, read through the custodian.
     Term(Characteristic),
+    /// A Plane B datum, read through the situation.
+    Datum(Datum),
     /// A constant (a number declared in `balance/*.json`).
     Const(f64),
     /// The product of the operands, applied left to right.
@@ -115,31 +137,57 @@ pub enum Formula {
 }
 
 impl Formula {
-    /// The terms of the formula, as the calculator must ask for them,
-    /// in sorted order (deterministic).
+    /// The Plane A characteristics of the formula, sorted.
     #[must_use]
-    pub fn declared_terms(&self) -> Vec<Characteristic> {
+    pub fn declared_characteristics(&self) -> Vec<Characteristic> {
         let mut set = BTreeSet::new();
-        self.collect_terms(&mut set);
+        self.collect_characteristics(&mut set);
         set.into_iter().collect()
     }
 
-    fn collect_terms(&self, out: &mut BTreeSet<Characteristic>) {
+    /// The Plane B data of the formula, sorted.
+    #[must_use]
+    pub fn declared_data(&self) -> Vec<Datum> {
+        let mut set = BTreeSet::new();
+        self.collect_data(&mut set);
+        set.into_iter().collect()
+    }
+
+    fn collect_characteristics(&self, out: &mut BTreeSet<Characteristic>) {
         match self {
             Self::Term(c) => {
                 out.insert(*c);
             }
-            Self::Const(_) => {}
+            Self::Datum(_) | Self::Const(_) => {}
             Self::Product(items) => {
                 for item in items {
-                    item.collect_terms(out);
+                    item.collect_characteristics(out);
                 }
             }
             Self::Ratio(a, b) => {
-                a.collect_terms(out);
-                b.collect_terms(out);
+                a.collect_characteristics(out);
+                b.collect_characteristics(out);
             }
-            Self::Clamp(inner, _, _) => inner.collect_terms(out),
+            Self::Clamp(inner, _, _) => inner.collect_characteristics(out),
+        }
+    }
+
+    fn collect_data(&self, out: &mut BTreeSet<Datum>) {
+        match self {
+            Self::Datum(d) => {
+                out.insert(*d);
+            }
+            Self::Term(_) | Self::Const(_) => {}
+            Self::Product(items) => {
+                for item in items {
+                    item.collect_data(out);
+                }
+            }
+            Self::Ratio(a, b) => {
+                a.collect_data(out);
+                b.collect_data(out);
+            }
+            Self::Clamp(inner, _, _) => inner.collect_data(out),
         }
     }
 
@@ -150,46 +198,52 @@ impl Formula {
     /// Returns [`CalculatorError::EmptyFormula`] if the formula has no
     /// term (a constant alone is not a formula).
     pub fn validate(&self) -> Result<(), CalculatorError> {
-        if self.declared_terms().is_empty() {
+        if self.declared_characteristics().is_empty() && self.declared_data().is_empty() {
             return Err(CalculatorError::EmptyFormula);
         }
         Ok(())
     }
 }
 
-/// The calculator: applies a formula to a player, asking the custodian
-/// for exactly the formula's terms.
+/// The calculator: applies a formula to a player and a situation.
 pub struct Calculator;
 
 impl Calculator {
-    /// Applies `formula` to `player`, using `custodian` for the values.
-    ///
-    /// The mechanical test (in `tests/`) uses a recording custodian and
-    /// verifies that the calls are exactly the formula's terms, no more,
-    /// no less.
+    /// Applies `formula` to `player`.
     #[must_use]
-    pub fn apply(formula: &Formula, custodian: &mut dyn Custodian, player: u32) -> f64 {
-        Self::eval(formula, custodian, player)
+    pub fn apply(
+        formula: &Formula,
+        custodian: &mut dyn Custodian,
+        situation: &dyn Situation,
+        player: u32,
+    ) -> f64 {
+        Self::eval(formula, custodian, situation, player)
     }
 
-    fn eval(formula: &Formula, custodian: &mut dyn Custodian, player: u32) -> f64 {
+    fn eval(
+        formula: &Formula,
+        custodian: &mut dyn Custodian,
+        situation: &dyn Situation,
+        player: u32,
+    ) -> f64 {
         match formula {
             Formula::Term(c) => custodian.value(player, *c),
+            Formula::Datum(d) => situation.datum(*d),
             Formula::Const(v) => *v,
             Formula::Product(items) => {
                 let mut acc = 1.0;
                 for item in items {
-                    acc *= Self::eval(item, custodian, player);
+                    acc *= Self::eval(item, custodian, situation, player);
                 }
                 acc
             }
             Formula::Ratio(a, b) => {
-                let num = Self::eval(a, custodian, player);
-                let den = Self::eval(b, custodian, player);
+                let num = Self::eval(a, custodian, situation, player);
+                let den = Self::eval(b, custodian, situation, player);
                 if den == 0.0 { num } else { num / den }
             }
             Formula::Clamp(inner, min, max) => {
-                Self::eval(inner, custodian, player).clamp(*min, *max)
+                Self::eval(inner, custodian, situation, player).clamp(*min, *max)
             }
         }
     }
@@ -201,17 +255,12 @@ pub enum CalculatorError {
     /// A formula has no terms.
     #[error("formula has no terms")]
     EmptyFormula,
-    /// A term is not in the catalogue.
-    #[error("unknown term: {0}")]
-    UnknownTerm(String),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// A custodian that records every call, to verify the calculator asks
-    /// for exactly the formula's terms.
     struct RecordingCustodian {
         calls: Vec<(u32, Characteristic)>,
     }
@@ -229,84 +278,92 @@ mod tests {
         }
     }
 
-    /// A custodian with a fixed value per characteristic.
-    struct FixedCustodian {
-        force: f64,
+    struct RecordingSituation {
+        calls: std::cell::RefCell<Vec<Datum>>,
+        height: f64,
         weight: f64,
     }
 
-    impl Custodian for FixedCustodian {
-        fn value(&mut self, _player: u32, c: Characteristic) -> f64 {
-            match c {
-                Characteristic::ExplosiveForce => self.force,
-                Characteristic::Weight => self.weight,
-                _ => 0.0,
+    impl RecordingSituation {
+        fn new(height: f64, weight: f64) -> Self {
+            Self {
+                calls: std::cell::RefCell::new(Vec::new()),
+                height,
+                weight,
             }
         }
     }
 
-    /// The movement formula, as decided for F.7:
-    /// `a = accel_ref * explosive_force * (weight_ref / weight)`.
-    /// Expressed on the fixed grammar, it is a product of three factors,
-    /// the third of which is a ratio.
+    impl Situation for RecordingSituation {
+        fn datum(&self, datum: Datum) -> f64 {
+            self.calls.borrow_mut().push(datum);
+            match datum {
+                Datum::Height => self.height,
+                Datum::Weight => self.weight,
+                Datum::Fatigue => 0.0,
+            }
+        }
+    }
+
     fn movement_formula() -> Formula {
         Formula::Product(vec![
             Formula::Const(2.0),
             Formula::Term(Characteristic::ExplosiveForce),
             Formula::Ratio(
                 Box::new(Formula::Const(78.0)),
-                Box::new(Formula::Term(Characteristic::Weight)),
+                Box::new(Formula::Datum(Datum::Weight)),
             ),
         ])
     }
 
     #[test]
-    fn calculator_asks_exactly_the_formula_terms() {
+    fn calculator_asks_exactly_the_characteristics() {
         let formula = movement_formula();
         let mut custodian = RecordingCustodian::new();
-        let _ = Calculator::apply(&formula, &mut custodian, 7);
+        let situation = RecordingSituation::new(180.0, 78.0);
+        let _ = Calculator::apply(&formula, &mut custodian, &situation, 7);
         let mut asked: Vec<Characteristic> = custodian.calls.iter().map(|(_, c)| *c).collect();
         asked.sort_by_key(|c| c.name());
         asked.dedup();
-        assert_eq!(
-            asked,
-            vec![Characteristic::ExplosiveForce, Characteristic::Weight],
-            "the calculator must ask for exactly the formula's terms, no more, no less"
-        );
+        assert_eq!(asked, vec![Characteristic::ExplosiveForce]);
+    }
+
+    #[test]
+    fn calculator_asks_exactly_the_data() {
+        let formula = movement_formula();
+        let mut custodian = RecordingCustodian::new();
+        let situation = RecordingSituation::new(180.0, 78.0);
+        let _ = Calculator::apply(&formula, &mut custodian, &situation, 7);
+        let asked = situation.calls.borrow();
+        assert_eq!(*asked, vec![Datum::Weight]);
     }
 
     #[test]
     fn calculator_does_not_ask_for_a_term_not_declared() {
         let formula = movement_formula();
         let mut custodian = RecordingCustodian::new();
-        let _ = Calculator::apply(&formula, &mut custodian, 7);
+        let situation = RecordingSituation::new(180.0, 78.0);
+        let _ = Calculator::apply(&formula, &mut custodian, &situation, 7);
         assert!(
             !custodian
                 .calls
                 .iter()
                 .any(|(_, c)| *c == Characteristic::MaxSpeed),
-            "the formula does not declare max_speed, the calculator must not ask for it"
         );
+        assert!(!situation.calls.borrow().contains(&Datum::Height));
     }
 
     #[test]
     fn ratio_compensates_mass() {
-        // a = 2.0 * 0.8 * (78 / 78) = 1.6 for a 78 kg player
-        // a = 2.0 * 0.8 * (78 / 97.5) = 1.28 for a 97.5 kg player
-        // The ratio decides, the two do not add up.
         let formula = movement_formula();
-        let mut light = FixedCustodian {
-            force: 0.8,
-            weight: 78.0,
-        };
-        let a_light = Calculator::apply(&formula, &mut light, 1);
-        assert!((a_light - 1.6).abs() < 1e-9, "78 kg: {a_light}");
+        let mut light_c = RecordingCustodian::new();
+        let light_s = RecordingSituation::new(180.0, 78.0);
+        let a_light = Calculator::apply(&formula, &mut light_c, &light_s, 1);
 
-        let mut heavy = FixedCustodian {
-            force: 0.8,
-            weight: 97.5,
-        };
-        let a_heavy = Calculator::apply(&formula, &mut heavy, 1);
+        let mut heavy_c = RecordingCustodian::new();
+        let heavy_s = RecordingSituation::new(180.0, 97.5);
+        let a_heavy = Calculator::apply(&formula, &mut heavy_c, &heavy_s, 1);
+
         assert!(
             a_heavy < a_light,
             "heavier must accelerate less: {a_heavy} vs {a_light}"
@@ -329,16 +386,19 @@ mod tests {
             Characteristic::MaximalForce,
             Characteristic::Acceleration,
             Characteristic::MaxSpeed,
-            Characteristic::Height,
-            Characteristic::Weight,
         ] {
             assert_eq!(Characteristic::from_name(c.name()), Some(c));
+        }
+        for d in [Datum::Height, Datum::Weight, Datum::Fatigue] {
+            assert_eq!(Datum::from_name(d.name()), Some(d));
         }
     }
 
     #[test]
     fn unknown_name_is_rejected() {
         assert_eq!(Characteristic::from_name("strength"), None);
-        assert_eq!(Characteristic::from_name(""), None);
+        assert_eq!(Datum::from_name("strength"), None);
+        assert_eq!(Characteristic::from_name("height"), None);
+        assert_eq!(Datum::from_name("explosive_force"), None);
     }
 }
