@@ -86,6 +86,24 @@ pub struct SetPieceContext {
     pub taker: PlayerId,
 }
 
+/// The context of a movement resolution (F.7).
+///
+/// The player, and the Plane B data the movement formula reads: height
+/// and weight from `Player` (registry data), fatigue from `MatchState`
+/// (state). The situation is passed by the orchestrator; the calculator
+/// does not know where it lives.
+#[derive(Debug, Clone, Copy)]
+pub struct MovementContext {
+    /// The moving player.
+    pub player: PlayerId,
+    /// Height, in cm (Plane B, registry data).
+    pub height_cm: f64,
+    /// Weight, in kg (Plane B, registry data).
+    pub weight_kg: f64,
+    /// Fatigue, 0.0–1.0 (Plane B, state).
+    pub fatigue: f64,
+}
+
 /// The latent attribute used as modulator by an influence query.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SkillKind {

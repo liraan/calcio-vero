@@ -136,6 +136,7 @@ name = "pcfm-hidden"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "pcfm-calculator",
  "pcfm-core",
  "pcfm-model",
  "rand_chacha",

@@ -85,6 +85,17 @@ pub struct SaveOutcome {
     pub saved: bool,
 }
 
+/// The outcome of a movement resolution (F.7).
+///
+/// The acceleration the agent receives this tick, in cm/tick². The
+/// engine integrates it (velocity, then position); the calculator
+/// computes it; the orchestrator returns it.
+#[derive(Debug, Clone, Copy)]
+pub struct MovementOutcome {
+    /// The acceleration, in cm/tick².
+    pub acceleration: f64,
+}
+
 /// The outcome of a set piece.
 #[derive(Debug, Clone)]
 pub struct SetPieceOutcome {

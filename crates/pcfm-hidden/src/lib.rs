@@ -26,12 +26,13 @@ mod latents;
 
 pub use context::{
     DuelContext, DuelType, InfluenceAgent, InfluenceContext, InfluenceWeights, InjuryContext,
-    PassContext, PressureContext, SaveContext, SetPieceContext, ShotContext, SkillKind,
+    MovementContext, PassContext, PressureContext, SaveContext, SetPieceContext, ShotContext,
+    SkillKind,
 };
 pub use observation::ObservationEvent;
 pub use outcome::{
-    DuelOutcome, InjuryOutcome, PassOutcome, PressureOutcome, SaveOutcome, SetPieceOutcome,
-    ShotOutcome, ShotType,
+    DuelOutcome, InjuryOutcome, MovementOutcome, PassOutcome, PressureOutcome, SaveOutcome,
+    SetPieceOutcome, ShotOutcome, ShotType,
 };
 
 use std::collections::BTreeMap;
@@ -358,6 +359,61 @@ impl GroundTruth {
         outcome
     }
 
+    /// Resolves a movement: the acceleration of `ctx.player` this tick
+    /// (F.7).
+    ///
+    /// The orchestrator: it reads the player's explosive force from the
+    /// custodian (Plane A), builds a situation from the context (Plane B:
+    /// height, weight, fatigue), loads the movement formula from
+    /// `balance/movement.json`, and calls the calculator. It does not
+    /// calculate: it decides when, with which situation, for which
+    /// formula.
+    ///
+    /// The adapter is local: `GroundTruth` is the custodian for this one
+    /// player, and the situation is the context. The calculator does not
+    /// know either of them.
+    #[must_use]
+    pub fn resolve_movement(&mut self, ctx: &MovementContext) -> MovementOutcome {
+        use pcfm_calculator::movement::MovementBalance;
+        use pcfm_calculator::{Calculator, Characteristic, Custodian, Datum, Situation};
+
+        struct OneCharacteristic(f32);
+        impl Custodian for OneCharacteristic {
+            fn value(&mut self, characteristic: Characteristic) -> f64 {
+                match characteristic {
+                    Characteristic::ExplosiveForce => f64::from(self.0),
+                    _ => 0.0,
+                }
+            }
+        }
+
+        struct TheSituation {
+            height: f64,
+            weight: f64,
+            fatigue: f64,
+        }
+        impl Situation for TheSituation {
+            fn datum(&self, datum: Datum) -> f64 {
+                match datum {
+                    Datum::Height => self.height,
+                    Datum::Weight => self.weight,
+                    Datum::Fatigue => self.fatigue,
+                }
+            }
+        }
+
+        let force = self.latents_for(ctx.player).physical.explosive_force;
+        let mut custodian = OneCharacteristic(force);
+        let situation = TheSituation {
+            height: ctx.height_cm,
+            weight: ctx.weight_kg,
+            fatigue: ctx.fatigue,
+        };
+        let formula = MovementBalance::load().formula();
+        let acceleration = Calculator::apply(&formula, &mut custodian, &situation);
+        MovementOutcome { acceleration }
+    }
+
     /// Drains the accumulated observations.
     ///
     /// The method is idempotent: the second call returns an empty `Vec`.
@@ -631,6 +687,58 @@ mod influence_determinism_tests {
         assert_eq!(
             a.resolve_influence(&c1, &w()),
             b.resolve_influence(&c2, &w())
+        );
+    }
+}
+
+#[cfg(test)]
+mod movement_tests {
+    use super::*;
+    use pcfm_core::ids::{MatchId, PlayerId};
+
+    fn gt() -> GroundTruth {
+        GroundTruth::new(42, MatchId::new(1, 0))
+    }
+
+    fn ctx(slot: u32, weight: f64) -> MovementContext {
+        MovementContext {
+            player: PlayerId::new(slot, 0),
+            height_cm: 180.0,
+            weight_kg: weight,
+            fatigue: 0.0,
+        }
+    }
+
+    #[test]
+    fn resolve_movement_returns_a_positive_acceleration() {
+        let mut g = gt();
+        let out = g.resolve_movement(&ctx(1, 78.0));
+        assert!(out.acceleration > 0.0, "acceleration: {}", out.acceleration);
+    }
+
+    #[test]
+    fn heavier_player_accelerates_less() {
+        let mut g = gt();
+        let light = g.resolve_movement(&ctx(1, 70.0)).acceleration;
+        let heavy = g.resolve_movement(&ctx(1, 95.0)).acceleration;
+        assert!(heavy < light, "light {light}, heavy {heavy}");
+    }
+
+    #[test]
+    fn different_players_have_different_acceleration() {
+        let mut g = gt();
+        let a = g.resolve_movement(&ctx(1, 78.0)).acceleration;
+        let b = g.resolve_movement(&ctx(2, 78.0)).acceleration;
+        assert_ne!(a, b, "two players, same weight, must differ by force");
+    }
+
+    #[test]
+    fn same_input_same_acceleration() {
+        let mut a = gt();
+        let mut b = gt();
+        assert_eq!(
+            a.resolve_movement(&ctx(1, 78.0)).acceleration,
+            b.resolve_movement(&ctx(1, 78.0)).acceleration
         );
     }
 }

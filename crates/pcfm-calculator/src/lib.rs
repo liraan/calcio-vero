@@ -110,7 +110,7 @@ impl Datum {
 /// The custodian API, as seen by the calculator (Plane A).
 pub trait Custodian {
     /// Returns the value of `characteristic` for `player`, in `[0, 1)`.
-    fn value(&mut self, player: u32, characteristic: Characteristic) -> f64;
+    fn value(&mut self, characteristic: Characteristic) -> f64;
 }
 
 /// The Plane B data, as seen by the calculator.
@@ -209,41 +209,41 @@ impl Formula {
 pub struct Calculator;
 
 impl Calculator {
-    /// Applies `formula` to `player`.
+    /// Applies `formula`, using `custodian` for Plane A and `situation`
+    /// for Plane B.
+    ///
+    /// The player is not a parameter: the orchestrator already knows it,
+    /// and the custodian it passes is bound to that player. The trait
+    /// asks by characteristic only, and the mechanical test verifies the
+    /// calls are exactly the formula's terms.
     #[must_use]
     pub fn apply(
         formula: &Formula,
         custodian: &mut dyn Custodian,
         situation: &dyn Situation,
-        player: u32,
     ) -> f64 {
-        Self::eval(formula, custodian, situation, player)
+        Self::eval(formula, custodian, situation)
     }
 
-    fn eval(
-        formula: &Formula,
-        custodian: &mut dyn Custodian,
-        situation: &dyn Situation,
-        player: u32,
-    ) -> f64 {
+    fn eval(formula: &Formula, custodian: &mut dyn Custodian, situation: &dyn Situation) -> f64 {
         match formula {
-            Formula::Term(c) => custodian.value(player, *c),
+            Formula::Term(c) => custodian.value(*c),
             Formula::Datum(d) => situation.datum(*d),
             Formula::Const(v) => *v,
             Formula::Product(items) => {
                 let mut acc = 1.0;
                 for item in items {
-                    acc *= Self::eval(item, custodian, situation, player);
+                    acc *= Self::eval(item, custodian, situation);
                 }
                 acc
             }
             Formula::Ratio(a, b) => {
-                let num = Self::eval(a, custodian, situation, player);
-                let den = Self::eval(b, custodian, situation, player);
+                let num = Self::eval(a, custodian, situation);
+                let den = Self::eval(b, custodian, situation);
                 if den == 0.0 { num } else { num / den }
             }
             Formula::Clamp(inner, min, max) => {
-                Self::eval(inner, custodian, situation, player).clamp(*min, *max)
+                Self::eval(inner, custodian, situation).clamp(*min, *max)
             }
         }
     }
@@ -262,7 +262,7 @@ mod tests {
     use super::*;
 
     struct RecordingCustodian {
-        calls: Vec<(u32, Characteristic)>,
+        calls: Vec<Characteristic>,
     }
 
     impl RecordingCustodian {
@@ -272,8 +272,8 @@ mod tests {
     }
 
     impl Custodian for RecordingCustodian {
-        fn value(&mut self, player: u32, characteristic: Characteristic) -> f64 {
-            self.calls.push((player, characteristic));
+        fn value(&mut self, characteristic: Characteristic) -> f64 {
+            self.calls.push(characteristic);
             0.5
         }
     }
@@ -321,8 +321,8 @@ mod tests {
         let formula = movement_formula();
         let mut custodian = RecordingCustodian::new();
         let situation = RecordingSituation::new(180.0, 78.0);
-        let _ = Calculator::apply(&formula, &mut custodian, &situation, 7);
-        let mut asked: Vec<Characteristic> = custodian.calls.iter().map(|(_, c)| *c).collect();
+        let _ = Calculator::apply(&formula, &mut custodian, &situation);
+        let mut asked = custodian.calls.clone();
         asked.sort_by_key(|c| c.name());
         asked.dedup();
         assert_eq!(asked, vec![Characteristic::ExplosiveForce]);
@@ -333,7 +333,7 @@ mod tests {
         let formula = movement_formula();
         let mut custodian = RecordingCustodian::new();
         let situation = RecordingSituation::new(180.0, 78.0);
-        let _ = Calculator::apply(&formula, &mut custodian, &situation, 7);
+        let _ = Calculator::apply(&formula, &mut custodian, &situation);
         let asked = situation.calls.borrow();
         assert_eq!(*asked, vec![Datum::Weight]);
     }
@@ -343,13 +343,8 @@ mod tests {
         let formula = movement_formula();
         let mut custodian = RecordingCustodian::new();
         let situation = RecordingSituation::new(180.0, 78.0);
-        let _ = Calculator::apply(&formula, &mut custodian, &situation, 7);
-        assert!(
-            !custodian
-                .calls
-                .iter()
-                .any(|(_, c)| *c == Characteristic::MaxSpeed),
-        );
+        let _ = Calculator::apply(&formula, &mut custodian, &situation);
+        assert!(!custodian.calls.contains(&Characteristic::MaxSpeed));
         assert!(!situation.calls.borrow().contains(&Datum::Height));
     }
 
@@ -358,11 +353,11 @@ mod tests {
         let formula = movement_formula();
         let mut light_c = RecordingCustodian::new();
         let light_s = RecordingSituation::new(180.0, 78.0);
-        let a_light = Calculator::apply(&formula, &mut light_c, &light_s, 1);
+        let a_light = Calculator::apply(&formula, &mut light_c, &light_s);
 
         let mut heavy_c = RecordingCustodian::new();
         let heavy_s = RecordingSituation::new(180.0, 97.5);
-        let a_heavy = Calculator::apply(&formula, &mut heavy_c, &heavy_s, 1);
+        let a_heavy = Calculator::apply(&formula, &mut heavy_c, &heavy_s);
 
         assert!(
             a_heavy < a_light,
