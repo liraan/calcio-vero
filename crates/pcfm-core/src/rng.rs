@@ -80,15 +80,30 @@ impl RngRegistry {
 /// in this context (a random value in `[0, 1)`).
 #[allow(clippy::cast_precision_loss)]
 #[must_use]
-pub fn next_unit(rng: &mut ChaCha20Rng) -> f32 {
-    (rng.next_u32() as f32) / (u32::MAX as f32)
-}
-
 fn derive_seed(world_seed: u64, name: &StreamName) -> [u8; 32] {
     let mut hasher = blake3::Hasher::new();
     hasher.update(&world_seed.to_le_bytes());
     hasher.update(name.as_str().as_bytes());
     *hasher.finalize().as_bytes()
+}
+
+/// Returns a uniform random number in `[0, 1)` from `rng`.
+///
+/// The value is taken from the top 24 bits of a `u32` (f32 has a 24-bit
+/// mantissa), so every value is exactly representable and the maximum is
+/// `1 - 2^-24`, strictly below 1.0. See OI-58 for why the previous form
+/// could return exactly 1.0.
+#[allow(clippy::cast_precision_loss)]
+pub fn next_unit(rng: &mut ChaCha20Rng) -> f32 {
+    // Take the top 24 bits (f32 has a 24-bit mantissa) and divide by 2^24.
+    // Every value is exactly representable in f32, the maximum is
+    // (2^24 - 1) / 2^24 = 1 - 2^-24, strictly below 1.0. The previous
+    // form (`next_u32 / (u32::MAX as f32)`) could return exactly 1.0
+    // (OI-58): the value was fine in f64 but rounded to 1.0 in f32.
+    let bits = rng.next_u32() >> 8;
+    #[allow(clippy::cast_precision_loss)]
+    let unit = (bits as f32) * (1.0 / (1u32 << 24) as f32);
+    unit
 }
 
 #[cfg(test)]
@@ -168,9 +183,24 @@ mod tests {
         let mut r = RngRegistry::new(42);
         let name = StreamName::new("test").unwrap();
         let rng = r.stream(&name);
-        for _ in 0..1000 {
+        for _ in 0..10_000 {
             let v = next_unit(rng);
-            assert!((0.0..1.0).contains(&v));
+            assert!((0.0..1.0).contains(&v), "next_unit out of [0, 1): {v}");
         }
+    }
+
+    #[test]
+    fn next_unit_never_returns_one_on_the_edge() {
+        // The maximum value of `bits` is 2^24 - 1. Divided by 2^24 it is
+        // 1 - 2^-24, exactly representable in f32 and strictly below 1.0.
+        // The previous form (`next_u32 / (u32::MAX as f32)`) rounded to
+        // exactly 1.0 in f32 for a `next_u32` of `u32::MAX` (OI-58).
+        let max_bits = (1u32 << 24) - 1;
+        #[allow(clippy::cast_precision_loss)]
+        let max_unit = (max_bits as f32) * (1.0 / (1u32 << 24) as f32);
+        assert!(max_unit < 1.0, "the edge case is not below 1.0: {max_unit}");
+        #[allow(clippy::cast_precision_loss)]
+        let expected = 1.0 - (1.0 / (1u32 << 24) as f32);
+        assert_eq!(max_unit, expected);
     }
 }

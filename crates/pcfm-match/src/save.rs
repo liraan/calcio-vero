@@ -71,7 +71,7 @@ pub const SCHEMA_VERSION: u32 = 1;
 /// event emission). A bump requires a `CHANGELOG-SIM.md` entry and a
 /// golden-test regeneration. See `docs/adr/003-plane-a-enforcement.md` and
 /// `CHANGELOG-SIM.md`.
-pub const SIM_VERSION: u32 = 19;
+pub const SIM_VERSION: u32 = 20;
 
 /// The save of a single match.
 #[derive(Debug, Clone, Serialize, Deserialize)]
