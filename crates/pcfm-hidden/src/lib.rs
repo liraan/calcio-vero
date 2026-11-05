@@ -70,6 +70,10 @@ pub struct GroundTruth {
     streams: Streams,
     latents: BTreeMap<PlayerId, PlayerLatents>,
     observations: Vec<ObservationEvent>,
+    /// The movement balance, parsed once. `resolve_movement` is called
+    /// for every agent every tick: parsing the JSON 1.2 million times is
+    /// waste, and the file does not change during a match.
+    movement_balance: pcfm_calculator::movement::MovementBalance,
 }
 
 impl GroundTruth {
@@ -102,6 +106,7 @@ impl GroundTruth {
             streams,
             latents: BTreeMap::new(),
             observations: Vec::new(),
+            movement_balance: pcfm_calculator::movement::MovementBalance::load(),
         }
     }
 
@@ -374,7 +379,6 @@ impl GroundTruth {
     /// know either of them.
     #[must_use]
     pub fn resolve_movement(&mut self, ctx: &MovementContext) -> MovementOutcome {
-        use pcfm_calculator::movement::MovementBalance;
         use pcfm_calculator::{Calculator, Characteristic, Custodian, Datum, Situation};
 
         struct OneCharacteristic(f32);
@@ -409,7 +413,7 @@ impl GroundTruth {
             weight: ctx.weight_kg,
             fatigue: ctx.fatigue,
         };
-        let formula = MovementBalance::load().formula();
+        let formula = self.movement_balance.formula();
         let acceleration = Calculator::apply(&formula, &mut custodian, &situation);
         MovementOutcome { acceleration }
     }
