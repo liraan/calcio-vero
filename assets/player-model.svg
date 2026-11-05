@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect x="150" y="40" width="500" height="100" rx="8" fill="#2c3e50"/>
+  <text x="400" y="75" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">PLANE A — hidden</text>
+  <text x="400" y="100" text-anchor="middle" fill="#ecf0f1" font-size="13">performances (physical, technical, cognitive) and psychological traits</text>
+  <text x="400" y="122" text-anchor="middle" fill="#bdc3c7" font-size="12" font-style="italic">read only through resolve_*</text>
+
+  <line x1="400" y1="140" x2="400" y2="188" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="415" y="168" fill="#555" font-size="12">one characteristic at a time</text>
+
+  <rect x="150" y="190" width="500" height="100" rx="8" fill="#3498db"/>
+  <text x="400" y="225" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">THE CALCULATOR</text>
+  <text x="400" y="250" text-anchor="middle" fill="#ecf0f1" font-size="13">applies a formula from balance/*.json</text>
+  <text x="400" y="272" text-anchor="middle" fill="#eaf4fb" font-size="12" font-style="italic">the formula declares its terms; it asks only for those</text>
+
+  <line x1="400" y1="290" x2="400" y2="338" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="415" y="318" fill="#555" font-size="12">an outcome (observable)</text>
+
+  <rect x="150" y="340" width="500" height="100" rx="8" fill="#27ae60"/>
+  <text x="400" y="375" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">PLANE B — observable</text>
+  <text x="400" y="400" text-anchor="middle" fill="#ecf0f1" font-size="13">match events, fatigue, confidence, height, weight, name</text>
+  <text x="400" y="422" text-anchor="middle" fill="#d5f5e3" font-size="12" font-style="italic">events and states, computed</text>
+
+  <line x1="400" y1="440" x2="400" y2="488" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="415" y="468" fill="#555" font-size="12">estimates, with a confidence</text>
+
+  <rect x="150" y="490" width="500" height="90" rx="8" fill="#e67e22"/>
+  <text x="400" y="525" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">PLANE C — what the manager sees</text>
+  <text x="400" y="550" text-anchor="middle" fill="#fdf2e9" font-size="13">"passing: good, two matches seen"   ·   "right-footed (est.)"</text>
+  <text x="400" y="570" text-anchor="middle" fill="#fdebd0" font-size="12" font-style="italic">never a true value</text>
+</svg>

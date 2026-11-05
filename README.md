@@ -16,7 +16,7 @@
 
 ---
 
-**Contents:** [Why this project exists](#why-this-project-exists) · [Three Planes](#the-core-idea-three-planes) · [The paradigm](#the-paradigm-phenomenological-simulation) · [Determinism](#determinism-taken-seriously) · [Status](#project-status) · [The engine in one glance](#the-match-engine-in-one-glance) · [What makes it different](#what-makes-it-different) · [Technology](#technology) · [Getting started](#getting-started) · [Try it in 30 seconds](#try-it-in-30-seconds) · [Reading order](#reading-order-for-newcomers) · [Contributing](#contributing) · [License](#license) · [AI disclosure](#ai-disclosure) · [FAQ](#faq)
+**Contents:** [Why this project exists](#why-this-project-exists) · [Three Planes](#the-core-idea-three-planes) · [The paradigm](#the-paradigm-phenomenological-simulation) · [Determinism](#determinism-taken-seriously) · [Status](#project-status) · [The engine in one glance](#the-match-engine-in-one-glance) · [The player](#the-player-what-a-footballer-is-in-this-engine) · [What makes it different](#what-makes-it-different) · [Technology](#technology) · [Getting started](#getting-started) · [Try it in 30 seconds](#try-it-in-30-seconds) · [Reading order](#reading-order-for-newcomers) · [Contributing](#contributing) · [License](#license) · [AI disclosure](#ai-disclosure) · [FAQ](#faq)
 
 ## Why this project exists
 
@@ -150,6 +150,71 @@ Deep Simulator simulates one football match with 22 players, a ball, and (planne
 | **The engine** (`pcfm-match`) | One tick every tenth of a second. One roll decides whether something happens; five event types out of 31 are emitted. | Every player decides, every tick; the attempt and its outcome are separate, linked events. |
 | **The event log** | Append-only, hash-chained. Every event carries the fields to understand why. | Same. |
 | **The readers** | A text board, an HTML page, a text narrative, a save file. | A TUI. The board is not the product. |
+
+## The player: what a footballer is, in this engine
+
+
+![The player model: three planes and the calculator](assets/player-model.svg)
+
+A management game usually reduces a player to two numbers — current
+ability and potential — and hides both. We do the opposite: a player is
+a set of datums, each with a plane, a source and a consumer, and the
+manager sees an **estimate** of each one, never the true value.
+
+| What | Plane | Can the manager see it? | Example |
+|---|---|---|---|
+| **Identity** — name, date and place of birth | B (visible) | Yes, as a document | "Born 14 March 2004, in Bergamo" |
+| **Body** — height, weight | B (visible) | Yes, measured | 183 cm, 78 kg |
+| **Performances** — physical, technical, cognitive | A (hidden) | Only an estimate, with a confidence | "Passing: good, but we have seen him twice" |
+| **Psychological traits** — consistency, resilience, courage | A (hidden) | Only an estimate, from behaviour over months | "Consistent, rarely a 4, rarely a 9" |
+| **States** — match fatigue, season fatigue, confidence, morale | B (computed or received) | Through its effects, often with low confidence | "He is tired: he arrived late twice" |
+
+Two things follow, and they are the point of the design.
+
+**There is no potential scalar.** A player grows (or does not) because
+of age, playing time, training and context. "He will become great" is a
+judgement the manager makes, not a hidden number the game holds.
+
+**Every performance is explainable.** A pass is completed or not
+because of the passer's passing ability, the pressure he was under, his
+fatigue, and what he saw. Every event carries those fields, so a fan can
+read *why*, not only *what*.
+
+### The feet, as an example
+
+The body has two feet — a given, not a field. What varies is **how well
+each foot is used**: two hidden abilities, like passing and shooting.
+Which foot a player uses is not a stored label; it is the outcome of the
+formula, which reads the two abilities together with the pressure, the
+fatigue and the player's reading of the game. A strong right foot under
+pressure and tired uses the left more often than the numbers alone would
+suggest; a player who reads the game well finds the angle to use the
+strong foot anyway. The manager sees "right-footed" as an **estimate**,
+with a confidence — never `right_foot = 0.87`.
+
+### The movement, and where it is going
+
+Movement is being rebuilt (tracked as F.7, **decided, not yet
+implemented**). The body follows the same simple physics as the ball:
+acceleration from force and mass, a top speed, a stride that depends on
+height, fatigue that reduces the push. No arbitrary coefficients: the
+reference values come from real data — a footballer's top speed and
+acceleration time, anthropometric medians, GPS studies on the
+end-of-match drop — and a term with no derivation does not enter the
+model.
+
+What it will change, on the pitch: a stronger player accelerates faster,
+a heavier one slower, a taller one covers more ground per stride, a
+tired one arrives late, and the goalkeeper dives as far as his body
+allows instead of a fixed reach. Every one of these is a phenomenon a
+fan recognises, with a cause the engine can name.
+
+**Today, honestly:** the engine is a prototype. Players have a position
+on a 4-4-2 grid and move toward a translated slot; the ball does not
+travel yet in the current build; five event types out of 31 are emitted.
+The player model above is the target, documented in
+[`specs/L0-match/11-player-characteristics.md`](specs/L0-match/11-player-characteristics.md),
+and F.7 is the first slice that moves the code toward it.
 
 ## What makes it different
 
