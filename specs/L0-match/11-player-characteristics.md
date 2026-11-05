@@ -759,10 +759,21 @@ recomputed from the characteristics and the situation.
 | Leadership | Needs the dressing room, not the match | L2 |
 | Motivation | Needs season objectives, contracts | L2 |
 | Communication / organisation | Needs the unit that talks, the line that manages | L2 |
+| Reputation | Needs the world, not the match | L2 |
+| Cohesion | Needs the group, not the match | L2 |
+| Familiarity with teammates | Needs the group, the time together | L2 |
 
 They are real, they are football, and they are not L0. They are listed so
 that a future session does not restart from zero, and they are not
 generated at L0 (no consumer, no context).
+
+**Why these three were missing, and why they are added now.** Reputation,
+cohesion and familiarity are real (a known player settles faster, a
+cohesive team wins the difficult duels), but they need the world and the
+group, not the match: they belong to L2. The table did not list them, so
+a reader could not tell whether they were missing by mistake or by
+design. This is OI-61, traced the same day. The row is the declaration,
+not the model: it says "not L0", it does not design them.
 
 ### 7.9 Composites (to be split, not stored)
 
