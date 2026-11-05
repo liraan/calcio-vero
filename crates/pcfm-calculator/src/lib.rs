@@ -16,11 +16,18 @@
 //! records every call, and the test verifies the calculator asked for
 //! exactly the formula's terms.
 //!
-//! This crate is the skeleton. The first formula (movement) arrives with
-//! F.7; the other formulas arrive when the phenomena that need them exist
-//! (OI-50).
+//! # The grammar
+//!
+//! A formula is an expression on a **fixed grammar** of operators
+//! (L0.11 §4.5): product, ratio, clamp. The sum is the product with
+//! weight 1. A formula cannot invent an operator: a new operator is an
+//! amendment to the model, not a formula (L0.11 §4.10). The grammar is
+//! fixed because the phenomenon decides it: in a real match a stronger
+//! player accelerates more and a heavier one less, and the two effects
+//! compensate in ratio, they do not add up. A weighted sum cannot
+//! express that.
 
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 use thiserror::Error;
 
@@ -59,7 +66,7 @@ impl Characteristic {
     }
 
     /// Parses a name from `balance/*.json`. `None` if the name is not in
-    /// the catalogue (which is a load-time error, see [`Formula::validate`]).
+    /// the catalogue (which is a load-time error).
     #[must_use]
     pub fn from_name(name: &str) -> Option<Self> {
         match name {
@@ -83,51 +90,69 @@ impl Characteristic {
 /// exactly its terms.
 pub trait Custodian {
     /// Returns the value of `characteristic` for `player`, in `[0, 1)`.
-    ///
-    /// The value is a hidden performance (Plane A) or a registry datum
-    /// (Plane B, read through the custodian because the formula does not
-    /// know the plane). The calculator never interprets it; it passes it
-    /// to the formula.
     fn value(&mut self, player: u32, characteristic: Characteristic) -> f64;
 }
 
 /// A formula, as read from `balance/*.json`.
 ///
-/// A weighted sum of terms, not a free expression language: the terms are
-/// enumerated (the catalogue), the weights are in the file, the arithmetic
-/// is integer or fixed-point. The formula declares its terms; the
-/// calculator asks for exactly those.
+/// An expression on a fixed grammar: `Term` (a characteristic),
+/// `Const` (a number), `Product` (a list, applied left to right),
+/// `Ratio` (numerator, denominator), `Clamp` (inner, min, max). The
+/// grammar is enumerated; a formula cannot invent an operator.
 #[derive(Debug, Clone)]
-pub struct Formula {
-    /// The terms, with their weights. `BTreeMap` for determinism.
-    pub terms: BTreeMap<Characteristic, f64>,
+pub enum Formula {
+    /// A term from the catalogue.
+    Term(Characteristic),
+    /// A constant (a number declared in `balance/*.json`).
+    Const(f64),
+    /// The product of the operands, applied left to right.
+    Product(Vec<Self>),
+    /// The ratio numerator / denominator.
+    Ratio(Box<Self>, Box<Self>),
+    /// The inner value, clamped to [min, max].
+    Clamp(Box<Self>, f64, f64),
 }
 
 impl Formula {
-    /// Validates the formula against the catalogue.
+    /// The terms of the formula, as the calculator must ask for them,
+    /// in sorted order (deterministic).
+    #[must_use]
+    pub fn declared_terms(&self) -> Vec<Characteristic> {
+        let mut set = BTreeSet::new();
+        self.collect_terms(&mut set);
+        set.into_iter().collect()
+    }
+
+    fn collect_terms(&self, out: &mut BTreeSet<Characteristic>) {
+        match self {
+            Self::Term(c) => {
+                out.insert(*c);
+            }
+            Self::Const(_) => {}
+            Self::Product(items) => {
+                for item in items {
+                    item.collect_terms(out);
+                }
+            }
+            Self::Ratio(a, b) => {
+                a.collect_terms(out);
+                b.collect_terms(out);
+            }
+            Self::Clamp(inner, _, _) => inner.collect_terms(out),
+        }
+    }
+
+    /// Validates the formula: it must have at least one term.
     ///
     /// # Errors
     ///
-    /// Returns [`CalculatorError::UnknownTerm`] if a term is not in the
-    /// catalogue. This is a **load-time** error: the formula is rejected
-    /// before any match starts.
+    /// Returns [`CalculatorError::EmptyFormula`] if the formula has no
+    /// term (a constant alone is not a formula).
     pub fn validate(&self) -> Result<(), CalculatorError> {
-        // Every key in `terms` is already a `Characteristic`, so by
-        // construction it is in the catalogue. The validation is the
-        // `from_name` step: a name that does not parse never reaches this
-        // type. This method stays for the day a formula is loaded from a
-        // file (the JSON → Formula step), when an unknown name would
-        // otherwise be silently dropped.
-        if self.terms.is_empty() {
+        if self.declared_terms().is_empty() {
             return Err(CalculatorError::EmptyFormula);
         }
         Ok(())
-    }
-
-    /// The terms of the formula, as the calculator must ask for them.
-    #[must_use]
-    pub fn declared_terms(&self) -> Vec<Characteristic> {
-        self.terms.keys().copied().collect()
     }
 }
 
@@ -142,16 +167,30 @@ impl Calculator {
     /// verifies that the calls are exactly the formula's terms, no more,
     /// no less.
     #[must_use]
-    pub fn apply(
-        formula: &Formula,
-        custodian: &mut dyn Custodian,
-        player: u32,
-    ) -> BTreeMap<Characteristic, f64> {
-        let mut values: BTreeMap<Characteristic, f64> = BTreeMap::new();
-        for term in formula.declared_terms() {
-            values.insert(term, custodian.value(player, term));
+    pub fn apply(formula: &Formula, custodian: &mut dyn Custodian, player: u32) -> f64 {
+        Self::eval(formula, custodian, player)
+    }
+
+    fn eval(formula: &Formula, custodian: &mut dyn Custodian, player: u32) -> f64 {
+        match formula {
+            Formula::Term(c) => custodian.value(player, *c),
+            Formula::Const(v) => *v,
+            Formula::Product(items) => {
+                let mut acc = 1.0;
+                for item in items {
+                    acc *= Self::eval(item, custodian, player);
+                }
+                acc
+            }
+            Formula::Ratio(a, b) => {
+                let num = Self::eval(a, custodian, player);
+                let den = Self::eval(b, custodian, player);
+                if den == 0.0 { num } else { num / den }
+            }
+            Formula::Clamp(inner, min, max) => {
+                Self::eval(inner, custodian, player).clamp(*min, *max)
+            }
         }
-        values
     }
 }
 
@@ -189,11 +228,35 @@ mod tests {
         }
     }
 
+    /// A custodian with a fixed value per characteristic.
+    struct FixedCustodian {
+        force: f64,
+        weight: f64,
+    }
+
+    impl Custodian for FixedCustodian {
+        fn value(&mut self, _player: u32, c: Characteristic) -> f64 {
+            match c {
+                Characteristic::ExplosiveForce => self.force,
+                Characteristic::Weight => self.weight,
+                _ => 0.0,
+            }
+        }
+    }
+
+    /// The movement formula, as decided for F.7:
+    /// `a = accel_ref * explosive_force * (weight_ref / weight)`.
+    /// Expressed on the fixed grammar, it is a product of three factors,
+    /// the third of which is a ratio.
     fn movement_formula() -> Formula {
-        let mut terms = BTreeMap::new();
-        terms.insert(Characteristic::ExplosiveForce, 1.0);
-        terms.insert(Characteristic::Weight, 1.0);
-        Formula { terms }
+        Formula::Product(vec![
+            Formula::Const(2.0),
+            Formula::Term(Characteristic::ExplosiveForce),
+            Formula::Ratio(
+                Box::new(Formula::Const(78.0)),
+                Box::new(Formula::Term(Characteristic::Weight)),
+            ),
+        ])
     }
 
     #[test]
@@ -201,12 +264,12 @@ mod tests {
         let formula = movement_formula();
         let mut custodian = RecordingCustodian::new();
         let _ = Calculator::apply(&formula, &mut custodian, 7);
+        let mut asked: Vec<Characteristic> = custodian.calls.iter().map(|(_, c)| *c).collect();
+        asked.sort_by_key(|c| c.name());
+        asked.dedup();
         assert_eq!(
-            custodian.calls,
-            vec![
-                (7, Characteristic::ExplosiveForce),
-                (7, Characteristic::Weight),
-            ],
+            asked,
+            vec![Characteristic::ExplosiveForce, Characteristic::Weight],
             "the calculator must ask for exactly the formula's terms, no more, no less"
         );
     }
@@ -226,10 +289,32 @@ mod tests {
     }
 
     #[test]
-    fn empty_formula_is_rejected() {
-        let formula = Formula {
-            terms: BTreeMap::new(),
+    fn ratio_compensates_mass() {
+        // a = 2.0 * 0.8 * (78 / 78) = 1.6 for a 78 kg player
+        // a = 2.0 * 0.8 * (78 / 97.5) = 1.28 for a 97.5 kg player
+        // The ratio decides, the two do not add up.
+        let formula = movement_formula();
+        let mut light = FixedCustodian {
+            force: 0.8,
+            weight: 78.0,
         };
+        let a_light = Calculator::apply(&formula, &mut light, 1);
+        assert!((a_light - 1.6).abs() < 1e-9, "78 kg: {a_light}");
+
+        let mut heavy = FixedCustodian {
+            force: 0.8,
+            weight: 97.5,
+        };
+        let a_heavy = Calculator::apply(&formula, &mut heavy, 1);
+        assert!(
+            a_heavy < a_light,
+            "heavier must accelerate less: {a_heavy} vs {a_light}"
+        );
+    }
+
+    #[test]
+    fn empty_formula_is_rejected() {
+        let formula = Formula::Const(1.0);
         assert!(matches!(
             formula.validate(),
             Err(CalculatorError::EmptyFormula)
