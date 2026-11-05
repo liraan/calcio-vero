@@ -2,13 +2,53 @@
 
 **Version:** 1.0
 **Status:** active
-**Last updated:** 2026-10-26
+**Last updated:** 2026-11-05
 
 This document explains how the nine crates of Calcio Vero interact, how a match
 flows through the system, and what the two architectural patterns
 (simulation/rendering split, testkit contract) are. It is the
 **architectural** counterpart of [`STRUCTURE.md`](../STRUCTURE.md), which
 describes the *rules of the repository*.
+
+
+> **Dated note — 2026-11-05. The architecture described in this document is
+> the PROTOTYPE's, which is still the code today. It is SUPERSEDED for the
+> new engine.**
+>
+> Two decisions taken on 2026-11-05 change the shape:
+>
+> 1. **Three components, not one (ADR-028, L0.11 §4).** The single
+>    `resolve_*` (one function that reads the latent and applies a hardcoded
+>    formula) is replaced by a **custodian** (`pcfm-hidden`) that holds the
+>    hidden performances and answers one characteristic at a time, a
+>    **calculator** (new crate) that applies a formula from
+>    `balance/*.json`, and an **orchestrator** (`resolve_*`) that decides
+>    when. The formula declares its terms; the calculator asks the custodian
+>    only for those; a term outside the catalogue fails at load time. The
+>    engine sees neither the hidden values nor the formulas.
+> 2. **Dimension vs performance (ADR-028).** A **dimension** is a property
+>    of the body (height, weight, foot), measured, Plane B. A
+>    **performance** is what the player does (strength, passing), hidden,
+>    Plane A. The manager reads an **estimate** in Plane C for every datum,
+>    never a true value.
+>
+> What this document still gets right and stays: the three planes, the
+> simulation/rendering split, the testkit contract, `pcfm-stats` not
+> depending on `pcfm-hidden`, the engine as the only crate that talks to
+> both planes. `pcfm-hidden` is not `Serialize` and has no public fields.
+>
+> What is superseded: the sentence "the only crate that talks to both planes
+> is `pcfm-match`", and "it calls `resolve_*` on Plane A" — in the new
+> engine the orchestrator is the door, the custodian is behind it, and a
+> calculator sits in between. The crate list (`pcfm-model`, `pcfm-hidden`,
+> `pcfm-match`, ...) stays; a tenth crate (the calculator) will be added
+> when the three components exist in code.
+>
+> **What to read instead:** `specs/L0-match/11-player-characteristics.md`
+> (the player model) and `docs/adr/028-dimension-performance-plane-criterion.md`
+> (the criterion and the three components). This document will be rewritten
+> when the three components exist; until then the note keeps it from being
+> read as the current architecture.
 
 It is the document that was missing: a newcomer could read the doctrine
 (`specs/00-foundations.md`) and the code (52 files), but not how they

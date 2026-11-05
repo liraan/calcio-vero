@@ -2,10 +2,10 @@
 
 **Version:** 1.0
 **Status:** active
-**Last updated:** 2026-10-26
+**Last updated:** 2026-11-05
 
 
-**Note (2026-11-03): this document describes the code as of 2026-10-26; some citations are stale.** Known stale examples: Stage 2 mentions `cause.rs` with `CauseTrace` and `Factor`, Stage 3a says `outcome.rs` carries a `CauseTrace` — but ADR-024 (accepted 2026-10-31) removed `CauseTrace` at L0, and `outcome.rs` does not carry it. The repository is the source of truth, not this document. The mechanical inventory is tracked in OI-45 (per-agent) and OI-49 (all navigation documents). Do not "fix" the code to match this document: fix the document against the code.
+**Note (2026-11-05): the document describes the prototype, and the prototype is still the code. The new engine is decided in the documentation, not in the code.** Two decisions change the shape and are not reflected in the stages below: (1) the single `resolve_*` is replaced by three components — a custodian (`pcfm-hidden`), a calculator (new crate), an orchestrator (`resolve_*`) — see ADR-028 and `specs/L0-match/11-player-characteristics.md` §4; (2) the latents and the noise are derived by key, not by sequence — `hash(world_seed, player_id, characteristic)` for latents, `hash(world_seed, match_id, tick, player_id, purpose)` for noise (ADR-029). Neither is implemented. The reading path below is still the right path to understand the **prototype**; read L0.11 and ADR-028 for the new engine. Known stale examples: Stage 2 mentions `cause.rs` with `CauseTrace` and `Factor`, Stage 3a says `outcome.rs` carries a `CauseTrace` — but ADR-024 (accepted 2026-10-31) removed `CauseTrace` at L0. The repository is the source of truth, not this document. The mechanical inventory is tracked in OI-45 (per-agent) and OI-49 (all navigation documents). Do not "fix" the code to match this document: fix the document against the code.
 
 This is the **reading path** for the code. It is for someone who wants to
 contribute to Calcio Vero and does not know where to start.
@@ -195,9 +195,12 @@ If you want to go deeper, in this order:
 
 1. [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — how the crates interact.
 2. [`docs/context/SESSION-STATE.md`](context/SESSION-STATE.md) — current state and next steps.
-3. [`docs/PLUGIN_DEVELOPER_GUIDE.md`](PLUGIN_DEVELOPER_GUIDE.md) — how to write a plugin.
-4. [`docs/adr/`](adr/) — every decision the project has made, and why.
-5. [`specs/L0-match/`](../specs/L0-match/) — the full specification of L0, cell by cell.
+3. [`specs/L0-match/11-player-characteristics.md`](../specs/L0-match/11-player-characteristics.md) — the player model for the new engine: what a characteristic is, the three components, the catalogue, the dynamics. **Read this before touching `PlayerLatents`, any `resolve_*`, or any `balance/` formula**: the prototype's shape is not the new contract.
+4. [`docs/adr/028-dimension-performance-plane-criterion.md`](adr/028-dimension-performance-plane-criterion.md) — dimension vs performance (the Plane A/B criterion), and the three components.
+5. [`docs/adr/029-keyed-derivation.md`](adr/029-keyed-derivation.md) — latents and noise derived by key, not by sequence.
+6. [`docs/PLUGIN_DEVELOPER_GUIDE.md`](PLUGIN_DEVELOPER_GUIDE.md) — how to write a plugin.
+7. [`docs/adr/`](adr/) — every decision the project has made, and why.
+8. [`specs/L0-match/`](../specs/L0-match/) — the full specification of L0, cell by cell.
 
 ---
 

@@ -1,8 +1,8 @@
 # Glossary
 
-**Version:** 1.1
+**Version:** 1.2
 **Status:** active
-**Last updated:** 2026-10-25
+**Last updated:** 2026-11-05
 
 Terms, acronyms, and concepts used throughout the specification. Every entry links to the file where the term is defined in full. This file is a navigator, not a replacement for the source.
 
@@ -18,31 +18,86 @@ The non-negotiable architectural separation of data into three layers. Plane A (
 
 ### Plane A — Ground Truth
 
-The actual state of the world: latent attributes, physiological state, latent psychological state, internal RNG seed. Lives in `pcfm-hidden`. Never exposed. Read only by `pcfm-match` and `pcfm-gen`, via `resolve_*` functions. See [`specs/00-foundations.md`](../specs/00-foundations.md) §3 and [`docs/adr/003-plane-a-enforcement.md`](adr/003-plane-a-enforcement.md).
+The actual state of the world: the hidden performances (strength, passing, vision, reading), the physiological and psychological traits, the internal RNG seed. Lives in `pcfm-hidden` (the **custodian**). Never exposed. Read only through the custodian API, one characteristic at a time, by the **calculator** (ADR-028). The engine never sees a value: it calls the **orchestrator** (`resolve_*`), which calls the calculator. See [`specs/00-foundations.md`](../specs/00-foundations.md) §3, [`docs/adr/003-plane-a-enforcement.md`](adr/003-plane-a-enforcement.md), ADR-028.
 
 ### Plane B — Observation
 
-Events and statistics computed exclusively from observable outcomes. Includes `MatchEvent`, aggregated statistics, ratings (computed from events, never from attributes), and temporal trends. Append-only. Lives in `pcfm-stats`. See [`specs/L0-match/05-match-events.md`](../specs/L0-match/05-match-events.md).
+Everything observable: dimensions of the body (height, weight, preferred foot, in `Player`, `pcfm-model`), states (fatigue, confidence, concentration, in `PhysicalStateMinimal` / `PsychologicalStateMinimal`, `pcfm-model`), and events and statistics (in `pcfm-stats`). Append-only where it is a log. The **engine** reads a dimension or a state directly; the **manager** does not read them either, he estimates them in Plane C (ADR-028). See [`specs/L0-match/05-match-events.md`](../specs/L0-match/05-match-events.md).
 
 ### Plane C — Estimation
 
-Valuations, projections, and indexes derived from statistical models. Includes `IndexSnapshot`, `ProjectionProfile`, visible attributes, and scouting reports. This is what the player sees. See [`specs/00-foundations.md`](../specs/00-foundations.md) §3.
+The **estimates**: what the manager reads, for every datum, with a confidence that depends on the method (a measurement for a dimension, a test for a physical performance, many matches for a technical skill, expert judgement for what has no instrument). Not only valuations and projections: every datum has an estimate in C. The manager never reads a true value: if he saw `passing = 0.73`, scouting would not exist (ADR-028). The scouting crate that holds these estimates does not exist yet. See [`specs/00-foundations.md`](../specs/00-foundations.md) §3.
 
 
-### Four layers of a player
+### Four kinds of datum about a player
 
-A player has four kinds of things, and each lives in exactly one place. The table is the reference model: a decision that blurs two rows is a decision to re-examine.
+A player's data falls into four kinds, and each lives in exactly one place.
+This replaces the older "four layers" (identity / state / latent skill /
+estimated skill), which used "latent skill" for everything hidden and
+"identity" for height. The criterion that decides is **dimension vs
+performance** (ADR-028, L0.11 §2): a dimension is a property of the body,
+a performance is something the player does.
 
-| Layer | Examples | Plane | Lives in | Who sees it |
+| Kind | Examples | Plane | Lives in | Who sees it |
 |---|---|---|---|---|
-| **Identity** | name, role, foot, height | B/C | `pcfm-model` | everyone |
-| **State** | fatigue, condition, confidence, morale | B (observable) | `pcfm-model` | everyone (it is observed) |
-| **Latent skill** | finishing, tackling, passing, ... | **A (truth)** | `pcfm-hidden` | **nobody, ever** |
-| **Estimated skill** | "his passing is ~14, with a margin" | **C (estimate)** | **does not exist yet** | the player, with uncertainty |
+| **Dimension** | height, weight, preferred foot | **B** (measured) | `pcfm-model` (`Player`) | measured, then estimated |
+| **State** | fatigue, confidence, concentration, composure | **B** (computed or held) | `pcfm-model` (`PhysicalStateMinimal`, `PsychologicalStateMinimal`) | estimated from effects |
+| **Performance** | strength, passing, tackling, vision, game reading | **A** (hidden) | `pcfm-hidden` | **nobody directly**: an estimate in Plane C |
+| **Estimate** | "his passing is good, with low confidence" | **C** | the scouting crate (does not exist yet) | the manager |
 
-- **"Hidden" is a crate, not a meaning.** `pcfm-hidden` contains the latent skill layer, plus the RNG and the observations buffer (mechanics, not player properties). "hidden = the attributes" confuses the container with the content.
-- **Layer 3 and layer 4 are never the same thing.** The player never sees the latents: he sees estimates built from events. This is pillar 10 (`Plane B ≠ Plane A`), and it is what separates Calcio Vero from a CA/PA game.
-- **The engine decides on truth, the player sees estimates.** `resolve_influence` reads layer 3 (inside the crate) and layer 2 (fatigue, passed as data), and returns an order — which is layer 2 (observable). No hidden scalar leaves.
+- **"Hidden" is a crate, not a meaning.** `pcfm-hidden` contains the
+  hidden performances, plus the RNG and the observations buffer (mechanics,
+  not player properties). "hidden = the attributes" confuses the container
+  with the content.
+- **The manager never reads a true value.** He reads an estimate in Plane
+  C, for every datum: a measurement for a dimension, a test for a physical
+  performance, many matches for a technical skill. This is what makes
+  scouting a game: if he saw `passing = 0.73`, there would be nothing to
+  discover.
+- **A datum produces an effect or modulates one.** A **modulator** is a
+  datum that changes how a characteristic behaves without producing a
+  result of its own: consistency (the spread of a performance), fatigue
+  (how much the body and the capability deliver), confidence (the risk the
+  player takes). Trait modulators live in Plane A, state modulators in
+  Plane B. The calculator treats an effect as a term of the sum and a
+  modulator as a parameter. See L0.11 §2.2.
+- **Dated note (2026-11-05).** The old table above this one put height in
+  "identity, B/C, everyone sees it" and confidence in "state, everyone
+  observes". Both are wrong: height is a **dimension** (measured, Plane
+  B), confidence is a **state** (computed from the trait plus context,
+  Plane B), and the manager estimates both, he does not read them. The old
+  "latent skill" row said "nobody, ever"; the correct statement is
+  "nobody directly, an estimate in Plane C".
+
+- **The engine reads truth, the manager reads estimates.** The engine reads a performance through the custodian (inside `pcfm-hidden`) and a dimension or a state directly (`Player`, `MatchState`), and returns an outcome. The manager reads an estimate in Plane C for every datum: a measurement for a dimension, a test for a physical performance, many matches for a technical skill. No true value reaches him.
+### Dimension
+
+A property of the body that exists whether the player moves or not: height, weight, preferred foot. Measured with a simple instrument, it does not change during a match, and it is not something the player *does*. Plane B, in `Player` (`pcfm-model`). It enters the formulas as an input. See ADR-028, L0.11 §2 and §7.5.
+
+### Performance
+
+Something the player *does*, and it exists only when he expresses it: strength, passing, vision, game reading. Hidden, stable over months, Plane A, in `pcfm-hidden`, read through the custodian. Measured with a test (strength, acceleration, vision) or observed over many matches (passing, reading) — but the method of estimation does not change the kind. See ADR-028, L0.11 §2 and §7.
+
+### Modulator
+
+A datum that changes how a characteristic behaves without producing a result of its own. Consistency changes the spread of a performance; fatigue changes how much the body and the capability deliver; confidence changes the risk the player takes. A modulator is not a sixth kind of datum: it is a property that crosses the kinds — a **trait modulator** in Plane A (consistency, resilience, emotional control, aggressiveness, courage) or a **state modulator** in Plane B (fatigue, confidence, concentration, composure). The calculator treats an effect as a term of the sum and a modulator as a parameter (a spread or a multiplier). See L0.11 §2.2 and §4.7.
+
+### Custodian
+
+The component that holds the hidden performances. It is `pcfm-hidden`. It answers one question at a time: "what is the value of this characteristic for this player?". It has no "give me all the values" door. It does not calculate and does not decide. See ADR-028, L0.11 §4.
+
+### Calculator
+
+The component that applies a formula. It is a new crate (not yet created). It receives the hidden values from the custodian and the situation from the orchestrator, applies a formula from `balance/*.json`, and returns the outcome. It does not choose which characteristics to read: the formula declares its terms, and the calculator asks the custodian for exactly those. A term outside the catalogue fails at load time, not in the middle of a match. See ADR-028, L0.11 §4 and §4.6.
+
+### Orchestrator
+
+The component the engine calls. It is `resolve_*`. It decides when to call the calculator, with which situation, for which formula. It does not calculate. It is the only door the engine sees: it sees neither the hidden values nor the formulas. See ADR-028, L0.11 §4.
+
+### Keyed derivation
+
+The mechanism that replaces sequential generation for latents and noise. A value that belongs to a player is derived from the player; a value that belongs to an event is derived from the event. Latents: `hash(world_seed, player_id, characteristic)` — no `match_id`, because a player's strength is the same in every match of his world. Noise: `hash(world_seed, match_id, tick, player_id, purpose)` — implemented when the per-agent loop exists. The defect it fixes: with a sequence, adding a characteristic shifts the values of every player generated after the first. See ADR-029.
+
 ### Doctrine
 
 The set of non-negotiable rules that every module must obey. Lives in [`specs/00-foundations.md`](../specs/00-foundations.md). Changing the doctrine requires an ADR.

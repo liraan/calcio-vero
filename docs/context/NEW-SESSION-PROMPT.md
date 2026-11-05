@@ -165,6 +165,18 @@ If Git provides the mechanism, use it. Session metadata lives in **commit traile
 
 - **Commit trailers** (block of `key: value` lines at the bottom of the commit message, after a blank line). The `commit-msg` hook (`.githooks/commit-msg`, one-off install: `git config core.hooksPath .githooks`) validates them. Template: `git config commit.template .gitmessage` (one-off, same install step). **The hook fires when `docs/context/SESSION-STATE.md` is staged** (closing commit), not by subject: a closing commit with an arbitrary subject is still validated. Required on closing commits:
     - `Verified:` — `C2-green` when the full quality gate ran and passed.
+      **The trailer must be true, not just present.** The hook checks that
+      `Verified:` exists; it cannot check that C2 ran. Write `C2-green` only
+      if you ran the full gate **in this session** and it passed. If it did
+      not run (a docs-only commit, or the workspace is red for unrelated
+      work), write `Verified: C2-not-run (<one-line reason>)`. A false
+      `C2-green` is a D1 violation in a persistent artefact: `git log`
+      repeats it to every future reader and no gate catches it. Observed
+      twice on 2026-11-05: `f94f083` carries `C2-green` on `origin/main`
+      while C2 was red (golden failing for the uncommitted F.7 work), and
+      `453550c` was amended before the push for the same reason. The first
+      cannot be corrected without rewriting shared history; the second was
+      caught only because the push re-ran the gates.
     - `Rules-Audit:` — **only if this session modified a rule file** (`NEW-SESSION-PROMPT.md`, `DECISION-PATTERNS.md`, a hard-stop, the startup or closing). `N changes, 0 contradictions, 0 leaks`, or `findings=[...]`. If no rule was touched, the trailer is omitted; the closing commit says nothing, which is honest.
     - `Direction-Check:` — **required when the diff touches a direction file** (`docs/context/IDEAS.md`, `docs/WORLD-MODEL.md`). The trailer declares what was checked and the outcome: `Direction-Check: <term> -> <OI or step contradicted | none>`. The judgment is not mechanised (no gate can decide "this direction contradicts this decision"); the **artefact** is: a false `none` is a D1 violation visible in `git log`, and a missing trailer is a red hook. Rationale: on 2026-11-02 the influence direction contradicted C.1, and the contradiction was noticed three commits late; with this trailer it would have been resolved in the same commit.
 - **What Git already does, so we do not reimplement it:**

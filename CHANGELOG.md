@@ -11,7 +11,58 @@ This project does not use semantic versioning for the docs; the version of each 
 > **Terminology note (2026-10-25):** the terms are **module** (a directory of the specification, e.g. `L0-match`), **sub-module** (a file inside a module, e.g. `04-match-engine.md`), **plugin** (a Rust crate with a `sheet.toml`, defined in ADR-012). The term **cell** is deprecated. In entries **before** this date, 'cell' means 'module', and 'module' (in the plugin sense) means 'plugin'. In entries **from** this date onwards, the new terminology is used.
 
 ---
-## [Unreleased]
+## [2026-11-05] — ADR-028 rewritten, ADR-029, L0.11, context files
+
+The project is rewriting its match engine. This session decided the model
+of the player and the shape of the engine; the code is still the
+prototype. The documentation now says so explicitly.
+
+### Added
+
+- `specs/L0-match/11-player-characteristics.md` (L0.11): the player model
+  for the new engine. The criterion (dimension vs performance), the four
+  families (physical, technical, psychological, cognitive), the
+  produce/modulate property, the three components (custodian, calculator,
+  orchestrator), the catalogue of terms, the sampling of modulators,
+  fatigue as one source with two effects, the dynamics (correlations,
+  development window, events-to-estimates bridge, persistence), and the
+  decisions taken and resolved.
+- `docs/adr/029-keyed-derivation.md`: latents and noise derived by key,
+  not by sequence. Corrects the key OI-53 proposed (no `match_id` for
+  latents: a player's strength is the same in every match of his world).
+  Decides OI-44 (noise) and OI-53 (latents); implements neither yet.
+- Glossary entries: dimension, performance, modulator, custodian,
+  calculator, orchestrator, keyed derivation.
+
+### Changed
+
+- **ADR-028 rewritten** (`028-observability-plane-criterion.md` →
+  `028-dimension-performance-plane-criterion.md`). The first version used
+  "observable in a match" and failed on height (a ruler), weight (a
+  scale), strength (a dynamometer). The criterion is dimension vs
+  performance. The ADR also records the three components and the rule
+  that the manager reads an estimate in Plane C, never a true value.
+- `specs/L0-match/10-ground-truth.md`: dated note. The cell describes the
+  prototype, still the code today; it is superseded for the new engine
+  and will be rewritten when the three components exist.
+- `docs/ARCHITECTURE.md`, `docs/CODE_TOUR.md`: dated notes and the
+  reading path updated to L0.11 and ADR-028/029.
+- `docs/GLOSSARY.md`: the "Four layers of a player" replaced by "Four
+  kinds of datum" (dimension, state, performance, estimate); the three
+  planes entries rewritten for the new engine.
+- `README.md`: ADR count 24 → 26 (24 accepted, 2 superseded). The count
+  had been stale since ADR-025 and was not covered by gate A4.
+- `docs/context/NEW-SESSION-PROMPT.md`: the `Verified:` trailer must be
+  true, not just present. Write `C2-green` only if the full gate ran in
+  this session; otherwise `C2-not-run (<reason>)`. Observed twice on
+  2026-11-05, once on `origin/main`.
+- `SESSION-STATE.md`: the player model paragraph, the F.7 deferral, the
+  decisions in §12, OI-44 and OI-53 marked decided by ADR-029.
+
+### Removed
+
+- `docs/adr/028-observability-plane-criterion.md` (renamed, see above).
+
 
 ### Planned
 
