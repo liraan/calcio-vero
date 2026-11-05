@@ -94,6 +94,11 @@ pub struct SaveOutcome {
 pub struct MovementOutcome {
     /// The acceleration, in cm/tick².
     pub acceleration: f64,
+    /// The top speed, in cm/tick (the clamp).
+    pub v_max: f64,
+    /// The stride ratio: how much ground one unit of leg speed covers,
+    /// relative to the reference height.
+    pub stride: f64,
 }
 
 /// The outcome of a set piece.

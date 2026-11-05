@@ -406,16 +406,29 @@ impl GroundTruth {
             }
         }
 
-        let force = self.latents_for(ctx.player).physical.explosive_force;
+        let latents = self.latents_for(ctx.player);
+        let force = latents.physical.explosive_force;
+        let max_speed = latents.physical.max_speed;
+        let balance = &self.movement_balance;
+        // v_max and stride are not terms of the acceleration formula: they
+        // are the clamp and the ground-per-step, computed from the balance
+        // and the player's data. The model says
+        // `v = min(v + a, v_max_ref * max_speed)`, `x += v * (height / height_ref)`.
+        let v_max = balance.v_max_ref_cm_per_tick * f64::from(max_speed);
+        let stride = ctx.height_cm / balance.height_ref_cm;
         let mut custodian = OneCharacteristic(force);
         let situation = TheSituation {
             height: ctx.height_cm,
             weight: ctx.weight_kg,
             fatigue: ctx.fatigue,
         };
-        let formula = self.movement_balance.formula();
+        let formula = balance.formula();
         let acceleration = Calculator::apply(&formula, &mut custodian, &situation);
-        MovementOutcome { acceleration }
+        MovementOutcome {
+            acceleration,
+            v_max,
+            stride,
+        }
     }
 
     /// Drains the accumulated observations.

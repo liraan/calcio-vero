@@ -56,6 +56,8 @@ pub struct PhysicalLatents {
     /// Explosive force, consumed by the movement (F.7).
     #[allow(dead_code)] // the consumer is resolve_movement, F.7 step 6
     pub explosive_force: f32,
+    /// Max speed, consumed by the movement (F.7).
+    pub max_speed: f32,
     /// Susceptibility to injury (prototype field, L0.11 §10 item 1:
     /// physical susceptibility, not a technical skill).
     pub injury_proneness: f32,
@@ -107,6 +109,7 @@ impl PlayerLatents {
         Self {
             physical: PhysicalLatents {
                 explosive_force: unit_from_key(world_seed, player, "explosive_force"),
+                max_speed: unit_from_key(world_seed, player, "max_speed"),
                 injury_proneness: unit_from_key(world_seed, player, "injury_proneness"),
             },
             technical: TechnicalLatents {
