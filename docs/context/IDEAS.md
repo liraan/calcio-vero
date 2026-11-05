@@ -891,3 +891,11 @@
 - **Why it matters:** if the commit cost ever crosses the 30 s threshold (OI-51), the fast profile is the obvious escape, and today it is blocked by a doctrine rule. Knowing that in advance is cheaper than discovering it under pressure.
 - **Prerequisites:** OI-51 reopened (the threshold crossed); an ADR for any `assert!` in a simulation path (D2).
 - **Not now:** the cost is acceptable, and adding invariants is structure without a current need (D3).
+
+### IDEA-DOC-004 — README: characteristics and influences, a table or a tree
+
+- **Status:** sketch
+- **What:** a table or logical tree in `README.md` showing each characteristic, its plane (A/B), what consumes it, and its observable effect. A summary for a new reader, not a duplicate of L0.11 §7.
+- **Why:** the README says what the project is, not what the player model contains. The table is the model's face: it shows that a characteristic is not an abstract number but a thing with a producer and a consumer. This is the transparency that distinguishes the project from a commercial game: not "trust the number", but "here is where it comes from and what it does". It makes the Three Planes visible without explaining them: a reader sees that a characteristic is hidden (A) or visible (B), and what it produces.
+- **Prerequisites:** the model tables (L0.11 §7) stable enough; the README rewrite is already tracked in OI-35 (the tables age).
+- **Open questions:** table or tree? Which level of detail? How to keep it from going stale (the same problem as OI-35)? Does it duplicate L0.11 or summarize it?
