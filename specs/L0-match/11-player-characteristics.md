@@ -690,26 +690,37 @@ a player can be heavy and weak, or light and strong.
 
 ### 7.6 States (Plane B)
 
-A state is a condition of the moment: it changes within a match (or
-between matches). **Every state today is a modulator**: none of them
-produces an action. They change how a characteristic or a body term
-behaves, and the calculator reads them as multipliers (§4.8), never as
-terms of the sum.
+A state is a condition of the moment. **Every state today is a modulator**:
+none of them produces an action. They change how a characteristic or a
+body term behaves, and the calculator reads them as multipliers (§4.8),
+never as terms of the sum.
 
-States are **computed**: the trait (Plane A, through the custodian) plus
-fatigue plus events, inside the calculator, produce the state. The engine
-holds the state; the manager estimates it (often with low confidence).
+**Two clocks.** A state is not one value: it is a **baseline** plus a
+**fluctuation**. The baseline belongs to the season (L1): it is set by
+the calendar, the training load, the travels, the results over weeks, and
+the engine of a match receives it as an **input**. The fluctuation belongs
+to the match (L0): it is set by the events of the 90 minutes, and the
+calculator computes it. The value the formula reads is the two together.
+This is not a detail: the fatigue at kick-off and the fatigue at the 90th
+minute are two different things, the confidence after a mistake and the
+confidence after three months on the bench are two different things, and
+a model with one value cannot explain either.
 
-| Name | Plane | Modulates | Computed from | Effect |
-|---|---|---|---|---|
-| Fatigue | B | **body** (geometry) and **capability** (quality), per action family | effort over the match (MD-40) | slower movement, later arrival, misplaced pass |
-| Condition | B | the baseline of the day (on fatigue and on physical delivery) | recent load, recovery | how much the body gives |
-| Confidence | B | risk taking and shot choice | trait threshold + events (error, goal) | choice of action |
-| Morale | B | commitment | results, context | intensity |
-| Pressure load | B | composure under pressure | accumulated pressure events | precision under pressure |
-| Concentration (level) | B | the degraded image (MD-40) | trait threshold + fatigue + events | errors, distraction |
-| Composure (level) | B | precision under pressure | trait threshold + pressure load | on-target under pressure |
-| Consistency (level of the day) | B | the spread of every performance | trait consistency + fatigue + events | variance of the outcome |
+Some states are **L1-only**, with no L0 fluctuation: the engine receives
+them as input and does not change them during the match.
+
+| Name | Plane | Clocks | Modulates | Computed from | Effect |
+|---|---|---|---|---|---|
+| Fatigue (match) | B | L0 (fluctuation); baseline from L1 | **body** (geometry) and **capability** (quality), per action family | effort over the match (MD-40) | slower movement, later arrival, misplaced pass |
+| Confidence | B | L0 + L1 | risk taking and shot choice | trait threshold + events (error, goal) | choice of action |
+| Morale | B | L0 + L1 | commitment | results, context | intensity |
+| Pressure load | B | L0 + L1 | composure under pressure | accumulated pressure events | precision under pressure |
+| Concentration (level) | B | L0 + L1 | the degraded image (MD-40) | trait threshold + fatigue + events | errors, distraction |
+| Composure (level) | B | L0 + L1 | precision under pressure | trait threshold + pressure load | on-target under pressure |
+| Consistency (level of the day) | B | L0 + L1 | the spread of every performance | trait consistency + fatigue + events | variance of the outcome |
+| Condition | B | L1 only | the baseline of the day (on fatigue and on physical delivery) | recent load, recovery | how much the body gives |
+| Match sharpness | B | L1 only | the readiness to play at match intensity | matches played and time since the last one | how quickly the body answers |
+| Injury | B | L1 only | availability | an event: start and end | available or not, and for how long |
 
 **The three "double" cases, resolved.** Concentration, composure and
 emotional control looked like they belonged to two planes. They do not:
@@ -720,13 +731,15 @@ the state is what he *is like today* (visible in its effects, computed).
 
 **Fatigue is the one state the engine holds directly.** It is an
 accumulator the engine updates (MD-40); the others are computed by the
-calculator from the trait and the events. The engine holds fatigue
-because it is the producer, not a read of a trait.
+calculator from the trait and the events. The engine holds the match
+fatigue because it is the producer, not a read of a trait. Its baseline
+arrives from L1 as an input, like the other L1-only states.
 
 **Where the state lives.** The state is an **output** of the calculator,
 stored in `MatchState`, not a latent and not a field of `Player`. This is
 the piece the prototype did not have: it stored psychological traits as
-states (in `PsychologicalStateMinimal`) without a trait behind them.
+states (in `PsychologicalStateMinimal`) without a trait behind them. The
+L1-only states are fields of the season data (L1), not of `Player`.
 
 ### 7.7 Behaviours (not datums)
 
