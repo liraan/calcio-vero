@@ -7,6 +7,25 @@
 //! Coordinates are integer centimetres (ADR-019 D1: determinism). The pitch
 //! is 10500 × 6800 cm by default. The origin is the home team's goal line,
 //! bottom-left: `x` grows toward the away goal, `y` toward the far touchline.
+//!
+//! # Classification of `AgentState` (dated note, 2026-11-05)
+//!
+//! `position`, `velocity` and `heading` are **match state**, not player
+//! data: they exist during the 90 minutes and change every tick. ADR-028
+//! asks "is this something the player is, does, or is like today?"; for
+//! them the question is different, because they are not the player's.
+//! They are **observable facts of the match**, Plane B:
+//!
+//! - `position` is read by the engine everywhere;
+//! - `heading` is read by the cone (`visible_to` in `perception.rs`) and
+//!   written when the carrier turns to play;
+//! - `velocity` is **written** (the movement pass) and never read yet. It
+//!   is a derived output of the movement, not an input.
+//!
+//! **Futurability.** All three are observable, so the 2D/3D will show them
+//! through the tick record (IDEA-INFRA-018, not built). The tick record is
+//! the leaf: without it, these fields have no renderer, and the 2D cannot
+//! show movement at all.
 
 use std::collections::BTreeMap;
 

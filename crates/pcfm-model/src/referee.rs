@@ -1,4 +1,13 @@
-//! Referee — strictness and consistency.
+//! Referee — a prototype residue.
+//!
+//! **Dated note (2026-11-05).** In the new engine the referee is not an
+//! entity with strictness and consistency: it **applies the rules**, exact
+//! (T1.3, T1.3-bis: *fairness over realism*, a foul is a foul). The
+//! referee on the pitch is a projection of the rules module, computed from
+//! the events for the renderer, with no state in the engine. `strictness`
+//! and `consistency` **do not exist** in the new engine: they are the
+//! prototype's way of modelling systematic referee error, which T1.3-bis
+//! removed. See OI-55.
 //!
 //! See `specs/L0-match/03-entities-minimal.md` §2.6.
 
@@ -7,7 +16,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::ModelError;
 
-/// The referee.
+/// The referee (prototype).
+///
+/// **Residue.** In the new engine the referee applies the rules and is a
+/// projection for the renderer (OI-55); `strictness` and `consistency` do
+/// not exist there. Kept because the prototype still constructs this type.
 ///
 /// See `specs/L0-match/03-entities-minimal.md` §2.6.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -15,8 +28,10 @@ pub struct Referee {
     /// The unique identifier of the referee.
     pub id: RefereeId,
     /// The strictness, 0.0–1.0 (affects card probability).
+    /// Prototype only: not in the new engine (OI-55).
     pub strictness: f32,
     /// The consistency, 0.0–1.0 (affects decision variance).
+    /// Prototype only: not in the new engine (OI-55).
     pub consistency: f32,
 }
 

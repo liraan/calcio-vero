@@ -102,6 +102,13 @@ The two are **separate**. A 3D stadium with 45,000 people is rendering; the crow
 The 2D horizon keeps "ball with physics" in the force sense: a renderer or a future engine that integrates trajectories. The difference between the two is *computed from forces* vs *declared geometry*, and it is the same distinction as `L0-POSITIONAL-SLICE` §0: effects are modelled, not simulated.
 **Note (2026-11-03) — the 3D is a projection, not a physics engine.** The 3D view (post-v1.0) consumes the same tick record as the 2D view; it is a new projection of the same phenomenological engine, not a new engine. "Physical ball dynamics" stays defined as *computed from forces* (§5 note, 2026-11-02), and it is **not** on the roadmap: a physics engine is a different paradigm, not a later step (`L0-POSITIONAL-SLICE` §0). Adding physics would require an ADR that changes the doctrine, not a rendering decision. Recorded so that "for the 3D we need physics" cannot be introduced as an implementation detail.
 
+
+**Note (2026-11-05) — weather and pitch condition are out, and the pitch is geometry.** Two points in the table above and in the 2026-11-02 note are stale.
+
+- **Gameplay weather is out of the new engine.** The table lists "basic gameplay weather" in v1.0; T5 (`SESSION-STATE.md`, decision of 2026-11-03) excludes weather and pitch wear from the new engine. Weather is an input to perception and execution in the *old* prototype; the new engine does not model it yet, and the first phenomena (the ball travelling, the geometric goal, the save) do not depend on it. It is not "reserved": it is out, and it will be reintroduced with an ADR if and when a consumer exists.
+- **`Pitch.condition` is not "reserved" either.** The 2026-11-02 note says it "stays reserved at v1.0: the field exists, no consumer reads it". T5 decides that pitch wear is out. Moreover, in the new engine the pitch is **only geometry**: a grass surface with `length_m` and `width_m`, on which the actors run and the ball rolls. It has no condition and no weather. The prototype's `Pitch` has four fields; the new engine inherits two.
+- **What this note does not change.** The horizon table stays as the record of the earlier vision; the ball, the posts, the `InFlight` position and the 3D-as-projection notes all stay valid.
+
 **Rule:** a horizon is not a promise. It is a place to put things so that the contract does not have to grow to accommodate them prematurely.
 
 ---

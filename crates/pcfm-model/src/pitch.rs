@@ -1,4 +1,12 @@
-//! Pitch — dimensions, condition, weather.
+//! Pitch — a grass surface with its dimensions.
+//!
+//! **Dated note (2026-11-05).** In the new engine the pitch is **only
+//! geometry**: a grass surface with `length_m` and `width_m`, on which the
+//! actors run and the ball rolls. It has no condition and no weather.
+//! `Pitch.condition` and `Pitch.weather` are prototype fields: T5
+//! (2026-11-03) excludes weather and pitch wear from the new engine, and
+//! the 2026-11-02 note in WORLD-MODEL §5 that called `condition`
+//! "reserved" is superseded by T5. They are not inherited. See OI-56.
 //!
 //! See `specs/L0-match/03-entities-minimal.md` §2.5.
 
@@ -29,8 +37,10 @@ pub struct Pitch {
     /// The width in metres (default 68).
     pub width_m: u16,
     /// The condition, 0.0–1.0 (affects ball roll).
+    /// Prototype only: not in the new engine (T5, OI-56).
     pub condition: f32,
     /// The weather.
+    /// Prototype only: not in the new engine (T5, OI-56).
     pub weather: Weather,
 }
 

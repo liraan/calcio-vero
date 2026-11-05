@@ -9,6 +9,33 @@
 //! `GroundTruth::resolve_*`. This is the whole point of ADR-003 (option B):
 //! the match engine calls `resolve_*` and receives an outcome; it never
 //! reads a latent number.
+//!
+//! # Classification (dated note, 2026-11-05)
+//!
+//! Every field answers the question of ADR-028: is it something the player
+//! **is** (a dimension), **does** (a performance), or **is like today** (a
+//! state)?
+//!
+//! - **Identity**, not part of the model: `id`, `name`. `role` is a label
+//!   at L0 (ADR-017); it becomes the expected profile of the generator at
+//!   L3, and the two must not be confused.
+//! - **Dimensions** (Plane B, measured): `preferred_foot`, `height_cm`.
+//! - **States** (Plane B, computed or held): `condition` (freshness),
+//!   `match_sharpness` (match rhythm: a player can be fresh and off the
+//!   pace, so it is distinct from `condition`), `fatigue`, `confidence`,
+//!   `morale`, `pressure_load`.
+//!
+//! **Debt declared.** `confidence` and `morale` are states without the
+//! trait behind them: L0.11 §7.3 says the trait lives in Plane A and the
+//! state is computed from it plus the events. Today only the state
+//! exists. `fatigue` has a producer (MD-40) but no consumer in the engine
+//! since F.5 removed the influence bridge; the new engine will read it as
+//! a modulator (§4.8), and that consumer does not exist yet.
+//!
+//! **Futurability.** These states are observable, so the 2D/3D can show
+//! them through the tick record (IDEA-INFRA-018, not built). That
+//! justifies the field, not the hidden performances: the manager never
+//! sees a true value (ADR-028 §2.4), so a latent never reaches a frame.
 
 use pcfm_core::ids::PlayerId;
 use serde::{Deserialize, Serialize};
