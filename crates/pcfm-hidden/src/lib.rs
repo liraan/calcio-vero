@@ -140,14 +140,14 @@ impl GroundTruth {
         let noise = next_unit(&mut self.streams.duel);
 
         let attacker_score = match ctx.duel_type {
-            DuelType::Aerial => attacker.aerial,
-            DuelType::Ground => attacker.tackling.mul_add(-1.0, 1.0),
-            DuelType::WithGoalkeeper => attacker.finishing,
+            DuelType::Aerial => attacker.technical.aerial,
+            DuelType::Ground => attacker.technical.tackling.mul_add(-1.0, 1.0),
+            DuelType::WithGoalkeeper => attacker.technical.finishing,
         };
         let defender_score = match ctx.duel_type {
-            DuelType::Aerial => defender.aerial,
-            DuelType::Ground => defender.tackling,
-            DuelType::WithGoalkeeper => defender.goalkeeping,
+            DuelType::Aerial => defender.technical.aerial,
+            DuelType::Ground => defender.technical.tackling,
+            DuelType::WithGoalkeeper => defender.technical.goalkeeping,
         };
 
         let attacker_wins = noise.mul_add(0.2, attacker_score) > defender_score;
@@ -210,7 +210,7 @@ impl GroundTruth {
 
         // Bidirectional deviation: two independent axes, signed by two
         // different noise draws. All f64, deterministic (cast = truncation).
-        let spread_base = (1.0 - f64::from(shooter.finishing)) * 400.0;
+        let spread_base = (1.0 - f64::from(shooter.technical.finishing)) * 400.0;
         let spread_diff = f64::from(ctx.difficulty) * 2.0;
         let spread = spread_base + spread_diff;
         let y_rand = f64::from(next_unit(&mut self.streams.shot));
@@ -264,7 +264,7 @@ impl GroundTruth {
     pub fn resolve_pass(&mut self, ctx: &PassContext) -> PassOutcome {
         let passer = self.latents_for(ctx.passer);
         let noise = next_unit(&mut self.streams.pass);
-        let complete = noise.mul_add(0.3, passer.passing) > 0.5;
+        let complete = noise.mul_add(0.3, passer.technical.passing) > 0.5;
         let dir = Self::direction_3d(ctx.from, ctx.to);
         let speed = Self::speed_from_success(complete);
         let initial_velocity = (
@@ -306,7 +306,7 @@ impl GroundTruth {
     pub fn resolve_injury_risk(&mut self, ctx: &InjuryContext) -> InjuryOutcome {
         let player = self.latents_for(ctx.player);
         let noise = next_unit(&mut self.streams.injury);
-        let injured = noise.mul_add(0.3, player.injury_proneness) > 0.8;
+        let injured = noise.mul_add(0.3, player.physical.injury_proneness) > 0.8;
 
         let outcome = InjuryOutcome { injured };
 
@@ -329,7 +329,7 @@ impl GroundTruth {
     pub fn resolve_save(&mut self, ctx: &SaveContext) -> SaveOutcome {
         let keeper = self.latents_for(ctx.goalkeeper);
         let noise = next_unit(&mut self.streams.save);
-        let saved = noise.mul_add(0.3, keeper.goalkeeping) > 0.5;
+        let saved = noise.mul_add(0.3, keeper.technical.goalkeeping) > 0.5;
 
         let outcome = SaveOutcome { saved };
 
@@ -346,7 +346,7 @@ impl GroundTruth {
     pub fn resolve_set_piece(&mut self, ctx: &SetPieceContext) -> SetPieceOutcome {
         let taker = self.latents_for(ctx.taker);
         let noise = next_unit(&mut self.streams.set_piece);
-        let success = noise.mul_add(0.3, taker.set_pieces) > 0.5;
+        let success = noise.mul_add(0.3, taker.technical.set_pieces) > 0.5;
 
         let outcome = SetPieceOutcome { success };
 
@@ -519,11 +519,11 @@ impl GroundTruth {
     fn skill_milli(&mut self, player: PlayerId, skill: SkillKind) -> i32 {
         let l = self.latents_for(player);
         let v = match skill {
-            SkillKind::Tackling => l.tackling,
-            SkillKind::Passing => l.passing,
-            SkillKind::Finishing => l.finishing,
-            SkillKind::Aerial => l.aerial,
-            SkillKind::Goalkeeping => l.goalkeeping,
+            SkillKind::Tackling => l.technical.tackling,
+            SkillKind::Passing => l.technical.passing,
+            SkillKind::Finishing => l.technical.finishing,
+            SkillKind::Aerial => l.technical.aerial,
+            SkillKind::Goalkeeping => l.technical.goalkeeping,
         };
         #[allow(clippy::cast_possible_truncation)]
         let milli = (v * 1000.0) as i32;

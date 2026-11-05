@@ -1,4 +1,4 @@
-//! Latent attributes (Plane A), derived by key.
+//! Latent attributes (Plane A), derived by key, grouped by family.
 //!
 //! These are the values that must **never** leave `pcfm-hidden`.
 //!
@@ -18,20 +18,84 @@
 //! The factor structure that produces realistic distributions and
 //! correlations is L3's job (L0.11 §11.1); this module only fixes the
 //! derivation, not the distribution.
+//!
+//! # The four families (L0.11 §7, §12.2)
+//!
+//! The latents are grouped by family, as the model does: physical,
+//! technical, psychological, cognitive. Adding a characteristic touches
+//! one family, not a 24-field blob (L0.11 §12.2). The families that have
+//! no datum yet (psychological, cognitive) are empty: their content
+//! arrives with the consumer, not before (D3).
+//!
+//! The prototype fields keep their prototype names and their prototype
+//! place: `aerial` and `set_pieces` are composites (L0.11 §7.9 and §10), and
+//! they are migrated when their split arrives (OI-48, OI-50).
+//! `explosive_force` is the first new-model field: it is read by the
+//! movement formula (F.7).
 
 use pcfm_core::ids::PlayerId;
 
-/// A latent attribute of a player.
+/// A latent attribute of a player, grouped by family (L0.11 §7, §12.2).
 #[derive(Debug, Clone, Copy)]
 pub struct PlayerLatents {
-    pub finishing: f32,
-    pub passing: f32,
-    pub tackling: f32,
-    pub aerial: f32,
-    pub goalkeeping: f32,
-    pub set_pieces: f32,
+    /// Physical performances (L0.11 §7.1).
+    pub physical: PhysicalLatents,
+    /// Technical performances (L0.11 §7.2).
+    pub technical: TechnicalLatents,
+    /// Psychological traits (L0.11 §7.3), all modulators.
+    #[allow(dead_code)] // no consumer yet: the family is empty (D3)
+    pub psychological: PsychologicalLatents,
+    /// Cognitive traits (L0.11 §7.4).
+    #[allow(dead_code)] // no consumer yet: the family is empty (D3)
+    pub cognitive: CognitiveLatents,
+}
+
+/// Physical performances (L0.11 §7.1).
+#[derive(Debug, Clone, Copy)]
+pub struct PhysicalLatents {
+    /// Explosive force, consumed by the movement (F.7).
+    #[allow(dead_code)] // the consumer is resolve_movement, F.7 step 6
+    pub explosive_force: f32,
+    /// Susceptibility to injury (prototype field, L0.11 §10 item 1:
+    /// physical susceptibility, not a technical skill).
     pub injury_proneness: f32,
 }
+
+/// Technical performances (L0.11 §7.2).
+#[derive(Debug, Clone, Copy)]
+pub struct TechnicalLatents {
+    /// Finishing, consumed by the shot (prototype name; L0.11 §7.2 calls
+    /// the characteristic "shooting").
+    pub finishing: f32,
+    /// Passing, consumed by the pass.
+    pub passing: f32,
+    /// Tackling, consumed by the ground duel.
+    pub tackling: f32,
+    /// Prototype composite (`heading` × `height` × `explosive_force`): to be
+    /// split (OI-50).
+    pub aerial: f32,
+    /// Goalkeeping, consumed by the save.
+    pub goalkeeping: f32,
+    /// Prototype composite (free kicks, penalties, corners, throw-ins):
+    /// to be split (OI-48, OI-50).
+    pub set_pieces: f32,
+}
+
+/// Psychological traits (L0.11 §7.3), all modulators.
+///
+/// Empty: the first trait (consistency) arrives with the sampling the
+/// calculator needs §4.7, which does not exist yet (D3).
+#[derive(Debug, Clone, Copy)]
+#[allow(dead_code)] // no consumer yet: the trait arrives with the sampling (D3)
+pub struct PsychologicalLatents {}
+
+/// Cognitive traits (L0.11 §7.4).
+///
+/// Empty: the first trait (game reading) arrives with the situated
+/// decision (F.6), which does not exist yet (D3).
+#[derive(Debug, Clone, Copy)]
+#[allow(dead_code)] // no consumer yet: the trait arrives with F.6 (D3)
+pub struct CognitiveLatents {}
 
 impl PlayerLatents {
     /// Derives a player's latents from the world seed and the player id.
@@ -41,13 +105,20 @@ impl PlayerLatents {
     #[must_use]
     pub fn from_key(world_seed: u64, player: PlayerId) -> Self {
         Self {
-            finishing: unit_from_key(world_seed, player, "finishing"),
-            passing: unit_from_key(world_seed, player, "passing"),
-            tackling: unit_from_key(world_seed, player, "tackling"),
-            aerial: unit_from_key(world_seed, player, "aerial"),
-            goalkeeping: unit_from_key(world_seed, player, "goalkeeping"),
-            set_pieces: unit_from_key(world_seed, player, "set_pieces"),
-            injury_proneness: unit_from_key(world_seed, player, "injury_proneness"),
+            physical: PhysicalLatents {
+                explosive_force: unit_from_key(world_seed, player, "explosive_force"),
+                injury_proneness: unit_from_key(world_seed, player, "injury_proneness"),
+            },
+            technical: TechnicalLatents {
+                finishing: unit_from_key(world_seed, player, "finishing"),
+                passing: unit_from_key(world_seed, player, "passing"),
+                tackling: unit_from_key(world_seed, player, "tackling"),
+                aerial: unit_from_key(world_seed, player, "aerial"),
+                goalkeeping: unit_from_key(world_seed, player, "goalkeeping"),
+                set_pieces: unit_from_key(world_seed, player, "set_pieces"),
+            },
+            psychological: PsychologicalLatents {},
+            cognitive: CognitiveLatents {},
         }
     }
 }
@@ -88,22 +159,23 @@ mod tests {
     fn same_player_same_value() {
         let a = PlayerLatents::from_key(42, p(7));
         let b = PlayerLatents::from_key(42, p(7));
-        assert_eq!(a.passing, b.passing);
-        assert_eq!(a.finishing, b.finishing);
+        assert_eq!(a.technical.passing, b.technical.passing);
+        assert_eq!(a.technical.finishing, b.technical.finishing);
+        assert_eq!(a.physical.explosive_force, b.physical.explosive_force);
     }
 
     #[test]
     fn different_players_different_values() {
         let a = PlayerLatents::from_key(42, p(7));
         let b = PlayerLatents::from_key(42, p(8));
-        assert_ne!(a.passing, b.passing);
+        assert_ne!(a.technical.passing, b.technical.passing);
     }
 
     #[test]
     fn different_worlds_different_values() {
         let a = PlayerLatents::from_key(42, p(7));
         let b = PlayerLatents::from_key(43, p(7));
-        assert_ne!(a.passing, b.passing);
+        assert_ne!(a.technical.passing, b.technical.passing);
     }
 
     #[test]
@@ -111,13 +183,14 @@ mod tests {
         for slot in 0..100 {
             let l = PlayerLatents::from_key(42, p(slot));
             for v in [
-                l.finishing,
-                l.passing,
-                l.tackling,
-                l.aerial,
-                l.goalkeeping,
-                l.set_pieces,
-                l.injury_proneness,
+                l.physical.explosive_force,
+                l.physical.injury_proneness,
+                l.technical.finishing,
+                l.technical.passing,
+                l.technical.tackling,
+                l.technical.aerial,
+                l.technical.goalkeeping,
+                l.technical.set_pieces,
             ] {
                 assert!((0.0..1.0).contains(&v), "value {v} out of [0,1)");
             }
@@ -131,8 +204,8 @@ mod tests {
         let alone = PlayerLatents::from_key(42, p(8));
         let _before = PlayerLatents::from_key(42, p(7));
         let after = PlayerLatents::from_key(42, p(8));
-        assert_eq!(alone.passing, after.passing);
-        assert_eq!(alone.tackling, after.tackling);
+        assert_eq!(alone.technical.passing, after.technical.passing);
+        assert_eq!(alone.technical.tackling, after.technical.tackling);
     }
 
     #[test]
@@ -140,7 +213,8 @@ mod tests {
         // Adding a characteristic does not shift the others: each value is
         // derived from its own purpose string.
         let l = PlayerLatents::from_key(42, p(7));
-        assert_ne!(l.finishing, l.passing);
-        assert_ne!(l.passing, l.tackling);
+        assert_ne!(l.technical.finishing, l.technical.passing);
+        assert_ne!(l.technical.passing, l.technical.tackling);
+        assert_ne!(l.physical.explosive_force, l.technical.passing);
     }
 }
