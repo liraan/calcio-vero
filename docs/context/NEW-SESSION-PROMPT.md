@@ -191,6 +191,18 @@ If a standard tool already does what we need, use it: `awk` over `sed` for long 
 
 **Rule precedence:** the hard stops (D1, D2, C2) win over everything else. D1 (honesty) first. In any other conflict, ask the maintainer.
 
+## Patterns (how to work — observed, not speculative)
+
+These are the working patterns that have saved hours and the failures that have cost them. They refine the rules above (D7); where one repeats a rule, the rule is the source and this is the reminder. Each one is an artefact: a test that can fail, a `grep` in the report, a field in the commit.
+
+- **P1 — A test that cannot fail is worse than no test.** If the sample is empty, an `assert` inside the loop proves nothing. Verify that the sample is non-empty, or write the test that *forces* the case. A test that always passes looks like coverage and is not.
+- **P2 — `grep` before saying "consumer: X".** Before classifying a field as "read by X", run the `grep`. Almost every field classified from memory had no consumer. Without the `grep`, it is an invention (D1).
+- **P3 — A criterion that fails on a real case is wrong.** When a criterion breaks on a concrete case (observable-in-a-match fell on height, weight, strength), do not patch it: find one that holds on every case and declare why the first was insufficient.
+- **P4 — "Decided" is not "implemented".** In every artefact (Status column, Plan cell, commit body), write which of the two it is. A decision that is written but not coded is a decision, not an implementation.
+- **P5 — Futuribility justifies Plane B fields, not Plane A.** The tick record → 2D/3D is a declared consumer for observables. The manager never sees a true value: a latent never ends up in a frame.
+- **P6 — Prefer a conclusion to a menu.** When the metrics in context yield a default and the alternative is trackable as an OI with a first action, apply the default and state it (A2, *Default derivabile*). Reserve the menu for model choices and doctrine choices, which are the maintainer's. `00-foundations.md` §1 ("propose two options") applies to an ambiguous specification, not to a decision the agent can derive.
+- **P7 — Accept a correction and reformulate. Do not defend.** When the maintainer corrects a categorisation (A/B, pure/gap, decided/implemented), the correction is the classification. Reformulate, do not argue.
+
 ## Startup ritual (mandatory — see E1)
 
 At the start of every new chat, **before proposing anything**, ask the maintainer to run these commands in order and paste the output. Do not assume the state described in this prompt is still true: verify it.
