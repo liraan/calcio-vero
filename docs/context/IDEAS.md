@@ -936,7 +936,7 @@
   3. **Name tie** — the logo predates ADR-027; it does not encode a name, so it survives the rename.
 - **Prerequisites for a project-owned logo:** a mark drawn by a person (or an SVG written in the repo), not an output of a service that retains the rights.
 ### IDEA-PERCEPTION-002 — Head/body separation (head yaw)
-- **Status:** sketch
+- **Status:** resolved by ADR-033 (L0 part: the field exists at L0 with a declared default; the head yaw / shoulder check stay L2).
 - **Category:** Match engine (L0, after F.4-c) / L2 (shoulder check)
 - **Source:** conversation 2026-11-04 (user). Deferred: no consumer today (the decision does not exist).
 - **Idea:** the human head rotates ±60-70° in yaw, ±40° in pitch relative to the body; the "shoulder check" before receiving is the visible form. Today body + head + eyes collapse into a single `heading` (MD-34, declared).
