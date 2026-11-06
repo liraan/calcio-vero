@@ -36,3 +36,52 @@ The repo is **already correct**, verified on 2026-11-06. `.gitattributes` exists
 - **A check that does not exclude binaries reports false CRLF.** `git cat-file -p | grep $'\r'` finds `0x0D` inside PNGs and PDFs. The filter must skip files declared `binary` before counting. Cost: one wrong count, corrected in the next block.
 - **`grep -c "\`pattern\`"` eats the backticks.** Unquoted backticks in a double-quoted shell string are command substitution: the pattern becomes empty and the count is meaningless. The verification must use single quotes or an anchor without backticks. Cost: one failed verification, corrected in the next block.
 - **A `grep` anchor written from memory (em-dash, bold markdown) does not match.** `grep -nE "^\*\*B1 —"` returned nothing because the line begins with `- **B1`. The anchor must be the literal prefix that exists, verified with `grep -n "B1 — Tools"` first. This is P3 applied to `grep`, not only to patterns.
+
+## Extended evaluation (2026-11-06, evening)
+
+The original evaluation rejected `sd`, `ex`, `ruplacer`, `node`, `python`, PowerShell by argument, not by test. That was a leak (D5): "no slot" is a judgment, "tested and failed" is a fact. The candidates were installed (`sd` 1.0.0, `ruplacer` 0.10.0, `ast-grep` 0.51.1 via cargo, `yq` 4.54.2) and tested on six groups. Timing is process startup on Git Bash/Windows, not operation cost.
+
+### Group 1 — single-line, 4-byte UTF-8 (blue circle to green circle)
+
+| Tool | Result | Time |
+|---|---|---|
+| `perl -CSD -Mutf8 -i -pe` | correct | 84 ms |
+| `perl -CSD` (no `-Mutf8`) | silent failure | 78 ms |
+| `sed` | silent failure | 52 ms |
+| `sd` | correct | 97 ms |
+| `node -e` | fails (argument eaten by shell, see note) | 133 ms |
+| `python3 -c` | fails (same cause) | 247 ms |
+| PowerShell `WriteAllText` | fails (same cause) | 695 ms |
+
+Note (D1): `node`/`python3`/PowerShell failures are argument-passing, not language: the emoji inside `-c`/`-e` is consumed by Git Bash before reaching the process. Not tested with a script file. Declared as a false negative.
+
+Verdict: `perl -CSD -Mutf8` and `sd` correct; `perl` already installed, `sd` no slot.
+
+### Group 2 — multi-line / multi-file patch
+
+`perl` with `^(\s*)use ` and `git apply` both correct (3 `use` changed, one `// use` comment untouched). `git apply` wins on atomicity and preview (`--check`, `--stat`); `perl` wins on setup speed. Both retained.
+
+### Group 3 — whole-file rewrite
+
+`cat > file`, `ex -s`, `vim -es`: all correct (UTF-8 preserved, no BOM, LF). `cat > file` wins on simplicity; `ex`/`vim` no added value.
+
+### Group 4 — YAML frontmatter
+
+`yq --front-matter=process`, `sed`, `perl`: all correct (body intact, UTF-8 preserved, idempotent for `yq`). `ex` failed because `-c 's/.../.../'` without `%` acts on the current line (my error, not the tool). `yq` wins on structure-awareness.
+
+### Group 6 — large refactor (`use pcfm_` to `use ds_`)
+
+| Tool | Result |
+|---|---|
+| `perl '^(\s*)use pcfm_/$1use ds_'` | 11/11 correct, indentation preserved, doc comments untouched |
+| `ast-grep` scan (YAML rule) | 123 matches (correct, more precise than grep: excludes `/// use`) |
+| `ast-grep` fix (`$$$` in `fix:`) | broken: writes the literal `use ds_$$$` |
+| `ruplacer "use pcfm_" "use ds_" --go` | 13/13 correct, dry-run native, 5 files, doc comments untouched |
+
+Verdict: `ruplacer` wins for `ds-*` (ADR32): dry-run + apply, no regex, Rust, respects `.gitignore`. `ast-grep` remains a scan tool (precise on code, not on comments) but is not usable for rewriting on 0.51.1.
+
+### Finding: shell CWD destroyed by `cd /tmp/x && ... && rm -rf /tmp/x`
+
+While testing Group 2, the shell was `cd`'d into `/tmp/gt` and then the directory was deleted with `rm -rf`. Every subsequent command ran from a deleted CWD: `crates/` not found, `git` "Unable to read current working directory", `ast-grep` native binary ENOENT (false alarm, the binary existed). Five commands were wasted and one group (locate) was invalidated before the cause was found.
+
+Rule: `cd /tmp/x` must be followed by `cd -` (or an absolute path) before `rm -rf /tmp/x`. Symptom: every relative path fails, `git` reports the CWD error. Remedy: `cd "$HOME"` (or an absolute path) and retry; it is not a tool problem.
