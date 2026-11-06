@@ -2,9 +2,11 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `0a9012f` — "docs(context): ADR-033 wired in — IDEA-002 resolved, OI-71 partial, F.6 unlocked"
+**Last commit verified:** `b9a7285` — "docs(analysis): 2026-11-07 session handoff for a new agent"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
+
+**Session closed 2026-11-07 (closing ritual E2 executed).** No further work executed in this session (E3). The next session starts from `b9a7285`.
 
 **Ideas backlog:** `docs/context/IDEAS.md`. Read at startup to know what is not yet decided; do not implement from it.
 
