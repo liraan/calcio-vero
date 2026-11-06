@@ -23,7 +23,7 @@
 
   <rect x="150" y="340" width="500" height="100" rx="8" fill="#27ae60"/>
   <text x="400" y="375" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">PLANE B — observable</text>
-  <text x="400" y="400" text-anchor="middle" fill="#ecf0f1" font-size="13">match events, fatigue, confidence, height, weight, name</text>
+  <text x="400" y="400" text-anchor="middle" fill="#ecf0f1" font-size="13">match events, fatigue, confidence, height, weight, name, foot (fact)</text>
   <text x="400" y="422" text-anchor="middle" fill="#d5f5e3" font-size="12" font-style="italic">events and states, computed</text>
 
   <line x1="400" y1="440" x2="400" y2="488" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
@@ -31,6 +31,6 @@
 
   <rect x="150" y="490" width="500" height="90" rx="8" fill="#e67e22"/>
   <text x="400" y="525" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">PLANE C — what the manager sees</text>
-  <text x="400" y="550" text-anchor="middle" fill="#fdf2e9" font-size="13">"passing: good, two matches seen"   ·   "right-footed (est.)"</text>
+  <text x="400" y="550" text-anchor="middle" fill="#fdf2e9" font-size="13">"passing: good, two matches seen"   ·   "left foot: 6/10 (est.)"</text>
   <text x="400" y="570" text-anchor="middle" fill="#fdebd0" font-size="12" font-style="italic">never a true value</text>
 </svg>

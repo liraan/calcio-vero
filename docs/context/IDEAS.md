@@ -121,6 +121,20 @@
      IDEA-PM-002), or both.
   3. Is "both" a real value (ambidextrous players) or just the top of a
      weak-foot scale?
+  4. **Latent vs observable (2026-11-06, from a pause with the maintainer).**
+     The two per-foot performances are latent but **observable**: the true
+     value is not exposed (A), per-foot statistics are facts (B), and the
+     estimate is a second layer (C). The README puts "how well he uses each
+     foot" in A and the estimate in C; `assets/player-model.svg` puts
+     "right-footed (est.)" in C, which is wrong in every case (the foot is
+     a fact, not an estimate). The doctrine question is: does "latent"
+     imply "not observable"? The engine's answer so far is no (`height_cm`
+     measured and visible; `strength` latent and not visible; the foot
+     latent and visible), but the model does not say it explicitly.
+     **First action:** read `docs/adr/028-dimension-performance-plane-criterion.md`
+     §2 and check whether it separates "dimension vs performance" from
+     "observable vs latent"; if not, the amendment is the ADR, and the
+     README/L0.11 §7.5/§9 follow.
 - **Critical note:** L0 is complete and ratified; adding footedness is a
   contract change — it requires a new module or a revision, and an ADR if it
   touches the match engine contract (ADR-019). Do not implement from this

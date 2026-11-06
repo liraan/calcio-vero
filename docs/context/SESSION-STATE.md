@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `1ac7dc0` — "feat(match): move_agents calls resolve_movement (F.7 step 7b)"
+**Last commit verified:** `c9298fc` — "docs(context): F.7 step 7b done, next is step 8"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
