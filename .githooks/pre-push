@@ -8,6 +8,18 @@
 
 set -u
 
+# OI-66: gates.sh reads the working tree, not HEAD. A dirty tree can pass
+# locally and push a commit that no gate has verified. Require a clean
+# tree relative to HEAD before running the gate.
+if ! git diff --quiet HEAD 2>/dev/null; then
+  echo "" >&2
+  echo "pre-push: working tree is dirty (uncommitted changes to tracked files)." >&2
+  echo "pre-push: gates.sh reads the working tree, not HEAD; a dirty tree can pass" >&2
+  echo "pre-push: locally and push a commit that no gate has verified (OI-66)." >&2
+  echo "pre-push: commit or stash the changes, then push." >&2
+  exit 1
+fi
+
 if [ ! -x scripts/gates.sh ]; then
   echo "pre-push: scripts/gates.sh not found or not executable" >&2
   exit 1
