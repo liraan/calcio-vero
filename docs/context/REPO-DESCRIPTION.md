@@ -51,3 +51,68 @@ Code and doctrine: https://github.com/liraan/calciovero
 - **Ko-fi frontpage v2** (Three Planes instead of the no/yes list): more elegant, but a cold reader learns less. The Three Planes answer "how does it work inside", which belongs in the README, not on a landing page.
 - **Ko-fi frontpage v3** (the full README): too long, Ko-fi cuts around 700 characters.
 - **"free forever"** in any text: no artefact backs it. `LICENSE-MIT` / `LICENSE-APACHE` exist, `"free and open"` is descriptive; "forever" is a promise.
+
+---
+
+## Thank-you message to donors
+
+**Context.** Aligned with `FUNDING.yml` and `## Support` in the README:
+one-off donations, no goods or services in return, no influence over
+the roadmap. No amounts, no donor names, no promised recognition: a
+public thank-you with names would weaken "donations do not buy
+influence", and the repo has no artefact that governs that visibility.
+
+### Short (automatic thank-you after a donation)
+
+> Thank you. Calcio Vero is built in the open, one commit at a time, and
+> your donation buys exactly one thing: time to keep building it. It does
+> not buy influence over the roadmap — the doctrine in the repo decides
+> that, not donors. If you want to follow the work, the commit log is
+> public: https://github.com/liraan/calciovero
+
+### Medium (public post on Ko-fi)
+
+> **Thank you.**
+>
+> Calcio Vero is built in the open, one commit at a time. Every donation
+> buys exactly one thing: time to keep building it. Nothing else — not a
+> feature, not a priority, not a place on the roadmap. Those are decided
+> by the doctrine in the repository, which is public and the same for
+> everyone.
+>
+> What you are supporting is a different way of building a football
+> management game: no telemetry, no closed data, no hidden CA/PA, every
+> formula public, every decision in an ADR, every save reproducible from
+> its seed. It is slow work, and it is done in the open.
+>
+> If you want to see where the time goes, the commit log is the honest
+> answer: https://github.com/liraan/calciovero
+>
+> — the developer
+
+### Italian
+
+> **Grazie.**
+>
+> Calcio Vero si costruisce allo scoperto, un commit alla volta. Ogni
+> donazione compra esattamente una cosa: il tempo per continuare a
+> costruirlo. Nient'altro — non una funzionalità, non una priorità, non un
+> posto nella roadmap. Quelle le decide la dottrina nel repository, che è
+> pubblica e uguale per tutti.
+>
+> Quello che stai sostenendo è un modo diverso di fare un gestionale
+> calcistico: niente telemetria, niente dati chiusi, niente CA/PA
+> nascosti, ogni formula pubblica, ogni decisione in un ADR, ogni
+> salvataggio riproducibile dal suo seed. È lavoro lento, e si fa allo
+> scoperto.
+>
+> Se vuoi vedere dove finisce il tempo, il commit log è la risposta
+> onesta: https://github.com/liraan/calciovero
+>
+> — lo sviluppatore
+
+### Caveat
+
+Whether Ko-fi offers a custom post-donation thank-you message was not
+verified (D1): if the field exists, use the short; if not, the medium
+goes as a public post.
