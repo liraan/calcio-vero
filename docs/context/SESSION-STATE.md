@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `fe2f945` — "docs(adr): ADR-033 — body heading and gaze are two things (accepted)"
+**Last commit verified:** `0a9012f` — "docs(context): ADR-033 wired in — IDEA-002 resolved, OI-71 partial, F.6 unlocked"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -11,6 +11,8 @@
 **Legenda:** [wip] in corso · [next] prossimo · [open] aperto · [deferred] rinviato · [urgent] urgente · [done] chiuso
 
 `docs/context/analysis/2026-11-06-decisions-log.md` (log storico delle decisioni `[done]` 2026-11-01..2026-11-06 — MD-01..MD-54, T1..T5, note 2026-11-01/2026-11-02 — spostato dal bookmark il 2026-11-06, OI-68; contiene anche le tre voci `[open]` MD-16, Task F.3/F.4, Task OI-48, ancora aperte).
+
+`docs/context/analysis/2026-11-07-session-handoff.md` (handoff per un agente nuovo: stato verificato, cosa fatto, cosa NON fatto, prossimo fuoco raccomandato — `AgentState.gaze` da ADR-033 — trappole pagate, come iniziare).
 
 **Analysis reports (vivi):** `docs/context/analysis/2026-11-01-L0-verification-checklist.md` (13 item; G2/G10 ora OI-23/24; G1/OI-22 chiuso in slice B2), `docs/context/analysis/2026-11-02-engine-gaps.md` (fatti misurati + decisioni 2026-11-02, da annotare sui contratti), `docs/context/analysis/2026-11-03-perception-bench.md` (perception ~0.5 s per partita, F.3), `docs/context/analysis/2026-11-03-movement-bench.md` (movimento 84.58 ms, F.2 verde), `docs/context/analysis/2026-11-04-direction-decisions.md` (le decisioni di direzione della sessione 2026-11-04, scritte per un agente che non c era: MD-43, filtro partita vera, dado come resistenza, convergenza fenomenologica, 2D come consumatore deciso, costo misurato), `docs/context/analysis/2026-11-04-match-stats-and-traits.md` (campi per evento che rendono derivabili le statistiche di un tabellino reale e i tratti osservabili, senza latenti; il set che F.3-b3 deve emettere). `docs/context/analysis/2026-11-05-session-handoff.md` (la mappa tra stato e modello per un agente che non sa nulla: cosa la sessione ha deciso e dove, cosa ha implementato, cosa è aperto in ordine di dipendenza, le trappole, come iniziare; la tabella dei numeri prima/dopo). `docs/context/analysis/2026-11-05-f7-design-and-findings.md` (F.7 riformulata: corpo ibrido come la palla, peso mancante in `Player`, nessun numero arbitrario, OI-57/58/59/60/61; le trappole della sessione). `docs/context/analysis/2026-11-05-f7-part-b-handoff.md` (F.7 parte B: cosa resta, il codice revertito, le trappole; per una chat che parte da zero). Archiviati (2026-11-01): `09-50`, `12-30`, `12-40`, `10-25`, `22-28` (censimento invecchiato: L0 cambiato 3 volte il 2026-11-01, i G ancora veri sono OI individuali).
 
