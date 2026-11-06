@@ -37,6 +37,8 @@ The alternatives were discussed in a long pause (see `IDEAS.md`, `IDEA-PROJ-001`
 
 **by Liraan** — the attribution, in the README, the license, and the commit authorship. The project name does not contain the maintainer's handle: a name that contains a person does not survive a maintainer change.
 
+**Note (2026-11-07):** the attribution "by Liraan" is implicit in the maintainer field of the repository; it is not a fourth name and it is not removable as redundant. It is distinct from the project name (Calcio Vero / Deep Simulator), from the handle (Liraan), and from the crate prefix (`pcfm-*`, then `ds-*` per ADR-032).
+
 ### Commercial use
 
 **Non-commercial, declared.** The project is a hobby, on GitHub, not for sale. `LICENSE-ASSETS` (CC BY-NC-SA 4.0) already covers `assets/`, `data/`, `docs/`, and the non-code content. This is the declared context in which the residual trademark risk is accepted.

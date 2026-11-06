@@ -217,6 +217,8 @@ has no latent for it.
 It accumulates during a match and recovers between matches. It lives in
 `PhysicalStateMinimal` and is governed by MD-40 (one source, two delays).
 
+**Note (2026-11-07):** the four-family taxonomy is fixed. It is a decided structure, not a sketch: it can receive new characteristics as content, but it is not replaced by a differently shaped taxonomy. Reopening the families requires an ADR that supersedes this section, not a review pass.
+
 ## 4. Three components: custodian, calculator, orchestrator
 
 This section explains how a player's characteristics become an outcome on

@@ -1000,3 +1000,33 @@
 - **Prerequisites.** (a) OI-62 (dive, needs a cited sports-science source for `dive_ref_cm` and `dive_time_s`); (b) a decision about leaving the line: a geometric rule or a decision among options? (c) for distribution: a context with three candidate outcomes, and a formula in `balance/`; (d) F.6 (the keeper needs to perceive what is around him to decide to play short).
 - **Open questions.** (a) Is "leaving the line" a single decision (go or stay) or a continuous control? (b) Does the keeper get his own characteristic family (distribution, anticipation), or does `goalkeeping` cover both saving and distributing? (c) Does the keeper's distribution use the same pass formula, with a different situation term? (d) Is the keeper an agent for the purposes of the tick loop, or a special case in `state.rs`? (e) **Does the keeper's distribution read the foot?** ADR-031 gives every player `left_foot`/`right_foot`; a keeper playing short with the weak foot is a phenomenon a fan recognises, and the current model does not represent it.
 - **Critical note.** Not a decision, an idea. The reactive part (dive) is already tracked in OI-62; the decisional part (leave the line, distribute) is the genuinely new piece and should not be conflated with the dive. D3: the next concrete consumer is "a match where the keeper has the ball at his feet and must choose", and that consumer does not exist yet.
+
+### IDEA-DESIGN-005 — More data is not more capability
+
+- **Status:** sketch (candidate DP, blocked: `DECISION-PATTERNS.md` requires a `Source:` with a date + commit hash, and no commit applies this lens yet)
+- **Category:** Design lens (every characteristic, every datum, every field)
+- **Source:** conversation 2026-11-06/07 (maintainer), applied in ADR-031 (the third term "propensity" was rejected in favour of the gap between `left_foot` and `right_foot`).
+- **Idea.** A model does not get better by adding dimensions. It gets better by adding **distinct and orthogonal** dimensions, each with (a) a real derivation, (b) a declared consumer, (c) a place in the taxonomy. A dimension without a consumer is not detail, it is noise that will drift: the formula will not read it, the calibration will not cover it, and the next reader will assume it matters because it is there.
+- **Why it matters.** The temptation, when the content is thin (D3), is to design a richer model. The cost is paid later: every field that exists without a consumer must be audited by hand (OI-54 is exactly that audit), and every field with a consumer but no derivation becomes an arbitrary number the maintainer cannot defend (F.7's rule: if a term has no derivation, it becomes an OI, not a value).
+- **Applied, so far.** `left_foot`/`right_foot` instead of a `Foot` enum plus a "propensity" term (ADR-031); F.7's refusal to add a term without a cited source (`balance/movement.json` `_source:`); OI-54's classification of every existing field as observable or hidden.
+- **Open questions.** (a) Is the lens a DP (a recurring default for a recurring judgment) or a criterion inside D3/D7? (b) If a DP, what is the commit that first applies it as a decision, not as an after-the-fact justification? (c) Does the lens apply to documentation fields too (a bookmark column without a reader)?
+- **Critical note.** Not yet a rule: it is written here so it is not lost, and so a future session does not re-propose a richer model without arguing what the new dimension buys. Promoting it to `DECISION-PATTERNS.md` is the first action when a commit exists that applies it.
+
+### IDEA-DESIGN-006 — The FM-gap map (a pointer index, not new structure)
+
+- **Status:** sketch (a navigation artefact, not a design decision; lives here because it is not a rule and not a task)
+- **Category:** Navigation (index of tracked gaps against what a Football Manager player expects)
+- **Source:** pause 2026-11-07, after the review of "what a Football Manager player expects from the match engine" produced a list of gaps that existed only in chat. Three of the gaps were already tracked; the list as a whole was not.
+- **What it is.** One row per thing a Football Manager player expects from a match engine, with the OI or IDEA that tracks it today. The purpose is **visibility**: a session that reads "X is missing" should see, in one place, whether X is tracked or forgotten. It is not a plan, it is not a roadmap, it does not create structure.
+- **Why it matters.** The 2026-11-07 session lost time to reconstructing the priority by memory (OI-67 documents the same failure mode for the handoff Note). A pointer map is the cheapest fix: one file, one `grep`, no new rules.
+- **The rows (tracked, so not forgotten).**
+  - The match has a 90-minute arc (fatigue, half-time, side change, end) — `IDEA-DESIGN-003` (four D6 pieces), tracked as `OI-70`, `OI-48`, `OI-59`.
+  - The manager's hand during the match (pause, hints, in-match decisions) — `IDEA-INFRA-007`.
+  - Set pieces (free kicks, corners, throw-ins) as designed situations — `IDEA-TACT-003`, `OI-48` (restart as the first rule).
+  - Discipline (fouls, cards, advantage, suspensions) — `OI-48` (rules module), `IDEA-RULE-001` (contract).
+  - The observation-to-estimate loop (what the manager learns from a match) — `IDEA-INFRA-013` (observed-attributes snapshot, Plane C), `IDEA-INFRA-015` (ObservationEvent).
+  - The goalkeeper as a deciding player (leave the line, distribute, play short) — `IDEA-DESIGN-004`, `OI-62` (dive).
+  - Tactics as a modulation of a default shape, not an external addition — `OI-27`, `IDEA-TACT-001`, `IDEA-TACT-002`.
+  - A 2D debug view that shows the engine's events, not inferred ones — `IDEA-INFRA-018` (tick record), `IDEA-INFRA-021` (pipeline engine -> narrator -> 2D -> 3D), `ADR-025` (text board today).
+- **Open questions.** (a) Does this map stay in `IDEAS.md` (an idea, read at startup) or does it become a step in the Plan (a bookmark artefact, read at startup and updated at closing)? (b) Who updates it when an OI closes? The closing ritual already updates the Plan; a third list is a third thing to keep honest (D5, D7). (c) Does every future "we are missing X" go through this map, or only the ones a Football Manager player would name? The first is unbounded, the second is the working definition.
+- **Critical note.** Not a decision, not a plan. It is a reading aid. If it grows past one screen, it is doing the Plan's job badly and should be cut back to the rows that a session actually looks for.

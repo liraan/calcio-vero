@@ -51,6 +51,8 @@ Code and doctrine: https://github.com/liraan/calciovero
 - **Ko-fi frontpage v2** (Three Planes instead of the no/yes list): more elegant, but a cold reader learns less. The Three Planes answer "how does it work inside", which belongs in the README, not on a landing page.
 - **Ko-fi frontpage v3** (the full README): too long, Ko-fi cuts around 700 characters.
 - **"free forever"** in any text: no artefact backs it. `LICENSE-MIT` / `LICENSE-APACHE` exist, `"free and open"` is descriptive; "forever" is a promise.
+- **An embedded Ko-fi RSS feed on the project page:** Ko-fi does not support embedding an external RSS feed on the donation page. Rejected on facts, not on preference; re-propose only if Ko-fi adds the feature and the reason is declared.
+- **The Ko-fi badge: text-only and the official Ko-fi badge were both considered, shields.io was chosen.** Text-only is less visible in the README header; the official badge is heavier and forces Ko-fi colours that clash with the neutral README palette. The shields.io badge keeps the header consistent and reads as "supported" without decorating.
 
 ---
 

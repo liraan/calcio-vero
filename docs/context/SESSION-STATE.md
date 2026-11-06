@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `b9a7285` — "docs(analysis): 2026-11-07 session handoff for a new agent"
+**Last commit verified:** `f7bb13a` — "docs(context): session closed 2026-11-07"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -96,6 +96,10 @@ engine gets built.
 | OI-70 | **La fatica non ha un produttore durante la partita.** Il valore esiste in `PhysicalStateMinimal.fatigue` (default 0.0), viene copiato in `PlayerBody.fatigue` al setup e non viene mai aggiornato: la formula del movimento lo legge (F.7 step 10) ma vale sempre 1.0, quindi il modificatore e la sua forma sono oggi una promessa senza conseguenza. OI-54 diceva "fatigue ha produttore (MD-40)": il codice dice il contrario, corretto qui. E il prerequisito di IDEA-DESIGN-003 (l'arco dei 90 minuti) e di OI-63 (la fatica entra nell'esecuzione). **Se resta cosi:** il manager non ha niente su cui intervenire, le sostituzioni non hanno effetto, l'85° non esiste come stato. | Aprire una sessione dedicata, dopo F.7 step 11: (1) leggere MD-40 e decidere la forma del produttore (distanza percorsa nel tick, un solo punto, come MD-40 dice); (2) aggiungere `PlayerBody.fatigue` aggiornato in `move_agents` con l'accumulo; (3) test che forza il caso (dopo N tick, fatigue > 0; dopo M tick, l'accelerazione cala); (4) `SIM_VERSION` bump, golden rigenerato, `CHANGELOG-SIM`; (5) aggiornare OI-54 e IDEA-DESIGN-003. |
 | OI-71 **[PARZIALE 2026-11-07: ADR-033 accepted, implementazione in sessione dedicata]** | **F.6 step 2 non e eseguibile senza una decisione sull'orientamento: "turn to face play".** *Cosa.* Oggi `move_agents` legge la palla globale (`self.ball()`): tutti i 21 agenti non-chaser reagiscono a una palla che non vedono, tramite lo slot traslato (`dx/dy`). F.6 vuole togliere questa scorciatoia (chi non vede la palla non reagisce ad essa). Due forme possibili, nessuna eseguibile oggi: **(A) filtrare solo il chaser** (il prossimo che vede la palla diventa l'inseguitore) lascia la scorciatoia principale intatta (21 agenti su 22 reagiscono ancora alla palla globale); **(B) filtrare tutto il movimento con il cono** congela gli agenti, perche `heading` e aggiornato solo dalla velocita (`heading_from_velocity`, F.7 step 9) e la velocita solo dal movimento: chi non vede la palla non si muove, quindi non gira, quindi non vede la palla. In una partita vera il giocatore si gira **perche decide di guardare**, non perche si muove. *Se resta cosi:* F.6 o resta la scorciatoia (A) o introduce un motore congelato (B), e in entrambi i casi il filtro partita vera e violato. *Riferimenti:* F.6, `perception.rs` (`visible_to`, `perceived_ball`), `spatial.rs` (`move_agents`, `heading_from_velocity`); nessun file toccato. | Scrivere l'ADR "turn to face play": quando l'agente si gira (ogni tick? al cambio di possesso? su decisione), verso cosa (la palla, il gioco, l'avversario), con che ritardo, e se il corpo (heading) e distinto dallo sguardo (testa). Poi riaprire F.6 step 2 e dichiarare quale delle due forme (A o B) il modello adottato rende eseguibile. Fino a quella decisione, F.6 resta a step 1 (fatto, `d5ac111`). |
 
+| OI-72 | **`AgentState.gaze` non esiste: ADR-033 è accepted, il campo no.** *Cosa.* ADR-033 separa corpo e sguardo: `heading` resta la direzione di movimento (F.7 step 9), il cono legge `gaze` (una direzione di sguardo, distinta dal corpo). Oggi il cono legge `heading`, quindi "corpo verso est, sguardo a ovest" non è rappresentabile, e F.6 step 2 (l'agente reagisce alla palla che *percepisce*, non a quella globale) non è eseguibile: filtrare con `heading` congela gli agenti. *Se resta così:* il filtro partita vera su F.6 o resta una scorciatoia (21 agenti su 22 reagiscono alla palla globale) o introduce un motore congelato. *Riferimenti:* ADR-033, OI-71, F.6 step 2. | Sessione dedicata. (1) `AgentState` guadagna `gaze: u16`, `from_squads` lo inizializza (palla al centro, tutti la guardano); (2) `visible_to` e `perceived_ball` leggono `gaze`, non `heading`; (3) test: agente che corre a est e guarda a ovest non vede la palla a est; (4) `SIM_VERSION` 23→24, golden, `CHANGELOG-SIM`; (5) C2 completo prima del commit, `Note-Read` sui file del motore. |
+| OI-73 | **`ast-grep` è installato (0.51.1) ma non adottato: i pattern one-liner non coprono gli `use` reali.** *Cosa.* Installato con `npm install -g @ast-grep/cli`, funziona con pattern esatti (`use pcfm_core::ids::PlayerId;` matcha), ma le metavariabili (`$A`, `$$$`) non matchano uno `use_tree` con path multipla: il refactor `ds-*` (ADR32, 177 `use` in 10 crate) richiede una regola YAML con `kind: use_declaration`, non un `--pattern`. *Se resta così:* al momento di ADR32 si sceglie tra `perl` (che funziona già sui `use`: ASCII, nessun UTF-8) e una regola `ast-grep` non scritta. *Riferimenti:* ADR-032, Plan step ADR32, test del 2026-11-06. | Scrivere la regola YAML `use pcfm_* -> use ds_*`, provarla su una copia di un crate (`--check`), misurare se batte `perl` sul caso reale. Decisione prima di aprire ADR32. |
+| OI-74 | **La tabella di scelta degli strumenti non è scritta: B1 e B1-bis si contraddicono.** *Cosa.* B1 dice "Use `sed`/`awk` for targeted edits"; B1-bis oggi dice che `perl -CSD -Mutf8 -i -pe` è la prima scelta e `git apply --check` la seconda. Un agente che legge B1 per primo riceve l'istruzione vecchia. Manca una entry point unica (caso -> strumento -> flag obbligatorio -> verifica) in testa a B1-bis, e un report datato con la valutazione (perl, git apply, ast-grep, yq, sd, ex, ruplacer, node, python, PowerShell: adottati e respinti, con il perché). *Se resta così:* ogni sessione futura rilegge 15 bullet storici e non sa quale sia il default; B1 e B1-bis continuano a contraddirsi (D4 coherence). *Riferimenti:* B1, B1-bis, valutazione 2026-11-06. | Scrivere `docs/context/analysis/YYYY-MM-DD-tool-evaluation.md` (test, risultati, respinti), poi la tabella in testa a B1-bis, poi emendare la frase di B1 citando la riga esatta. D4 prima di scrivere, `Rules-Audit` nel commit. Non in una sessione già carica di edit. |
+| OI-75 | **`yq` è il candidato giusto per il frontmatter YAML degli 11 report in `analysis/`, ma non c'è un caso che lo richieda oggi.** *Cosa.* Ogni report ha frontmatter (`title`, `version`, `status`, `last_updated`, `conforms_to`); quando cambia stato, oggi si usa `sed`/`awk` sulla riga, che non vedono il documento e sbagliano in silenzio sull'indentazione YAML. `yq --front-matter=process -i '.status = "accepted"' file.md` modifica solo il frontmatter. *Se resta così:* il primo cambio di stato YAML fatto con `sed` è il primo rischio di YAML invalido non rilevato. *Riferimenti:* valutazione 2026-11-06. | Installare `yq` e provarlo su una copia di un report (`--front-matter=process`, dry-run); adottarlo nel primo commit che cambia lo `status` di un report, non prima (D3). |
 ## Plan (tree: leaves are executable steps, forks expose a decision; see IDEA-DESIGN-001)
 
 | Pr. | # | Cosa | Dipende da | Prima azione |
@@ -134,93 +138,9 @@ engine gets built.
 | [open] | ADR32 | **Crate prefix `ds-*` (ADR-032, accepted 2026-11-07).** Refactor dei 10 crate `pcfm-*` → `ds-*`: 10 crate, ~177 `use`, 11 `Cargo.toml`, CI, hook, badge. Un crate per commit, `cargo test --workspace` verde dopo ciascuno; l'ultimo commit rinomina le directory. `SIM_VERSION` invariato (identificatori, non simulazione). `pcfm-*` sopravvive nella storia (ADR 001-031, `CHANGELOG-SIM`, `analysis/`, commit vecchi), non nel codice. | ADR-032 | Aprire `ds-core` (il crate senza dipendenze interne): rinominare directory + `Cargo.toml` + `use pcfm_core` in tutto il workspace, `cargo test --workspace` verde, commit. Poi `ds-model`, `ds-hidden`, `ds-stats`, `ds-match`, `ds-calculator`, `ds-testkit`, `ds-test-runner`, `ds-demo`, `ds-fixtures`. |
 | [done] | D | **Design del per-agent: chiuso per la parte decidibile oggi (2026-11-03).** RNG fatto (A1); ordine = ADR-019 deferred 1 (spaziale, tie-break `PlayerId`), verificato in `resolve_influence` (`lib.rs:378,410`) e `nearest_in_squad` (`state.rs:386`). Il rumore per-ordine è tracciato in OI-44. Il per-agent (ogni agente decide ogni tick, invece di un solo dado globale che sceglie chi agisce) è il cambio di paradigma del motore, non una slice come C.1. Prima di progettare il movimento resta una decisione che lo blocca: (1) RNG **fatto** (A1, SIM_VERSION 10, OI-39 chiuso); (2) l'ordine di iterazione degli agenti (spaziale, distanza dalla palla, tie-break per `PlayerId`, come da ADR-019 deferred 1). Senza queste due, il per-agent non è deterministico e non è progettabile. | C.1 (fatto), OI-39 (chiuso 2026-11-03) | Leggere `orchestrator.rs`, `state.rs` (la funzione `tick`), `04-match-engine.md` §2.2, poi scrivere le due decisioni (RNG e ordine) in `SESSION-STATE` "Decisioni operative" o in un OI dedicato. |
 | [done] | P | **Patterns section in `NEW-SESSION-PROMPT.md` (2026-11-05, da pausa).** I pattern di lavoro (mutazioni, verifica, decisioni, comunicazione) erano sparsi tra B1-bis, A1-A3, C2, D1-D7. **Fatto:** sezione `## Patterns` con 7 voci (P1 test-che-non-può-fallire, P2 grep-prima-del-consumatore, P3 criterio-sbagliato-se-fallisce-su-caso-reale, P4 deciso-≠-implementato, P5 futuribilità-B-non-A, P6 conclusione-non-menu, P7 accetta-e-riformula), ognuna con D4 fatto prima di scrivere. Nessun file nuovo, nessun passo di rituale in più. Artefatto: `Rules-Audit: 7 changes, 0 contradictions, 0 leaks` nel commit `fa4ff56`. | — | Fatto: `fa4ff56`. |
-## Note (2026-11-07) — handoff for the next session
+## Note (2026-11-06 e 2026-11-07) — spostate
 
-**Sessione 2026-11-07: fuoco unico = gate pre-push (OI-66). I piedi (OI-65)
-NON sono stati aperti.** Nota di metodo: una sessione, un fuoco. Il tentativo
-piedi del 2026-11-07 si era fermato dopo la misura, costando mezza sessione;
-meglio decidere all'inizio "questa sessione è solo X".
-
-**Fatto in questa sessione:**
-- OI-66: `.githooks/pre-push` ora richiede `git diff --quiet HEAD` prima di
-  eseguire `gates.sh`. Testato: tree sporco -> exit 1 con messaggio OI-66;
-  tree pulito (via `git stash`) -> exit 0. Nessun Rust toccato, `SIM_VERSION`
-  invariato, golden invariato.
-- OI-66, OI-67 (handoff meccanico: Note di giudizio obbligatorio in chiusura),
-  OI-68 (relocation sezioni storiche del bookmark in `analysis/`) aggiunti
-  qui. OI-67 e OI-68 non eseguiti: il fuoco era il gate.
-
-**Next (in ordine):**
-1. OI-65 — codice dei piedi. Sessione dedicata, contesto quasi vuoto, 11 file
-   / 14 call site, un file per volta con `cargo check`. `schema_version`
-   prima di `SIM_VERSION`: verificare il golden, non promettere il bump.
-2. OI-67 e OI-68 — regole nuove, D4 prima di scrivere. Non ora.
-3. F.7 step 9 (heading), step 10 (test funzionale), step 11 (`SIM_VERSION`).
-   Non percorso critico.
-
-**Trappole pagate in questa sessione:**
-- Il test "tree pulito" non è "nessuna modifica nel disco": i fix non
-  committati sono sporco. Per un test pulito serve `git stash`.
-- `sh .githooks/pre-push` senza argomenti esegue `gates.sh` in modalità
-  closing; aspettarsi `gates: GREEN (closing)`.
-
-**2026-11-07, sessione piedi (step 1+2 fatti):**
-- `Player` perde `preferred_foot`; `Foot` enum rimosso; 14 call site
-  aggiornati; `PlayerLatents` guadagna `left_foot`/`right_foot`
-  (keyed, `#[allow(dead_code)]` come `explosive_force`, consumer =
-  formula del passaggio, OI-64). Test nuovo: 197.
-- `SCHEMA_VERSION` 1 → 2 (`MatchSave` serializza `Player`), nessuna
-  migrazione: nessun save nel repo. `SIM_VERSION` 22 invariato: golden
-  identico (nessuno legge il piede).
-- **Non fatto (step 3 di OI-65):** catalogo `pcfm-calculator` con i due
-  termini. Richiede la formula del passaggio (OI-64), che non esiste:
-  aggiungere i termini senza formula sarebbe D3.
-- **Trappola pagata:** clippy ha bocciato `left_foot`/`right_foot` con
-  `dead_code`. Fix: stesso pattern di `explosive_force`. Non era un
-  finding del codice, era il pattern del repo.
-- **Errore mio:** ho amendato `d33d738` → `b67fe12` **prima** di
-  leggere il `gates: RED`. L'amend era innocuo, la sequenza sbagliata.
-
-## Note (2026-11-06) — handoff for the next session
-
-**Read this before the Plan.** The Plan says `[next]` F.7 step 9 (`heading`), but
-it is not the priority. The order decided on 2026-11-06 is:
-
-1. **Feet code (next).** Remove `preferred_foot` from `Player` and add
-   `left_foot`/`right_foot` to `PlayerLatents` and the catalogue, as ADR-031
-   decides. **This is not a small change:** `Player::try_new` has 14 call sites
-   in **11 files** (`pcfm-fixtures`, `pcfm-match` engine/narrative/perception/
-   save/spatial/state, tests, `pcfm-model` match_/player/squad), and the `Foot`
-   argument is not uniformly placed (verified 2026-11-07: a `grep` near
-   `try_new` finds 0 `Foot::`). It needs a dedicated session, one file at a
-   time, `cargo check` after each. **Do not attempt it in the tail of a
-   session** (attempted and stopped on 2026-11-07). `MatchState::new` does not
-   read `preferred_foot` (verified), so the engine is untouched; the risk is
-   mechanical, not semantic. `SIM_VERSION` is checked, not promised: keyed
-   derivation (ADR-029) may leave the golden identical, and then the change is
-   a save schema change (`schema_version`), not a simulation change. No
-   committed save fixture.
-2. **F.7 step 9** (`heading`) waits: not on the critical path of the
-   ratification.
-
-**Feet — decisions taken on 2026-11-06, not yet in any other file:** two
-latents (`left_foot`, `right_foot`), both terms; the greater is the default, the
-other enters when geometry demands it; the propensity is the gap between the
-two values (example 100%/10%), no third term; `preferred_foot` removed; ADR-028
-amended; §4.6 corrected. Geometry of the foot (blocked foot, pass angle) is
-**not** implemented now: declared with `Removed-by`. The pass angle is defined
-in IDEA-PM-005 q5: angle between the passer's orientation and the pass
-direction, with sign; **orientation is today mechanical toward the goal** (a gap,
-not a simplification; it becomes a decision with F.6), and the **receiver's side
-is computable today** (not read yet). Name finding: `angle` is already a
-shooting term; document per family or rename.
-
-**Method lesson (2026-11-06, two hook blocks):** `E4b` requires that **HEAD
-touches `SESSION-STATE.md`** before a push, not merely that an earlier commit
-did; and S1 requires the LCV to point to **the commit that is HEAD at the moment
-of the bookmark commit**. Two consecutive docs commits without a bookmark block
-the push. The rules existed; they were violated, not missing.
-
+Le due Note di handoff vivono in `docs/context/analysis/2026-11-07-session-notes-log.md` (precedente OI-68: relocation verbatim, puntatore di una riga). Contengono il metodo "una sessione, un fuoco" e le trappole pagate. Il bookmark non le duplica (§F: il git log è il log).
 
 ## Decisioni storiche (spostate)
 
