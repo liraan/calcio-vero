@@ -62,6 +62,12 @@ measured.
   measured with a simple instrument, it does not change during a match,
   and it is not something the player *does*. The engine reads it
   directly.
+
+  > **Note (2026-11-06) — `preferred foot` is not a dimension.** It was
+  > listed here; ADR-031 moved it. The foot is **two performances**
+  > (`left_foot`, `right_foot`, Plane A), and the label is derived
+  > (`max`) and not stored. Read "height, weight, preferred foot" in the
+  > text above as "height, weight".
 - **Performance (Plane A, in `pcfm-hidden`).** Something the player
   expresses, and only exists when he expresses it: strength, passing,
   vision. It is hidden (you infer it from effects), stable over months,

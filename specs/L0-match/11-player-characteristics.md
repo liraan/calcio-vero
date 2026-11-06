@@ -337,15 +337,17 @@ The calculator validates a formula against a closed catalogue before
 applying it. A term not in the catalogue fails at load time, with a clear
 error. The catalogue has three parts.
 
-**Terms from Plane A (hidden performances, 23).**
+**Terms from Plane A (hidden performances, 25).**
 `explosive_force`, `maximal_force`, `acceleration`, `max_speed`,
 `resistance`, `joint_mobility`, `reactivity`, `body_control`,
 `first_touch`, `passing`, `shooting`, `dribbling`, `heading`, `tackling`,
-`goalkeeping`, `resilience`, `emotional_control`, `aggressiveness`,
-`courage`, `vision`, `game_reading`, `decision_making`, `risk_management`.
+`goalkeeping`, `left_foot`, `right_foot`, `resilience`, `emotional_control`,
+`aggressiveness`, `courage`, `vision`, `game_reading`, `decision_making`,
+`risk_management`.
 
-**Terms from Plane B (3 dimensions, 7 states).**
-`height`, `weight`, `preferred_foot`, `fatigue`, `condition`,
+**Terms from Plane B (2 dimensions, 7 states).**
+`height`, `weight`, `fatigue`, `condition`,
+`composure_level`.
 `confidence`, `morale`, `pressure_load`, `concentration_level`,
 `composure_level`.
 
@@ -361,9 +363,9 @@ carries (§5); a formula can use only the ones its context provides.
 | Movement | `distance_to_target`, `current_velocity` |
 | Influence | `point`, `distance_to_point` |
 
-**`preferred_foot` is the only categorical term.** The formula uses it as
-a boolean multiplier (strong foot / wrong foot), never as a number.
-
+**The catalogue has no categorical term.** The foot is not a stored label:
+`left_foot` and `right_foot` are two Plane A performances (ADR-031), and
+the label ("right-footed") is derived from them, not read by a formula.
 **The catalogue is not the model.** It is the set of terms the calculator
 knows how to read. Adding a characteristic to the model (§7) is not enough:
 the term must also be added to the catalogue, and the formula that uses it
@@ -695,9 +697,13 @@ passing or shooting, and it lives in Plane A (§7.2, `left_foot`,
 `right_foot`). Which foot a player uses is the outcome of the formula,
 not a stored label: the formula reads the two abilities plus the
 situation (pressing), the state (fatigue) and the cognitive traits (game
-reading, decision making). A strong right foot under pressure and tired
-uses the left more often than the values alone would suggest; a player
-with high game reading finds the angle to use the strong foot anyway.
+reading, decision making). **Note (2026-11-06, ADR-030/ADR-031):** the
+fatigue does **not** enter the choice of foot — it acts on the **outcome**
+(ADR-030). The sentence that follows is the record of the earlier decision
+and is corrected here: a tired player uses the left more often *only*
+because the geometry and the time available change, not because fatigue
+rewrites the choice. A player with high game reading finds the angle to use
+the strong foot anyway.
 The label "right-footed", "left-footed", "both-footed" is **derived** from
 the two numbers, for the UI and the narrative, and it is **not stored**.
 In the interface it is an **estimate** (Plane C), not the true value: the
