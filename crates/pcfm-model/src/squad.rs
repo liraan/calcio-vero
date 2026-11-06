@@ -95,7 +95,7 @@ impl Squad {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::player::{Foot, PhysicalStateMinimal, PsychologicalStateMinimal, RoleId};
+    use crate::player::{PhysicalStateMinimal, PsychologicalStateMinimal, RoleId};
     use pcfm_core::ids::PlayerId;
 
     fn make_player(slot: u32) -> Player {
@@ -103,7 +103,6 @@ mod tests {
             PlayerId::new(slot, 0),
             format!("Player {slot}"),
             RoleId::new("midfielder").unwrap(),
-            Foot::Right,
             180,
             78,
             PhysicalStateMinimal::default(),

@@ -19,7 +19,7 @@
 //! - **Identity**, not part of the model: `id`, `name`. `role` is a label
 //!   at L0 (ADR-017); it becomes the expected profile of the generator at
 //!   L3, and the two must not be confused.
-//! - **Registry data** (Plane B, measured): `preferred_foot`, `height_cm`,
+//! - **Registry data** (Plane B, measured): `height_cm`,
 //!   `weight_kg`. The body, read as inputs by the formulas.
 //! - **States** (Plane B, computed or held): `condition` (freshness),
 //!   `match_sharpness` (match rhythm: a player can be fresh and off the
@@ -42,17 +42,6 @@ use pcfm_core::ids::PlayerId;
 use serde::{Deserialize, Serialize};
 
 use crate::error::ModelError;
-
-/// The player's preferred foot.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Foot {
-    /// Right foot.
-    Right,
-    /// Left foot.
-    Left,
-    /// Both feet.
-    Both,
-}
 
 /// A role identifier.
 ///
@@ -178,8 +167,6 @@ pub struct Player {
     pub name: String,
     /// The role identifier.
     pub role: RoleId,
-    /// The preferred foot.
-    pub preferred_foot: Foot,
     /// The height in centimetres.
     pub height_cm: u16,
     /// The weight in kilograms.
@@ -200,15 +187,14 @@ impl Player {
     /// - [`ModelError::InvalidWeight`] if `weight_kg` is zero.
     // The eight arguments are the model: identity, registry data, two
     // state blocks. A builder or a `PlayerSpec` struct would be the
-    // cleaner API the day a ninth field arrives; today the constructor is
-    // the only caller, and the field set is what ADR-028 classifies. See
+    // cleaner API the day a ninth field arrives; the field set is
+    // what ADR-028 classifies. See
     // D3: no structure without a concrete need.
     #[allow(clippy::too_many_arguments)]
     pub fn try_new(
         id: PlayerId,
         name: impl Into<String>,
         role: RoleId,
-        preferred_foot: Foot,
         height_cm: u16,
         weight_kg: u16,
         physical: PhysicalStateMinimal,
@@ -228,7 +214,6 @@ impl Player {
             id,
             name,
             role,
-            preferred_foot,
             height_cm,
             weight_kg,
             physical,
@@ -255,7 +240,6 @@ mod tests {
             PlayerId::new(1, 0),
             "Alice",
             RoleId::new("striker").unwrap(),
-            Foot::Right,
             180,
             78,
             PhysicalStateMinimal::default(),
@@ -283,7 +267,6 @@ mod tests {
             PlayerId::new(1, 0),
             "",
             RoleId::new("striker").unwrap(),
-            Foot::Right,
             180,
             78,
             PhysicalStateMinimal::default(),
@@ -298,7 +281,6 @@ mod tests {
             PlayerId::new(1, 0),
             "Alice",
             RoleId::new("striker").unwrap(),
-            Foot::Right,
             0,
             78,
             PhysicalStateMinimal::default(),
@@ -313,7 +295,6 @@ mod tests {
             PlayerId::new(1, 0),
             "Alice",
             RoleId::new("striker").unwrap(),
-            Foot::Right,
             180,
             0,
             PhysicalStateMinimal::default(),

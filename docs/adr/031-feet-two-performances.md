@@ -138,3 +138,7 @@ imply, and a second source of the same fact.
 - IDEA-PM-005 (questions 1-5: the shape, the two planes, the choice, the
   pass angle, the geometry), the 2026-11-06 pause
 - OI-64 (the pass angle, when its formula exists)
+
+## Dated notes
+
+- **2026-11-07 (OI-65).** The `Foot` enum is removed from `pcfm-model`. The label is derived from `left_foot`/`right_foot` (§1, §3); keeping a stored `Foot` would be a second source for the same value (D7). No consumer reads it (verified: `Foot::` = 0 in `crates/`). `preferred_foot` is removed from `Player` in the same commit; the catalogue terms are the next step.

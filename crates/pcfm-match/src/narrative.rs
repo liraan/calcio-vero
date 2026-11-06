@@ -230,7 +230,7 @@ mod tests {
     use pcfm_core::ids::{EventId, MatchId, PlayerId, RefereeId, SquadId};
     use pcfm_core::time::GameInstant;
     use pcfm_model::{
-        Foot, FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
+        FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
         PsychologicalStateMinimal, Referee, RoleId, Squad,
     };
     use pcfm_stats::{EventChain, EventType, MatchEvent};
@@ -242,7 +242,6 @@ mod tests {
                     PlayerId::new(slot_base + i, 0),
                     format!("Player{slot_base}_{i}"),
                     RoleId::new("midfielder").unwrap(),
-                    Foot::Right,
                     180,
                     78,
                     PhysicalStateMinimal::default(),

@@ -10,7 +10,7 @@
 
 use pcfm_core::ids::{MatchId, PlayerId, RefereeId, SquadId};
 use pcfm_model::{
-    Foot, FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
+    FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
     PsychologicalStateMinimal, Referee, RoleId, Squad,
 };
 
@@ -62,7 +62,6 @@ fn make_squad(id: u32, label: &str, slot_base: u32) -> Result<Squad, String> {
             PlayerId::new(slot_base + i, 0),
             format!("{label} {i}"),
             RoleId::new("midfielder").map_err(|e| e.to_string())?,
-            Foot::Right,
             180,
             78,
             PhysicalStateMinimal::default(),

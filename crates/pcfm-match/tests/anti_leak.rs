@@ -8,7 +8,7 @@ use pcfm_core::time::GameInstant;
 use pcfm_hidden::GroundTruth;
 use pcfm_match::{MatchConfig, MatchContext, MatchEngine, MatchSave, TextMatchEngine};
 use pcfm_model::{
-    Foot, FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
+    FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
     PsychologicalStateMinimal, Referee, RoleId, Squad,
 };
 use pcfm_stats::EventChain;
@@ -30,7 +30,6 @@ fn make_squad(id: u32, slot_base: u32) -> Squad {
                 PlayerId::new(slot_base + i, 0),
                 format!("P{}", slot_base + i),
                 RoleId::new("midfielder").expect("role"),
-                Foot::Right,
                 180,
                 78,
                 PhysicalStateMinimal::default(),

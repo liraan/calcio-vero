@@ -81,6 +81,12 @@ pub struct TechnicalLatents {
     /// Prototype composite (free kicks, penalties, corners, throw-ins):
     /// to be split (OI-48, OI-50).
     pub set_pieces: f32,
+    /// Left foot, one of the two performances per foot (ADR-031, L0.11 7.2).
+    #[allow(dead_code)] // no consumer yet: ADR-031, arrives with the pass formula (OI-64)
+    pub left_foot: f32,
+    /// Right foot, one of the two performances per foot (ADR-031, L0.11 7.2).
+    #[allow(dead_code)] // no consumer yet: ADR-031, arrives with the pass formula (OI-64)
+    pub right_foot: f32,
 }
 
 /// Psychological traits (L0.11 §7.3), all modulators.
@@ -119,6 +125,8 @@ impl PlayerLatents {
                 aerial: unit_from_key(world_seed, player, "aerial"),
                 goalkeeping: unit_from_key(world_seed, player, "goalkeeping"),
                 set_pieces: unit_from_key(world_seed, player, "set_pieces"),
+                left_foot: unit_from_key(world_seed, player, "left_foot"),
+                right_foot: unit_from_key(world_seed, player, "right_foot"),
             },
             psychological: PsychologicalLatents {},
             cognitive: CognitiveLatents {},
@@ -194,6 +202,8 @@ mod tests {
                 l.technical.aerial,
                 l.technical.goalkeeping,
                 l.technical.set_pieces,
+                l.technical.left_foot,
+                l.technical.right_foot,
             ] {
                 assert!((0.0..1.0).contains(&v), "value {v} out of [0,1)");
             }
@@ -219,5 +229,16 @@ mod tests {
         assert_ne!(l.technical.finishing, l.technical.passing);
         assert_ne!(l.technical.passing, l.technical.tackling);
         assert_ne!(l.physical.explosive_force, l.technical.passing);
+    }
+
+    #[test]
+    fn feet_are_independent_performances() {
+        // ADR-031: left_foot and right_foot are two separate performances,
+        // not one value with a label. They share a player but are derived
+        // from different purposes, so they must differ.
+        let l = PlayerLatents::from_key(42, p(7));
+        assert_ne!(l.technical.left_foot, l.technical.right_foot);
+        assert_ne!(l.technical.left_foot, l.technical.finishing);
+        assert_ne!(l.technical.right_foot, l.technical.finishing);
     }
 }

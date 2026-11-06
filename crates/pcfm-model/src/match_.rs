@@ -124,7 +124,7 @@ impl Match {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::player::{Foot, PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
+    use crate::player::{PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
     use crate::squad::{FormationId, Squad};
     use pcfm_core::ids::{PlayerId, RefereeId, SquadId};
 
@@ -135,7 +135,6 @@ mod tests {
                     PlayerId::new(slot_base + i, 0),
                     format!("P{}", slot_base + i),
                     RoleId::new("midfielder").unwrap(),
-                    Foot::Right,
                     180,
                     78,
                     PhysicalStateMinimal::default(),

@@ -53,7 +53,7 @@ mod tests {
     use pcfm_core::rng::RngRegistry;
     use pcfm_hidden::GroundTruth;
     use pcfm_model::{
-        Foot, FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
+        FormationId, Match, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
         PsychologicalStateMinimal, Referee, RoleId, Squad,
     };
     use pcfm_stats::EventChain;
@@ -65,7 +65,6 @@ mod tests {
                     PlayerId::new(slot_base + i, 0),
                     format!("P{}", slot_base + i),
                     RoleId::new("midfielder").unwrap(),
-                    Foot::Right,
                     180,
                     78,
                     PhysicalStateMinimal::default(),

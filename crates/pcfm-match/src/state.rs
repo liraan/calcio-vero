@@ -800,7 +800,7 @@ mod tests {
     use super::*;
     use pcfm_core::ids::SquadId;
     use pcfm_model::{
-        Foot, FormationId, PhysicalStateMinimal, Pitch, Player, PsychologicalStateMinimal, RoleId,
+        FormationId, PhysicalStateMinimal, Pitch, Player, PsychologicalStateMinimal, RoleId,
     };
 
     fn make_squad(slot_base: u32) -> Squad {
@@ -810,7 +810,6 @@ mod tests {
                     PlayerId::new(slot_base + i, 0),
                     format!("P{}", slot_base + i),
                     RoleId::new("midfielder").unwrap(),
-                    Foot::Right,
                     180,
                     78,
                     PhysicalStateMinimal::default(),

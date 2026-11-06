@@ -506,7 +506,7 @@ impl SpatialState {
 mod tests {
     use super::*;
     use pcfm_core::ids::SquadId;
-    use pcfm_model::{Foot, PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
+    use pcfm_model::{PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
 
     fn make_bodies() -> BTreeMap<PlayerId, PlayerBody> {
         let mut m = BTreeMap::new();
@@ -532,7 +532,6 @@ mod tests {
                     PlayerId::new(slot_base + i, 0),
                     format!("P{}", slot_base + i),
                     RoleId::new("midfielder").unwrap(),
-                    Foot::Right,
                     180,
                     78,
                     PhysicalStateMinimal::default(),

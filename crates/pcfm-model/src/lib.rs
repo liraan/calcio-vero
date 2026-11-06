@@ -28,7 +28,7 @@ pub mod squad;
 pub use error::ModelError;
 pub use match_::{Match, MatchRules, MatchSeed};
 pub use pitch::{Pitch, Weather};
-pub use player::{Foot, PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
+pub use player::{PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
 pub use referee::Referee;
 pub use squad::{FormationId, Squad};
 

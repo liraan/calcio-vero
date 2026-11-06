@@ -63,7 +63,10 @@ use crate::result::MatchResult;
 ///
 /// Bumped whenever the structure of `MatchSave` changes (new fields, renamed
 /// fields, removed fields). A bump requires a migration script.
-pub const SCHEMA_VERSION: u32 = 1;
+///
+/// v1 -> v2 (2026-11-07, OI-65): `Player.preferred_foot` removed (ADR-031).
+/// No migration script: no save exists in the repo (Phase 1, prototype).
+pub const SCHEMA_VERSION: u32 = 2;
 
 /// The current simulation version.
 ///
@@ -226,7 +229,7 @@ mod tests {
     use super::*;
     use pcfm_core::ids::{MatchId, PlayerId, RefereeId, SquadId};
     use pcfm_model::{
-        Foot, FormationId, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
+        FormationId, MatchRules, MatchSeed, PhysicalStateMinimal, Pitch, Player,
         PsychologicalStateMinimal, Referee, RoleId, Squad,
     };
 
@@ -237,7 +240,6 @@ mod tests {
                     PlayerId::new(slot_base + i, 0),
                     format!("P{}", slot_base + i),
                     RoleId::new("midfielder").unwrap(),
-                    Foot::Right,
                     180,
                     78,
                     PhysicalStateMinimal::default(),
