@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Pre-commit hook: runs cargo fmt, clippy, test only if Rust files are staged.
 # Install once with: git config core.hooksPath .githooks
 
