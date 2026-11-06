@@ -49,6 +49,22 @@ pub struct AgentState {
 // (`03-entities-minimal` §2.9): heading (orientation) and time to arrive
 // (velocity). See OI-25 and OI-29.
 
+/// The `Player` fields the movement formula reads.
+///
+/// `spatial.rs` must not depend on `Player` (the model is not the
+/// match state): this type carries the three fields
+/// `resolve_movement` reads, and `MatchState` builds the map once
+/// in `new`.
+#[derive(Debug, Clone, Copy)]
+pub struct PlayerBody {
+    /// Height in centimetres (Plane B, registry data).
+    pub height_cm: f64,
+    /// Weight in kilograms (Plane B, registry data).
+    pub weight_kg: f64,
+    /// Fatigue, 0.0 to 1.0 (Plane B, state).
+    pub fatigue: f64,
+}
+
 /// The state of the ball (MD-25). `Possessed` means at the carrier's feet
 /// (velocity zero, no physics). `InFlight` means travelling with its own
 /// velocity. `Loose` means free and at rest.
@@ -100,11 +116,6 @@ pub struct SpatialState {
 const TRANSLATION_NUM: i32 = 30;
 const TRANSLATION_DEN: i32 = 100;
 
-/// Maximum distance an agent moves in one tick, in centimetres. Arbitrary,
-/// declared: 120 cm/tick (a jog; sprint arrives with the per-agent model).
-const MAX_STEP_CM: i32 = 120;
-
-/// The body radius used for minimal separation (MD-12). Derived from a
 /// ~45 cm shoulder half-width; two agents closer than 2R are pushed apart.
 const BODY_RADIUS_CM: i32 = 45;
 
@@ -332,7 +343,13 @@ impl SpatialState {
     /// Target: the formation slot, translated by a declared fraction of the
     /// ball's displacement from the pitch centre. One agent (the one nearest
     /// the ball, per team) is deviated toward the ball (placeholder, MD-09).
-    /// Step bounded by `MAX_STEP_CM`. After the step, a minimal separation
+    /// Displacement (F.7 step 7b): each agent accelerates via
+    /// `resolve_movement` (the movement formula), capped by
+    /// `v_max * stride` and the remaining distance (no overshoot).
+    /// `velocity` stores the previous displacement; its L-infinity
+    /// norm is the accumulated speed (no reader today; the tick
+    /// record will read displacement, IDEA-INFRA-018).
+    /// After the step, a minimal separation
     /// (`BODY_RADIUS_CM`) pushes overlapping agents apart (MD-12).
     ///
     /// **F.3-b3:** an anchored agent (the goalkeeper, `x` within
@@ -343,7 +360,13 @@ impl SpatialState {
     ///
     /// Deterministic: no RNG (S1). The variation comes from the inputs
     /// (positions, ball, slots), not from a die.
-    pub fn move_agents(&mut self, pitch_length_cm: i32, pitch_width_cm: i32) {
+    pub fn move_agents(
+        &mut self,
+        pitch_length_cm: i32,
+        pitch_width_cm: i32,
+        bodies: &BTreeMap<PlayerId, PlayerBody>,
+        hidden: &mut pcfm_hidden::GroundTruth,
+    ) {
         let centre = (pitch_length_cm / 2, pitch_width_cm / 2);
         let ball = self.ball();
         let dx = (ball.0 - centre.0) * TRANSLATION_NUM / TRANSLATION_DEN;
@@ -373,15 +396,52 @@ impl SpatialState {
             })
             .map(|(id, _, _)| *id);
 
+        // F.7 step 7b: each agent's displacement comes from the movement
+        // formula (`balance/movement.json`, via `resolve_movement`), not from
+        // a fixed step. `velocity` stores the previous tick's displacement;
+        // its L-infinity norm is the current speed, which accumulates toward
+        // `v_max` (acceleration) and is capped by the remaining distance
+        // (no overshoot). The displacement is per-axis (L-infinity): a
+        // diagonal step has the same per-axis magnitude as a cardinal one,
+        // matching the previous rule (MD-09), not a new model choice.
         for entry in &mut work {
             let target = if Some(entry.0) == nearest {
                 ball
             } else {
                 (entry.2.0 + dx, entry.2.1 + dy)
             };
-            let step_x = (target.0 - entry.1.0).clamp(-MAX_STEP_CM, MAX_STEP_CM);
-            let step_y = (target.1 - entry.1.1).clamp(-MAX_STEP_CM, MAX_STEP_CM);
-            entry.1 = (entry.1.0 + step_x, entry.1.1 + step_y);
+            let Some(body) = bodies.get(&entry.0) else {
+                continue;
+            };
+            let v_prev = self.agents.get(&entry.0).map_or(0, |a| {
+                i32::from(a.velocity.0.unsigned_abs().max(a.velocity.1.unsigned_abs()))
+            });
+            let mctx = pcfm_hidden::MovementContext {
+                player: entry.0,
+                height_cm: body.height_cm,
+                weight_kg: body.weight_kg,
+                fatigue: body.fatigue,
+            };
+            let outcome = hidden.resolve_movement(&mctx);
+            let stride = outcome.stride;
+            // Displacement space: stride is a positive per-player constant,
+            // so `min(v + a, v_max)` in leg-speed space becomes
+            // `min(v_disp + a*stride, v_max*stride)`.
+            let accel_disp = outcome.acceleration * stride;
+            let v_max_disp = outcome.v_max * stride;
+            let dist = (target.0 - entry.1.0)
+                .abs()
+                .max((target.1 - entry.1.1).abs());
+            let v_next = (f64::from(v_prev) + accel_disp)
+                .min(v_max_disp)
+                .min(f64::from(dist));
+            #[allow(clippy::cast_possible_truncation)]
+            let step = v_next.round() as i32;
+            let step_x = (target.0 - entry.1.0).signum() * step;
+            let step_y = (target.1 - entry.1.1).signum() * step;
+            let nx = (entry.1.0 + step_x).clamp(0, pitch_length_cm);
+            let ny = (entry.1.1 + step_y).clamp(0, pitch_width_cm);
+            entry.1 = (nx, ny);
         }
 
         // Minimal separation (MD-12), on the snapshot: no map lookups.
@@ -448,6 +508,23 @@ mod tests {
     use pcfm_core::ids::SquadId;
     use pcfm_model::{Foot, PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId};
 
+    fn make_bodies() -> BTreeMap<PlayerId, PlayerBody> {
+        let mut m = BTreeMap::new();
+        for base in [0u32, 100u32] {
+            for i in 0..11u32 {
+                m.insert(
+                    PlayerId::new(base + i, 0),
+                    PlayerBody {
+                        height_cm: 180.0,
+                        weight_kg: 78.0,
+                        fatigue: 0.0,
+                    },
+                );
+            }
+        }
+        m
+    }
+
     fn make_squad(slot_base: u32) -> Squad {
         let players: Vec<Player> = (0..11)
             .map(|i| {
@@ -513,7 +590,9 @@ mod tests {
         let away_gk = PlayerId::new(100, 0);
         let h_before = s.agent(home_gk).unwrap().position;
         let a_before = s.agent(away_gk).unwrap().position;
-        s.move_agents(10500, 6800);
+        let bodies = make_bodies();
+        let mut hidden = pcfm_hidden::GroundTruth::new(42, pcfm_core::ids::MatchId::new(0, 0));
+        s.move_agents(10500, 6800, &bodies, &mut hidden);
         assert_eq!(s.agent(home_gk).unwrap().position, h_before);
         assert_eq!(s.agent(away_gk).unwrap().position, a_before);
     }

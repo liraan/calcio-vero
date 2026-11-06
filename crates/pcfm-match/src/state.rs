@@ -8,12 +8,12 @@ use pcfm_core::rng::StreamName;
 use pcfm_core::time::GameInstant;
 use pcfm_model::Squad;
 use pcfm_stats::{EventChain, EventType, Half, MatchEvent};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::context::MatchContext;
 use crate::perception::distance_squared;
 use crate::result::{MatchResult, MatchStatistics, Score};
-use crate::spatial::SpatialState;
+use crate::spatial::{PlayerBody, SpatialState};
 
 /// Which team has the ball.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -125,6 +125,9 @@ pub struct MatchState {
     coverage: BTreeSet<PlayerId>,
     /// The possession the current `coverage` set refers to.
     coverage_possession: Possession,
+    /// The body of each player (height, weight, fatigue). Built once
+    /// in `new` from the squads; read by `resolve_movement` each tick.
+    bodies: BTreeMap<PlayerId, PlayerBody>,
     pending: Option<Pending>,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
@@ -234,6 +237,20 @@ impl MatchState {
             half_start_tick: 0,
             spatial: SpatialState::from_squads(&match_.pitch, &match_.home, &match_.away),
             pending: None,
+            bodies: {
+                let mut m = BTreeMap::new();
+                for p in match_.home.players.iter().chain(match_.away.players.iter()) {
+                    m.insert(
+                        p.id,
+                        PlayerBody {
+                            height_cm: f64::from(p.height_cm),
+                            weight_kg: f64::from(p.weight_kg),
+                            fatigue: f64::from(p.physical.fatigue),
+                        },
+                    );
+                }
+                m
+            },
             coverage: BTreeSet::new(),
             coverage_possession: Possession::Home,
             actions_stream: StreamName::new(format!("match:{}:actions", match_.id.slot()))
@@ -314,6 +331,8 @@ impl MatchState {
         self.spatial.move_agents(
             i32::from(ctx.match_.pitch.length_m) * 100,
             i32::from(ctx.match_.pitch.width_m) * 100,
+            &self.bodies,
+            ctx.hidden,
         );
         self.update_coverage(ctx, tick);
         match self.possession {
