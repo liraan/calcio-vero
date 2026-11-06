@@ -176,6 +176,43 @@ pub(crate) fn heading_from_velocity(vx: i16, vy: i16) -> Option<u16> {
     }
     Some(best)
 }
+
+/// The ball position as perceived by `from`, or `None` if the ball is
+/// not in the forward cone (MD-34, half-angle `VISION_HALF_ANGLE_DEG`).
+///
+/// Pure function on positions, headings and the ball: no RNG, no
+/// latent, no `atan2`, no float (determinism, D2). The ball is a
+/// single point; perception is binary (visible or not), as in
+/// `visible_to` for agents. At the ball (distance zero) the ball is
+/// always perceived.
+///
+/// F.6: the consumer is `move_agents`. The perception delay (MD-40) is
+/// **not** applied here: it needs per-tick memory, which requires a
+/// producer for fatigue (OI-70) and a decision on MD-40's two delays.
+/// The `tick` parameter the original plan proposed is therefore not
+/// present; it arrives with the delay.
+#[must_use]
+pub fn perceived_ball(
+    spatial: &SpatialState,
+    from: PlayerId,
+    ball: (i32, i32),
+) -> Option<(i32, i32)> {
+    let observer = spatial.agent(from)?;
+    let origin = observer.position;
+    let dx = ball.0 - origin.0;
+    let dy = ball.1 - origin.1;
+    if dx == 0 && dy == 0 {
+        return Some(ball);
+    }
+    let (hx, hy) = heading_vector(observer.heading);
+    let dot = i64::from(dx) * i64::from(hx) + i64::from(dy) * i64::from(hy);
+    let dist = (i64::from(dx) * i64::from(dx) + i64::from(dy) * i64::from(dy)).isqrt();
+    if dot > dist * COS_HALF_ANGLE_MILLI {
+        Some(ball)
+    } else {
+        None
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -302,5 +339,20 @@ mod tests {
         assert_eq!(heading_from_velocity(0, -5), Some(180));
         // Zero velocity: the agent keeps its heading.
         assert_eq!(heading_from_velocity(0, 0), None);
+    }
+
+    #[test]
+    fn perceived_ball_in_front_and_behind() {
+        let (home, away) = (make_squad(0), make_squad(100));
+        let mut s = SpatialState::from_squads(&Pitch::default(), &home, &away);
+        let id = PlayerId::new(1, 0);
+        s.set_position(id, (5000, 3400));
+        s.agent_mut(id).unwrap().heading = 90; // east
+        // In front (east): perceived.
+        assert!(perceived_ball(&s, id, (8000, 3400)).is_some());
+        // Behind (west): not perceived.
+        assert!(perceived_ball(&s, id, (2000, 3400)).is_none());
+        // At the agent: always perceived.
+        assert_eq!(perceived_ball(&s, id, (5000, 3400)), Some((5000, 3400)));
     }
 }
