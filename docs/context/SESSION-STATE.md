@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `dcfc00c` — "docs(ideas): pass angle defined; two gaps named"
+**Last commit verified:** `a49785e` — "docs(context): LCV before push (two docs commits)"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -119,6 +119,53 @@ engine gets built.
 | [open] | C.2 | **Slip/ControlError riformulati (dopo C.1).** Non più con velocity hardcoded: input osservabile alternativo, o sessione dedicata a OI-25 (modello di movimento) | C.1 | Decidere: input alternativo a velocity, o aprire OI-25 |
 | [done] | D | **Design del per-agent: chiuso per la parte decidibile oggi (2026-11-03).** RNG fatto (A1); ordine = ADR-019 deferred 1 (spaziale, tie-break `PlayerId`), verificato in `resolve_influence` (`lib.rs:378,410`) e `nearest_in_squad` (`state.rs:386`). Il rumore per-ordine è tracciato in OI-44. Il per-agent (ogni agente decide ogni tick, invece di un solo dado globale che sceglie chi agisce) è il cambio di paradigma del motore, non una slice come C.1. Prima di progettare il movimento resta una decisione che lo blocca: (1) RNG **fatto** (A1, SIM_VERSION 10, OI-39 chiuso); (2) l'ordine di iterazione degli agenti (spaziale, distanza dalla palla, tie-break per `PlayerId`, come da ADR-019 deferred 1). Senza queste due, il per-agent non è deterministico e non è progettabile. | C.1 (fatto), OI-39 (chiuso 2026-11-03) | Leggere `orchestrator.rs`, `state.rs` (la funzione `tick`), `04-match-engine.md` §2.2, poi scrivere le due decisioni (RNG e ordine) in `SESSION-STATE` "Decisioni operative" o in un OI dedicato. |
 | [done] | P | **Patterns section in `NEW-SESSION-PROMPT.md` (2026-11-05, da pausa).** I pattern di lavoro (mutazioni, verifica, decisioni, comunicazione) erano sparsi tra B1-bis, A1-A3, C2, D1-D7. **Fatto:** sezione `## Patterns` con 7 voci (P1 test-che-non-può-fallire, P2 grep-prima-del-consumatore, P3 criterio-sbagliato-se-fallisce-su-caso-reale, P4 deciso-≠-implementato, P5 futuribilità-B-non-A, P6 conclusione-non-menu, P7 accetta-e-riformula), ognuna con D4 fatto prima di scrivere. Nessun file nuovo, nessun passo di rituale in più. Artefatto: `Rules-Audit: 7 changes, 0 contradictions, 0 leaks` nel commit `fa4ff56`. | — | Fatto: `fa4ff56`. |
+## Note (2026-11-06) — handoff for the next session
+
+**Read this before the Plan.** The Plan says `[next]` F.7 step 9 (`heading`), but
+it is not the priority. The order decided on 2026-11-06 is:
+
+1. **ADR fatica (OI-63).** The maintainer ratified that fatigue enters the
+   success rate of pass, shot and duel. This supersedes T3 and requires an ADR,
+   not a silent addition. The OI records the double-counting risk (fatigue is
+   already read in movement and selection), the shape decided in the pause (one
+   scalar fatigue, two mechanisms: physical slowness and cognitive slowness, the
+   latter as a *delay* not a quality drop, the two coefficients chosen
+   together), and the open questions. Before writing it: read L0.11 §7.6 (done,
+   it already separates the two clocks and names `fatigue` as the one state the
+   engine holds) and ADR-028 (done). The decision the ADR cannot avoid:
+   `raw_influence` loses fatigue, or not. `raw_influence` is selection, and it is
+   orphan code today (OI-50): no engine effect.
+2. **ADR-028 amendment + L0.11 §4.6 correction (feet).** L0.11 §7.2 already has
+   `left_foot` and `right_foot` as Plane A traits. L0.11 §7.5 says the label
+   ("right-footed") is derived and **not stored**. §4.6 and ADR-028 §1 still list
+   `preferred_foot` as a dimension/term: they contradict §7.2+§7.5 and must be
+   corrected.
+3. **Feet code.** Remove `preferred_foot` from `Player` (not read by
+   `MatchState::new`: verified, so the engine is untouched); add
+   `left_foot`/`right_foot` to `PlayerLatents` and the catalogue; verify whether
+   the golden moves (with keyed derivation ADR-029 it may not: check the golden,
+   do not promise). The save has no committed fixture.
+4. **F.7 step 9** (`heading`) waits: not on the critical path of the
+   ratification.
+
+**Feet — decisions taken on 2026-11-06, not yet in any other file:** two
+latents (`left_foot`, `right_foot`), both terms; the greater is the default, the
+other enters when geometry demands it; the propensity is the gap between the
+two values (example 100%/10%), no third term; `preferred_foot` removed; ADR-028
+amended; §4.6 corrected. Geometry of the foot (blocked foot, pass angle) is
+**not** implemented now: declared with `Removed-by`. The pass angle is defined
+in IDEA-PM-005 q5: angle between the passer's orientation and the pass
+direction, with sign; **orientation is today mechanical toward the goal** (a gap,
+not a simplification; it becomes a decision with F.6), and the **receiver's side
+is computable today** (not read yet). Name finding: `angle` is already a
+shooting term; document per family or rename.
+
+**Method lesson (2026-11-06, two hook blocks):** `E4b` requires that **HEAD
+touches `SESSION-STATE.md`** before a push, not merely that an earlier commit
+did; and S1 requires the LCV to point to **the commit that is HEAD at the moment
+of the bookmark commit**. Two consecutive docs commits without a bookmark block
+the push. The rules existed; they were violated, not missing.
+
 ## Decisioni operative (2026-11-03)
 - [done] **MD-01 Modello di decisione situato.** L'agente sceglie tra le opzioni che la relazione gli mette davanti (passa a un candidato con spazio, tira se in zona, contrasta se a contatto); scelta geometrica, rumore in `resolve_*`. Il dado globale `action_kind_roll` sparisce dal percorso di scelta. Dentro F.3, non foglia a sé. → Prima azione: implementare in F.3; test F.5 "azioni non collassate".
 - [done] **MD-02 Osso / carne / pelle.** L0 = osso (piatto è condizione, non difetto); L2 = carne; 2D/3D = pelle attraverso il narrator. L'osso espone i punti di attacco come dichiarazione (non meccanismo). Il test F.5 distingue piatto da rotto. Il 2D mostra osso e carne solo via narrator; criterio: mostra la differenza tra due tattiche? → Prima azione: test F.5 (piatto vs rotto); criterio 2D in F.5.
