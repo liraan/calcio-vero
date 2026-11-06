@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `b0b9042` - "docs(context): bookmark LCV to fc37e5d before push"
+**Last commit verified:** `96bc7ed` - "docs(context): session handoff 2026-11-06, cited in the bookmark"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
