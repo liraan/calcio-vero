@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `af45e6c` — "docs(adr): ADR-030 — fatigue enters execution (supersedes T3)"
+**Last commit verified:** `b978b40` — "docs(adr): ADR-031 — feet are two performances, the label is derived"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
@@ -125,28 +125,21 @@ engine gets built.
 **Read this before the Plan.** The Plan says `[next]` F.7 step 9 (`heading`), but
 it is not the priority. The order decided on 2026-11-06 is:
 
-1. **ADR fatica (OI-63).** The maintainer ratified that fatigue enters the
-   success rate of pass, shot and duel. This supersedes T3 and requires an ADR,
-   not a silent addition. The OI records the double-counting risk (fatigue is
-   already read in movement and selection), the shape decided in the pause (one
-   scalar fatigue, two mechanisms: physical slowness and cognitive slowness, the
-   latter as a *delay* not a quality drop, the two coefficients chosen
-   together), and the open questions. Before writing it: read L0.11 §7.6 (done,
-   it already separates the two clocks and names `fatigue` as the one state the
-   engine holds) and ADR-028 (done). The decision the ADR cannot avoid:
-   `raw_influence` loses fatigue, or not. `raw_influence` is selection, and it is
-   orphan code today (OI-50): no engine effect.
-2. **ADR-028 amendment + L0.11 §4.6 correction (feet).** L0.11 §7.2 already has
-   `left_foot` and `right_foot` as Plane A traits. L0.11 §7.5 says the label
-   ("right-footed") is derived and **not stored**. §4.6 and ADR-028 §1 still list
-   `preferred_foot` as a dimension/term: they contradict §7.2+§7.5 and must be
-   corrected.
-3. **Feet code.** Remove `preferred_foot` from `Player` (not read by
-   `MatchState::new`: verified, so the engine is untouched); add
-   `left_foot`/`right_foot` to `PlayerLatents` and the catalogue; verify whether
-   the golden moves (with keyed derivation ADR-029 it may not: check the golden,
-   do not promise). The save has no committed fixture.
-4. **F.7 step 9** (`heading`) waits: not on the critical path of the
+1. **Feet code (next).** Remove `preferred_foot` from `Player` and add
+   `left_foot`/`right_foot` to `PlayerLatents` and the catalogue, as ADR-031
+   decides. **This is not a small change:** `Player::try_new` has 14 call sites
+   in **11 files** (`pcfm-fixtures`, `pcfm-match` engine/narrative/perception/
+   save/spatial/state, tests, `pcfm-model` match_/player/squad), and the `Foot`
+   argument is not uniformly placed (verified 2026-11-07: a `grep` near
+   `try_new` finds 0 `Foot::`). It needs a dedicated session, one file at a
+   time, `cargo check` after each. **Do not attempt it in the tail of a
+   session** (attempted and stopped on 2026-11-07). `MatchState::new` does not
+   read `preferred_foot` (verified), so the engine is untouched; the risk is
+   mechanical, not semantic. `SIM_VERSION` is checked, not promised: keyed
+   derivation (ADR-029) may leave the golden identical, and then the change is
+   a save schema change (`schema_version`), not a simulation change. No
+   committed save fixture.
+2. **F.7 step 9** (`heading`) waits: not on the critical path of the
    ratification.
 
 **Feet — decisions taken on 2026-11-06, not yet in any other file:** two
