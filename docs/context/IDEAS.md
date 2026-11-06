@@ -163,6 +163,32 @@
      **First action:** define "angle" for the pass, then decide whether it
      becomes a passing situation term (a catalogue addition, validated at
      load time) or the pass uses `game_reading` + `line_pressure`.
+     **Defined (2026-11-06, same pause):** the "angle" of the pass is the
+     angle between the passer's **orientation** and the direction of the
+     pass, with sign — positive toward the strong-foot side, negative
+     toward the other. It is the signature of the foot choice, and it is
+     what makes the default ("strong foot") emerge from the geometry
+     instead of a separate propensity term.
+     **Two corrections from the pause, both are gaps, not simplifications:**
+     (a) *Orientation.* Today the carrier turns toward the goal before
+     deciding, so the angle is relative to the goal, not to the body.
+     Orientation is not a field of the pitch: it is a **decision of the
+     actor**, and it cannot be a decision until the cognitive family
+     exists (F.6: `game_reading`, `decision_making`, `risk_management`).
+     Until then it is "mechanical orientation toward the goal", declared
+     as a gap, not as an acceptable simplification.
+     (b) *Receiving side.* The receiver's side is **computable today**:
+     the ball leaves a point, arrives at another, and the arrival
+     direction relative to the receiver's body is geometry the engine
+     already has. It is "not read yet", not "not modellable". The
+     passer's side is different: a possessed ball has no side relative to
+     the body, so the passer's receiving side exists only if the previous
+     touch is modelled. Two things, not one: receiver computable now,
+     passer depends on the previous touch (not modelled).
+     **Name finding.** `angle` is already a *shooting* situation term
+     (angle to the goal), with a different meaning. Same name, two
+     families, two meanings: the doc must say which one, or the two names
+     must differ (`goal_angle` vs `pass_angle`).
 - **Critical note:** L0 is complete and ratified; adding footedness is a
   contract change — it requires a new module or a revision, and an ADR if it
   touches the match engine contract (ADR-019). Do not implement from this
