@@ -718,11 +718,11 @@ Weight is measured, not derived. A scale measures it. An earlier version
 of this cell derived it from height and maximal force; that was wrong: a
 player can be heavy and weak, or light and strong.
 
-The code at SIM_VERSION 19. The `Player` struct
+The code at SIM_VERSION 20. The `Player` struct
 (crates/pcfm-model/src/player.rs) has `id`, `name`, `role`,
 `preferred_foot` (an enum, right or left), `height_cm`, and two state
-structs. It does not have `weight_kg`, `date_of_birth`, `place_of_birth`,
-or the two foot numbers. `weight_kg` is added by F.7, because the
+structs. It has `weight_kg` (added by F.7, commit `5ba4e5e`). It does not have `date_of_birth`, `place_of_birth`,
+or the two foot numbers. `weight_kg` was added by F.7 because the
 movement formula needs the mass. `date_of_birth`, `place_of_birth` and
 the two foot numbers have no consumer in the engine today: they are
 declared here so that L1 and the pass/shot formula find them when they
