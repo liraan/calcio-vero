@@ -2,7 +2,7 @@
 
 **Purpose:** prompt to paste as the first message of a new chat, to resume work on the project without losing context. Update this file when the project state or the operating rules change.
 
-**Last updated:** 2026-11-01 (CI exists, corrects the "no CI" line; Dependabot on; A4; hook anti-ridondanza; positional slice note; earlier: ritual cut, bookmark 5→3, closing 6→3, startup 5→3, D4 rules-only, trailers reduced)
+**Last updated:** 2026-11-07 (CI exists, corrects the "no CI" line; Dependabot on; A4; hook anti-ridondanza; positional slice note; earlier: ritual cut, bookmark 5→3, closing 6→3, startup 5→3, D4 rules-only, trailers reduced)
 
 ---
 
@@ -24,7 +24,7 @@ I am resuming work on **Calcio Vero (Deep Simulator)**. The previous chat ended 
 
 ## The project
 
-- **Repository:** https://github.com/liraan/pcfootballmanager (public)
+- **Repository:** https://github.com/liraan/calciovero (public)
 - **What it is:** a community alternative to commercial football management games. Transparent, offline-first, deterministic. Doctrine of the Three Planes (Plane A = Ground Truth, Plane B = Observation, Plane C = Estimation).
 - **Language:** technical documentation in English; conversation with me in Italian.
 - **Status:** L0 (match engine) is complete and implemented. L1–L3 are planned.
@@ -33,7 +33,7 @@ I am resuming work on **Calcio Vero (Deep Simulator)**. The previous chat ended 
 
 **For current numbers (crates, tests, ADR count), read `SESSION-STATE.md` and `STRUCTURE.md` §5. This section only gives the stable structure: it does not duplicate counts that change every session.**
 
-- **Crates:** 9 `pcfm-*` crates: `pcfm-core`, `pcfm-model`, `pcfm-hidden`, `pcfm-stats`, `pcfm-match`, `pcfm-testkit`, `pcfm-test-runner`, `pcfm-demo`, `pcfm-fixtures`.
+- **Crates:** 10 `pcfm-*` crates: `pcfm-core`, `pcfm-model`, `pcfm-hidden`, `pcfm-stats`, `pcfm-match`, `pcfm-testkit`, `pcfm-test-runner`, `pcfm-demo`, `pcfm-fixtures`, `pcfm-calculator`.
 - **`docs/context/`** holds briefing material (not normative): `NEW-SESSION-PROMPT.md`, `SESSION-STATE.md`, `AGENT-POLICY.md`, `GITHUB-SESSION-PROMPT.md`.
 
 ## Why these files matter (the commands are in the Startup ritual)
