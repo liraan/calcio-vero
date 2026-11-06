@@ -45,6 +45,8 @@ The alternatives were discussed in a long pause (see `IDEAS.md`, `IDEA-PROJ-001`
 
 The crate prefix stays **`pcfm-*`**. Renaming 9 crates, 177 `use` statements, 11 `Cargo.toml` names, CI, hooks, and badges is a **refactor**, not a rename: it has its own risk, and it does not change the project name. `pcfm-*` becomes a declared historical detail (the crate prefix is a technical identifier, not a brand: `serde` does not share the name of the projects that use it). If a future need justifies the refactor, it will be a separate ADR.
 
+**Note (2026-11-07):** the sentence "If a future need justifies the refactor, it will be a separate ADR" is now executed. The need: the three identities (name Calcio Vero, handle Deep Simulator, prefix `pcfm-*`) are one too many, and `pcfm-*` names a project that no longer exists. The separate ADR is **ADR-032** (crate prefix `ds-*`, one crate per commit, `SIM_VERSION` unchanged). `pcfm-*` survives in history, not in code.
+
 ## Consequences
 
 - **ADR-002 is superseded, not rewritten.** It stays as the record of what the name was and why. A dated note in it points here.
