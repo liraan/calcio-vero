@@ -145,6 +145,24 @@
      conditions act on the **outcome**, not the choice. Crosses and
      shielding need role and tactics: out of scope here, L2. The estimation
      (Plane C) is per foot, not about the choice.
+  5. **The geometry of the foot (2026-11-06, from the same pause).** The
+     choice of foot is not pure geometry: a player with high game reading
+     finds the angle to use the strong foot anyway (L0.11 §7.5 already
+     says so). The geometry is **mediated by perception**: two players in
+     the same scene see different options. The catalogue already has
+     `game_reading` (Plane A). **Finding (2026-11-06):** `angle` is a
+     situation term of *shooting* only; the *passing* family has
+     `distance`, `line_pressure`, `receiver_freedom`, and no `angle`. So
+     the mediated geometry is expressible today for the shot, not for the
+     pass. **Open, and it must be decided before adding the term:** what
+     "angle" means for a pass (passer-ball-receiver? the line of the pass
+     vs the nearest defender?). Without the definition, adding `angle` to
+     the passing family is structure without content (D3). The code is
+     still the prototype: `PassContext` has only `passer`, `from`, `to`,
+     and the `Situation` trait has no per-family terms yet.
+     **First action:** define "angle" for the pass, then decide whether it
+     becomes a passing situation term (a catalogue addition, validated at
+     load time) or the pass uses `game_reading` + `line_pressure`.
 - **Critical note:** L0 is complete and ratified; adding footedness is a
   contract change — it requires a new module or a revision, and an ADR if it
   touches the match engine contract (ADR-019). Do not implement from this
