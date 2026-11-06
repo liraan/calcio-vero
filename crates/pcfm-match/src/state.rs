@@ -31,9 +31,6 @@ const FLIGHT_TICKS: u64 = 15;
 /// declared.
 const INTERCEPT_RADIUS_CM: i64 = 200;
 
-/// Goalkeeper reach in centimetres (F.3-b3). Arbitrary, declared: 2 m.
-const GK_REACH_CM: i32 = 200;
-
 /// The squared distance from point `p` to the segment `a`-`b`. Integer
 /// only, deterministic (D2).
 fn point_segment_dist_sq(a: (i32, i32), b: (i32, i32), p: (i32, i32)) -> i64 {
@@ -639,7 +636,7 @@ impl MatchState {
     /// If a shot is pending and the ball crossed a goal plane:
     /// - outside the goal mouth: possession to the defending team
     ///   (declared derogation MD-38, ball out stops the match);
-    /// - inside, goalkeeper reaches (`GK_REACH_CM`): save via
+    /// - inside, goalkeeper reaches (`reach_cm = height_cm / 2`): save via
     ///   `resolve_save`, possession to the defender;
     /// - inside, no save: `Goal` emitted, score updated.
     ///
@@ -690,9 +687,10 @@ impl MatchState {
             Possession::Home => PlayerId::new(0, 0),
             Possession::Away => PlayerId::new(100, 0),
         };
+        let reach_cm = self.bodies.get(&gk).map_or(0.0, |b| b.height_cm / 2.0);
         let saved = if let Some(gk_agent) = self.spatial.agent(gk) {
-            let dy = (y_at - gk_agent.position.1).abs();
-            if dy <= GK_REACH_CM {
+            let dy = f64::from((y_at - gk_agent.position.1).abs());
+            if dy <= reach_cm {
                 let save_ctx = pcfm_hidden::SaveContext {
                     goalkeeper: gk,
                     point: (plane_x, y_at, z_at),
