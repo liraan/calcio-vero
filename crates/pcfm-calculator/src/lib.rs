@@ -130,6 +130,8 @@ pub enum Formula {
     Const(f64),
     /// The product of the operands, applied left to right.
     Product(Vec<Self>),
+    /// The sum of the operands, applied left to right.
+    Sum(Vec<Self>),
     /// The ratio numerator / denominator.
     Ratio(Box<Self>, Box<Self>),
     /// The inner value, clamped to [min, max].
@@ -159,7 +161,7 @@ impl Formula {
                 out.insert(*c);
             }
             Self::Datum(_) | Self::Const(_) => {}
-            Self::Product(items) => {
+            Self::Product(items) | Self::Sum(items) => {
                 for item in items {
                     item.collect_characteristics(out);
                 }
@@ -178,7 +180,7 @@ impl Formula {
                 out.insert(*d);
             }
             Self::Term(_) | Self::Const(_) => {}
-            Self::Product(items) => {
+            Self::Product(items) | Self::Sum(items) => {
                 for item in items {
                     item.collect_data(out);
                 }
@@ -234,6 +236,13 @@ impl Calculator {
                 let mut acc = 1.0;
                 for item in items {
                     acc *= Self::eval(item, custodian, situation);
+                }
+                acc
+            }
+            Formula::Sum(items) => {
+                let mut acc = 0.0;
+                for item in items {
+                    acc += Self::eval(item, custodian, situation);
                 }
                 acc
             }
@@ -395,5 +404,57 @@ mod tests {
         assert_eq!(Datum::from_name("strength"), None);
         assert_eq!(Characteristic::from_name("height"), None);
         assert_eq!(Datum::from_name("explosive_force"), None);
+    }
+
+    #[test]
+    fn sum_adds_left_to_right() {
+        struct NoTerms;
+        impl Custodian for NoTerms {
+            fn value(&mut self, _: Characteristic) -> f64 {
+                panic!("no characteristic expected")
+            }
+        }
+        struct NoData;
+        impl Situation for NoData {
+            fn datum(&self, _: Datum) -> f64 {
+                panic!("no datum expected")
+            }
+        }
+        let formula = Formula::Sum(vec![Formula::Const(2.0), Formula::Const(3.5)]);
+        let v = Calculator::apply(&formula, &mut NoTerms, &NoData);
+        assert!((v - 5.5).abs() < 1e-9, "sum: {v}");
+    }
+
+    #[test]
+    fn sum_inside_clamp_models_a_modifier() {
+        // `max(floor, 1 - c*x)` is the shape of the fatigue modifier
+        // (ADR-030): a multiplicative floor. Here x is Weight (a datum we
+        // control), c = 0.5, floor = 0.5.
+        struct NoTerms;
+        impl Custodian for NoTerms {
+            fn value(&mut self, _: Characteristic) -> f64 {
+                panic!("no characteristic expected")
+            }
+        }
+        struct Weight(f64);
+        impl Situation for Weight {
+            fn datum(&self, _: Datum) -> f64 {
+                self.0
+            }
+        }
+        let formula = Formula::Clamp(
+            Box::new(Formula::Sum(vec![
+                Formula::Const(1.0),
+                Formula::Product(vec![Formula::Const(-0.5), Formula::Datum(Datum::Weight)]),
+            ])),
+            0.5,
+            1.0,
+        );
+        let fresh = Calculator::apply(&formula, &mut NoTerms, &Weight(0.0));
+        let tired = Calculator::apply(&formula, &mut NoTerms, &Weight(1.0));
+        let floored = Calculator::apply(&formula, &mut NoTerms, &Weight(5.0));
+        assert!((fresh - 1.0).abs() < 1e-9, "fresh: {fresh}");
+        assert!((tired - 0.5).abs() < 1e-9, "tired: {tired}");
+        assert!((floored - 0.5).abs() < 1e-9, "floor should bind: {floored}");
     }
 }

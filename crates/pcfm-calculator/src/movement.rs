@@ -30,6 +30,10 @@ pub struct MovementBalance {
     pub weight_ref_kg: f64,
     /// Reference height, in cm.
     pub height_ref_cm: f64,
+    /// Weight of the fatigue term (ADR-030; prototype, not calibrated).
+    pub fatigue_coefficient: f64,
+    /// Floor of the fatigue modifier: 1 - c*fatigue is clamped here.
+    pub fatigue_floor: f64,
 }
 
 impl MovementBalance {
@@ -46,7 +50,11 @@ impl MovementBalance {
 
     /// The movement formula, built from the balance values.
     ///
-    /// `a = accel_ref * explosive_force * (weight_ref / weight)`.
+    /// `a = accel_ref * explosive_force * (weight_ref / weight) * max(floor, 1 - c*fatigue)`
+    ///
+    /// The fatigue modifier is ADR-030 (one scalar, multiplicative with a
+    /// floor). It is identity at fatigue = 0, so the golden is unchanged
+    /// when the match never accumulates fatigue (F.7, no producer yet).
     #[must_use]
     pub fn formula(&self) -> Formula {
         Formula::Product(vec![
@@ -55,6 +63,17 @@ impl MovementBalance {
             Formula::Ratio(
                 Box::new(Formula::Const(self.weight_ref_kg)),
                 Box::new(Formula::Datum(Datum::Weight)),
+            ),
+            Formula::Clamp(
+                Box::new(Formula::Sum(vec![
+                    Formula::Const(1.0),
+                    Formula::Product(vec![
+                        Formula::Const(-self.fatigue_coefficient),
+                        Formula::Datum(Datum::Fatigue),
+                    ]),
+                ])),
+                self.fatigue_floor,
+                1.0,
             ),
         ])
     }
@@ -79,7 +98,7 @@ mod tests {
         let chars = f.declared_characteristics();
         let data = f.declared_data();
         assert_eq!(chars, vec![Characteristic::ExplosiveForce]);
-        assert_eq!(data, vec![Datum::Weight]);
+        assert_eq!(data, vec![Datum::Weight, Datum::Fatigue]);
     }
 
     #[test]
