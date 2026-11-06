@@ -128,7 +128,7 @@ The rules that make this possible are non-negotiable:
 | **Doctrine** | 🟢 Settled | `specs/00-foundations.md` v2.0, ratified. The Three Planes and the bans are not under discussion. |
 | **L0 specification** | 🟢 Ratified | 11 cells, ratified. The contract is stable; the implementation evolves under it. |
 | **L0 implementation** | 🟡 Prototype | It compiles, it is deterministic, it is tested — but it is a *prototype model*: positions exist (slice A, used by slice B2), movement does not; 5 event types out of 31; formulas marked as placeholders. |
-| **ADRs** | 🟡 Evolving | 30 ADRs: 28 accepted, 2 superseded (002 → 027, 023 → 024). The set changes as the project learns. |
+| **ADRs** | 🟡 Evolving | 31 ADRs: 29 accepted, 2 superseded (002 → 027, 023 → 024). The set changes as the project learns. |
 | **Tests** | 🟢 Green | 206 tests, 6 test scenarios, `cargo fmt`/`clippy`/`test` clean. Green means "the contract holds", not "the game is finished". |
 | **L1–L3** | ⚪ Not started | Specifications only. No code. |
 
