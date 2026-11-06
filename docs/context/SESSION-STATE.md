@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `2e9d043` — "rules(B3): output sentinel in bright red by default"
+**Last commit verified:** `fc37e5d` - "rules: pre-commit shebang to /bin/sh (Niubash), B1-bis Niubash paste"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
