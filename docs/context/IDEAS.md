@@ -135,6 +135,16 @@
      §2 and check whether it separates "dimension vs performance" from
      "observable vs latent"; if not, the amendment is the ADR, and the
      README/L0.11 §7.5/§9 follow.
+     **Outcome of the pause (2026-11-06):** the two are not a fact and a
+     preference. The **default is the strong foot**; the exceptions are
+     *choices*, not conditions — the strong foot is blocked by the
+     defender, the ball arrives on the wrong side and a quick touch beats
+     precision, the body is used to shield. Fatigue does **not** enter the
+     choice (it makes you slow, not stupid; and it is already read twice,
+     movement and selection: a third reading violates T3/MD-40). The
+     conditions act on the **outcome**, not the choice. Crosses and
+     shielding need role and tactics: out of scope here, L2. The estimation
+     (Plane C) is per foot, not about the choice.
 - **Critical note:** L0 is complete and ratified; adding footedness is a
   contract change — it requires a new module or a revision, and an ADR if it
   touches the match engine contract (ADR-019). Do not implement from this
