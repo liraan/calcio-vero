@@ -400,6 +400,11 @@ impl SpatialState {
 
         let nearest = work
             .iter()
+            // F.6 step 2: the chaser is the nearest agent who *perceives*
+            // the ball. With gaze always towards the ball (OI-72), every
+            // agent perceives it, so this filter is identity today: it
+            // becomes real when OI-71 decides when to turn. Removed-by: OI-71.
+            .filter(|w| crate::perception::perceived_ball(&*self, w.0, ball).is_some())
             .min_by_key(|(_, pos, _)| {
                 let ddx = i64::from(pos.0 - ball.0);
                 let ddy = i64::from(pos.1 - ball.1);
