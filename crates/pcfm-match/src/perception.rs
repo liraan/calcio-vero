@@ -153,6 +153,29 @@ pub(crate) fn heading_vector(heading: u16) -> (i32, i32) {
     (hx, hy)
 }
 
+/// The heading (degrees, 0 = north = +y, clockwise) that points along
+/// `(vx, vy)`. `None` if the velocity is zero (the agent keeps its
+/// heading). Integer, no trig in the simulation path (D2).
+#[must_use]
+pub(crate) fn heading_from_velocity(vx: i16, vy: i16) -> Option<u16> {
+    if vx == 0 && vy == 0 {
+        return None;
+    }
+    let dx = i32::from(vx);
+    let dy = i32::from(vy);
+    let mut best = 0_u16;
+    let mut best_dot = i64::MIN;
+    for i in 0..36_u16 {
+        let h = i * 10;
+        let (hx, hy) = heading_vector(h);
+        let dot = i64::from(dx) * i64::from(hx) + i64::from(dy) * i64::from(hy);
+        if dot > best_dot {
+            best_dot = dot;
+            best = h;
+        }
+    }
+    Some(best)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -268,5 +291,16 @@ mod tests {
     #[test]
     fn visible_to_half_angle_constant_is_read() {
         assert_eq!(VISION_HALF_ANGLE_DEG, 55);
+    }
+
+    #[test]
+    fn heading_from_velocity_points_east_and_west() {
+        // P1: a test that can fail. East = +x = 90 degrees (0 = north, clockwise).
+        assert_eq!(heading_from_velocity(5, 0), Some(90));
+        assert_eq!(heading_from_velocity(-5, 0), Some(270));
+        assert_eq!(heading_from_velocity(0, 5), Some(0));
+        assert_eq!(heading_from_velocity(0, -5), Some(180));
+        // Zero velocity: the agent keeps its heading.
+        assert_eq!(heading_from_velocity(0, 0), None);
     }
 }

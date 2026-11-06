@@ -17,10 +17,12 @@
 //! They are **observable facts of the match**, Plane B:
 //!
 //! - `position` is read by the engine everywhere;
-//! - `heading` is read by the cone (`visible_to` in `perception.rs`) and
-//!   written when the carrier turns to play;
-//! - `velocity` is **written** (the movement pass) and never read yet. It
-//!   is a derived output of the movement, not an input.
+//! - `heading` is read by the cone (`visible_to` in `perception.rs`),
+//!   written when the carrier turns to play, and written by the
+//!   movement pass (F.7 step 9);
+//! - `velocity` is **written** (the movement pass) and read as the
+//!   previous tick's displacement (F.7 step 9); it is a derived output,
+//!   not a model input.
 //!
 //! **Futurability.** All three are observable, so the 2D/3D will show them
 //! through the tick record (IDEA-INFRA-018, not built). The tick record is
@@ -43,7 +45,10 @@ pub struct AgentState {
     pub heading: u16,
 }
 
-// Note (2026-11-02): `velocity` is `(0, 0)` and `heading` is never read.
+// Note (2026-11-07): superseded. `velocity` is written by the movement
+// pass and read as the previous tick's displacement; `heading` is read
+// by the cone and written by the movement pass. See F.7 step 9. The
+// 2026-11-02 record follows and is kept as history.
 // They are reserved fields for the per-agent slice, not part of any model
 // today. They are the two declared limits of the influence formula
 // (`03-entities-minimal` §2.9): heading (orientation) and time to arrive
@@ -482,6 +487,11 @@ impl SpatialState {
                 i16::try_from(new_pos.1 - agent.position.1).unwrap_or(0),
             );
             agent.position = *new_pos;
+            if let Some(h) =
+                crate::perception::heading_from_velocity(agent.velocity.0, agent.velocity.1)
+            {
+                agent.heading = h;
+            }
         }
     }
     /// The number of agents on the pitch.
@@ -701,5 +711,32 @@ mod tests {
         s.advance_ball();
         assert_eq!(s.ball_3d(), (5000, 3400, 0));
         assert_eq!(s.ball_state(), BallState::Loose);
+    }
+
+    #[test]
+    fn move_agents_heading_follows_velocity() {
+        // F.7 step 9: after the movement pass, every agent that moved has
+        // a heading that matches its velocity (the invariant the cone will
+        // read once F.6 makes it per-agent).
+        let mut s = make_state();
+        let bodies = make_bodies();
+        let mut hidden = pcfm_hidden::GroundTruth::new(42, pcfm_core::ids::MatchId::new(0, 0));
+        s.move_agents(10500, 6800, &bodies, &mut hidden);
+        let mut moved = 0;
+        for (id, a) in s.iter() {
+            if a.velocity == (0, 0) {
+                continue;
+            }
+            moved += 1;
+            let expected = crate::perception::heading_from_velocity(a.velocity.0, a.velocity.1);
+            assert_eq!(
+                Some(a.heading),
+                expected,
+                "agent {id:?} moved with velocity {:?} but heading is {}",
+                a.velocity,
+                a.heading
+            );
+        }
+        assert!(moved > 0, "no agent moved; the test proves nothing (P1)");
     }
 }
