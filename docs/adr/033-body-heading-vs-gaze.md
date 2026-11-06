@@ -50,3 +50,11 @@ The root cause is not F.6. It is the collapse: a defender running toward his own
 - OI-71 (the finding that triggered this ADR)
 - F.6 (the first consumer), F.7 step 9 (`heading_from_velocity`)
 - `crates/pcfm-match/src/spatial.rs`, `crates/pcfm-match/src/perception.rs`
+
+## Amendment (2026-11-07) — gaze as a decision
+
+The original text says "gaze is state, not a decision in the sense of MD-43" and rejects "a separate gaze decision with its own die". The second half stands: a noisy gaze is a puppet with a coin. The first half is amended: **gaze is a decision without a die**. The actor decides where to look, the decision is deterministic (geometry, context, role), and the variation comes from the situation, not from a random draw.
+
+The declared L0 default ("an agent looks at the ball") is the first behaviour, not the only one. **The "turn to face play" mechanic — when to turn, towards what, with what delay — is open** and is tracked as OI-71, not resolved by this ADR. The default stays as the starting rule; it is not a prohibition.
+
+What this amendment does not change: `gaze` is Plane B (observable), the cone reads `gaze`, `heading` is the body's direction of motion, and no die enters the gaze.
