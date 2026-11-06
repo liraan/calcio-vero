@@ -402,6 +402,12 @@ Use the code however you want. Share the assets under the same terms, for non-co
 
 ---
 
+## Support
+
+Calcio Vero is free and open. If you want to support its development, [donate on Ko-fi](https://ko-fi.com/liraan). Donations are voluntary, one-off, and do not buy influence over the roadmap (see OI-69 in [`docs/context/SESSION-STATE.md`](docs/context/SESSION-STATE.md)).
+
+---
+
 ## AI disclosure
 
 Some documentation and code in this repo was **drafted with AI**, then **reviewed, corrected, and owned by a human**. We say this openly because transparency applies to our own process too.
