@@ -112,7 +112,7 @@ pub fn visible_to(spatial: &SpatialState, from: PlayerId) -> Vec<PlayerId> {
         return Vec::new();
     };
     let origin = observer.position;
-    let (hx, hy) = heading_vector(observer.heading);
+    let (hx, hy) = heading_vector(observer.gaze);
     spatial
         .iter()
         .filter_map(|(id, other)| {
@@ -177,6 +177,18 @@ pub(crate) fn heading_from_velocity(vx: i16, vy: i16) -> Option<u16> {
     Some(best)
 }
 
+/// The heading (degrees, 0 = north = +y, clockwise) that points from
+/// the first point towards the second. None if the two points coincide
+/// (the agent keeps its current heading). The delta is within i16
+/// because the pitch is at most 12000 cm.
+#[must_use]
+pub(crate) fn heading_towards(from: (i32, i32), to: (i32, i32)) -> Option<u16> {
+    heading_from_velocity(
+        i16::try_from(to.0 - from.0).unwrap_or(0),
+        i16::try_from(to.1 - from.1).unwrap_or(0),
+    )
+}
+
 /// The ball position as perceived by `from`, or `None` if the ball is
 /// not in the forward cone (MD-34, half-angle `VISION_HALF_ANGLE_DEG`).
 ///
@@ -204,7 +216,7 @@ pub fn perceived_ball(
     if dx == 0 && dy == 0 {
         return Some(ball);
     }
-    let (hx, hy) = heading_vector(observer.heading);
+    let (hx, hy) = heading_vector(observer.gaze);
     let dot = i64::from(dx) * i64::from(hx) + i64::from(dy) * i64::from(hy);
     let dist = (i64::from(dx) * i64::from(dx) + i64::from(dy) * i64::from(dy)).isqrt();
     if dot > dist * COS_HALF_ANGLE_MILLI {
@@ -290,6 +302,7 @@ mod tests {
         s.set_position(PlayerId::new(1, 0), (10000, 3400));
         s.set_position(PlayerId::new(100, 0), (10000, 4000));
         s.agent_mut(PlayerId::new(1, 0)).unwrap().heading = 0;
+        s.agent_mut(PlayerId::new(1, 0)).unwrap().gaze = 0;
         let seen = visible_to(&s, PlayerId::new(1, 0));
         assert!(
             seen.contains(&PlayerId::new(100, 0)),
@@ -304,6 +317,7 @@ mod tests {
         s.set_position(PlayerId::new(1, 0), (10000, 3400));
         s.set_position(PlayerId::new(100, 0), (10000, 2800));
         s.agent_mut(PlayerId::new(1, 0)).unwrap().heading = 0;
+        s.agent_mut(PlayerId::new(1, 0)).unwrap().gaze = 0;
         let seen = visible_to(&s, PlayerId::new(1, 0));
         assert!(
             !seen.contains(&PlayerId::new(100, 0)),
@@ -318,6 +332,7 @@ mod tests {
         s.set_position(PlayerId::new(1, 0), (10000, 3400));
         s.set_position(PlayerId::new(100, 0), (10400, 3400));
         s.agent_mut(PlayerId::new(1, 0)).unwrap().heading = 0;
+        s.agent_mut(PlayerId::new(1, 0)).unwrap().gaze = 0;
         let seen = visible_to(&s, PlayerId::new(1, 0));
         assert!(
             !seen.contains(&PlayerId::new(100, 0)),
@@ -354,5 +369,19 @@ mod tests {
         assert!(perceived_ball(&s, id, (2000, 3400)).is_none());
         // At the agent: always perceived.
         assert_eq!(perceived_ball(&s, id, (5000, 3400)), Some((5000, 3400)));
+    }
+    #[test]
+    fn perceived_ball_reads_gaze_not_heading() {
+        let (home, away) = (make_squad(0), make_squad(100));
+        let mut s = SpatialState::from_squads(&Pitch::default(), &home, &away);
+        let id = PlayerId::new(1, 0);
+        s.set_position(id, (5000, 3400));
+        {
+            let agent = s.agent_mut(id).unwrap();
+            agent.heading = 90;
+            agent.gaze = 270;
+        }
+        assert!(perceived_ball(&s, id, (8000, 3400)).is_none());
+        assert!(perceived_ball(&s, id, (2000, 3400)).is_some());
     }
 }

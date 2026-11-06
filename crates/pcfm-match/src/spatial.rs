@@ -34,7 +34,7 @@ use std::collections::BTreeMap;
 use pcfm_core::ids::PlayerId;
 use pcfm_model::{Pitch, Squad};
 
-/// A player's position, velocity and heading on the pitch.
+/// A player's position, velocity, heading and gaze on the pitch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AgentState {
     /// Position in centimetres, `(x, y)`.
@@ -43,6 +43,10 @@ pub struct AgentState {
     pub velocity: (i16, i16),
     /// Heading in degrees, `0..=359`, `0` = north (positive `y`), clockwise.
     pub heading: u16,
+    /// Gaze in degrees (ADR-033): direction the agent looks at, distinct
+    /// from heading (body). Written in `from_squads` (all look at the ball
+    /// at kickoff) and in `move_agents` (towards the ball). Removed-by: OI-71.
+    pub gaze: u16,
 }
 
 // Note (2026-11-07): superseded. `velocity` is written by the movement
@@ -181,6 +185,7 @@ impl SpatialState {
                     position,
                     velocity: (0, 0),
                     heading: 90,
+                    gaze: 90,
                 },
             );
         }
@@ -197,6 +202,7 @@ impl SpatialState {
                     position,
                     velocity: (0, 0),
                     heading: 270,
+                    gaze: 270,
                 },
             );
         }
@@ -477,8 +483,12 @@ impl SpatialState {
             }
         }
 
-        // Write back once, with velocity derived from the displacement.
-        for (id, new_pos, _) in &work {
+        self.write_back(&work, ball);
+    }
+    /// Writes back the moved positions, with velocity derived from the
+    /// displacement, and updates heading and gaze.
+    fn write_back(&mut self, work: &[Work], ball: (i32, i32)) {
+        for (id, new_pos, _) in work {
             let Some(agent) = self.agents.get_mut(id) else {
                 continue;
             };
@@ -491,6 +501,9 @@ impl SpatialState {
                 crate::perception::heading_from_velocity(agent.velocity.0, agent.velocity.1)
             {
                 agent.heading = h;
+            }
+            if let Some(g) = crate::perception::heading_towards(agent.position, ball) {
+                agent.gaze = g;
             }
         }
     }
