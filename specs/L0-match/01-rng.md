@@ -12,6 +12,15 @@ referenced_by: ["L0.02", "L0.04", "L0.08", "L1-season", "L2-market", "L2-psyche"
 conforms_to: "00-foundations (v2.0)"
 ---
 
+> **Note (2026-11-07) -- superseded by ADR-035.** This file describes the
+> RNG streams of the prototype engine. ADR-035 ("No dice in simulation")
+> replaces the doctrine: no die is drawn in a simulation path. The `Rng`
+> type stays in `pcfm-core` for the generator (`pcfm-gen`, not written
+> yet), not for the engine. The named streams described below remain in
+> the code today, and the migration is tracked in OI-50. Do not implement
+> new consumers against this file: the direction is the local transitions
+> of the actors (ADR-035).
+
 <!--
   MAINTAINER NOTE: this is the single most dangerous cell in the entire project.
   A bug here corrupts determinism everywhere. Treat changes to seed derivation

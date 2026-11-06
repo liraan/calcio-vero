@@ -110,7 +110,7 @@ specs/
 ├── _index.md
 └── L0-match/         (11 files, 00 → 10)
 docs/
-├── adr/              (22 files, 000, 001–008, 012–024)
+├── adr/              (33 files, 000, 001–008, 012–035)
 ├── calibration/      (.gitkeep)
 ├── context/          (briefing material: not normative)
 ├── legal/            (.gitkeep)
@@ -369,8 +369,9 @@ If an ADR is `proposed` and touches an area, **no code may be written in that ar
 | 032 | Crate prefix: `ds-*` | ✅ accepted | Amends ADR-027 § 46 (which deferred this decision). The three identities — name Calcio Vero, handle Deep Simulator, crate prefix `pcfm-*` — are one too many. The code follows the handle, because the code is in English (ADR-007). All ten crates go from `pcfm-*` to `ds-*`; `pcfm-*` survives in history (ADRs 001-031, `CHANGELOG-SIM`, `analysis/`, old commits), not in code. Refactor is a dedicated session, one crate per commit, `cargo test --workspace` green after each; `SIM_VERSION` unchanged (identifiers, not simulation). |
 | 033 | Body heading and gaze are two things | ✅ accepted | Amends MD-34 (the collapse "orientamento = sguardo" is removed). `AgentState` gains `gaze: u16`; `heading` stays the direction of motion (F.7 step 9); the cone (`visible_to`, `perceived_ball`) reads `gaze`, not `heading`. At L0 the gaze is a declared default (the ball); L2 modulates. Resolves IDEA-PERCEPTION-002 (L0 part). `SIM_VERSION` bump when the field enters (implementation session). |
 | 034 | Scanning: when and where the gaze turns | ✅ accepted | Specifies the behaviour L0.11 §7.7 already declares. The gaze turns towards the most salient of five relational candidates (ball, opponent nearest the ball, opponent nearest the player, receiving space, line), scored geometrically, ties by `PlayerId`. Marking beats the ball (declared cascade, not a weight). Characteristics modulate, do not choose: `vision` (re-scan interval), `concentration_level` (scan frequency, producer open), cognitive fatigue (latency, OI-70). `game_reading` is not in the rule (§7.7 assigns it to positioning). Latency N in `balance/`. No die. `SIM_VERSION` bump when the rule enters the code. |
+| 035 | No dice in simulation: outcomes emerge from local transitions | ✅ accepted | No die in simulation paths. Outcomes emerge from local transitions of the actors, composed geometrically. Derivation from a key is not a die. The global decider does not exist. Blocks OI-50 (migration of the seven `resolve_*`) and OI-44 (keyed noise). |
 
-**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033 (28). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.
+**Accepted:** 001, 003, 004, 005, 006, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 034, 035 (30). **Superseded:** 002 (by ADR-027), 023 (by ADR-024). **Proposed:** none.
 
 **ADR-012 and ADR-013 are two halves of one decision.** Read them together, in order: [`PLUGINS-WORLDS-READING-GUIDE.md`](docs/PLUGINS-WORLDS-READING-GUIDE.md). ADR-013 depends on ADR-012.
 

@@ -11,6 +11,47 @@ This project does not use semantic versioning for the docs; the version of each 
 > **Terminology note (2026-10-25):** the terms are **module** (a directory of the specification, e.g. `L0-match`), **sub-module** (a file inside a module, e.g. `04-match-engine.md`), **plugin** (a Rust crate with a `sheet.toml`, defined in ADR-012). The term **cell** is deprecated. In entries **before** this date, 'cell' means 'module', and 'module' (in the plugin sense) means 'plugin'. In entries **from** this date onwards, the new terminology is used.
 
 ---
+## [2026-11-07] — ADR-035: no dice in simulation
+
+The project changes its doctrine of determinism. The die that every
+`resolve_*` consumed was covering a hole in the model: "the pass fails
+30% of the time" is not a model of the pass. The new doctrine says the
+engine is a deterministic, phenomenological chessboard: every piece has
+its own transition function, and the outcome of an interaction emerges
+from the local transitions of the actors, not from a global decider.
+The migration is incremental: the seven `resolve_*` remain in the old
+form and move to the new one, one at a time (OI-50).
+
+### Added
+
+- `docs/adr/035-no-dice-in-simulation.md`: no die in simulation paths.
+  Outcomes emerge from local transitions (perception, decision,
+  movement, contact). Derivation from a key (`hash(world_seed, ...)`)
+  stays: it is a deterministic function, not a decision. The global
+  decider does not exist. `injury` and `set_piece` are the open hard
+  cases.
+
+### Changed
+
+- `specs/00-foundations.md` §4 (Determinism): the "Named RNG streams"
+  rule is replaced by "No die in simulation paths", "Each piece has a
+  transition function", "No global decider", "Perception is derived,
+  not noisy by hash". §5 (Banned Things) gains "No dice in simulation
+  paths". The doctrine of determinism is by construction, not by
+  seeded stream.
+- `specs/L0-match/01-rng.md`: superseded by ADR-035 (see the note at
+  the top of the file).
+- `README.md`: the "Determinism, taken seriously" section is rewritten
+  to reflect ADR-035.
+- `docs/adr/029-keyed-derivation.md`: dated note. The noise half is
+  revised by ADR-035.
+- `docs/context/analysis/2026-11-06-decisions-log.md`: dated note on
+  MD-43 (the die was "resistance, not choice"; ADR-035 removes the
+  die).
+- `SESSION-STATE.md` OI-44, OI-50, Plan step E: rewritten to reflect
+  ADR-035 (the migration is to emergent outcomes, not to probability
+  formulas; OI-44 is absorbed by ADR-035).
+
 ## [2026-11-05] — ADR-028 rewritten, ADR-029, L0.11, context files
 
 The project is rewriting its match engine. This session decided the model

@@ -132,16 +132,19 @@ The single most important architectural rule. Violating it introduces systemic b
 
 ## 4. Determinism
 
-Same save + same match + same plugin configuration → same result. Always.
+Same save + same match + same plugin configuration → same result. Always. **Determinism is by construction, not by seeded stream:** every outcome is a deterministic function of the state and the characteristics of the actors, and the outcome of an interaction emerges from the local transitions of the interacting agents (perception, decision, movement, contact), composed geometrically. No die is drawn in a simulation path (ADR-035).
 
 Operational rules:
 
 - **Generational IDs**, never hashes or pointers
-- **Named RNG streams**: `ChaCha20Rng` derived from `(world_seed, stream_name)`, so adding a new consumer never shifts existing results. See [`L0-match/01-rng.md`](L0-match/01-rng.md).
+- **No die in simulation paths**: no `ChaCha20Rng` stream is consumed to decide an outcome. The `Rng` type stays in `pcfm-core` for the generator (`pcfm-gen`, not written yet), not for the engine. Derivation from a key — `hash(world_seed, ...)` for latents (OI-53) — is not a die: it is a deterministic function of the world and the identity, not a decision made in place of the actor. See [`docs/adr/035-no-dice-in-simulation.md`](../docs/adr/035-no-dice-in-simulation.md).
+- **Each piece has a transition function**: a player perceives (cone, gaze, latency), decides among perceived options (MD-43, geometric), and moves (F.7 formula); the ball has a declared trajectory (`advance_ball`); the interaction is the composition, not a draw.
+- **No global decider**: there is no point in the engine where a single function reads the whole state and returns the outcome of an action. If such a point exists, it is a bug in the model, not a feature.
+- **Perception is derived, not noisy by hash**: the error of perception is a function of the characteristics (`vision`, `concentration_level`), the distance, and the angle. A player with low vision sees less; the same player in the same situation sees the same thing. The world is deterministic; the information is incomplete in a way the model explains (revises the noise half of ADR-029).
 - **No `HashMap`/`HashSet` in simulation paths**: `BTreeMap`, `BTreeSet`, or explicitly sorted `Vec`
 - **Portable transcendentals**: `libm` pinned, or fixed-point for the critical path
 - **Deterministic parallelism**: `rayon` with fixed partitioning and ordered reduction
-- **Golden tests**: at L0, N matches from a known seed range → concatenated state hash (`crates/pcfm-match/tests/golden_l0.rs`). At L1, 10 seasons → state hash. The 10-season form requires L1, which does not exist yet; the L0 form exists and is regenerated on every `SIM_VERSION` bump
+- **Golden tests**: at L0, N matches from a known seed range → concatenated state hash (`crates/pcfm-match/tests/golden_l0.rs`). At L1, 10 seasons → state hash. The 10-season form requires L1, which does not exist yet; the L0 form exists and is regenerated on every `SIM_VERSION` bump. The golden is less informative now (determinism is structural), but it still catches regressions in the local transitions.
 - **`SIM_VERSION`**: bumped whenever simulation behaviour changes, with the five-step procedure documented in [`CHANGELOG-SIM.md`](../CHANGELOG-SIM.md)
 
 **Scope: local determinism (ADR-013, accepted).** The contract is: same save + same match + same plugin configuration = same result. Two saves with different plugin configurations are different worlds: their results are not comparable. Global determinism (same seed across different configurations) is no longer a requirement. See [`docs/adr/013-worlds.md`](../docs/adr/013-worlds.md).
@@ -149,6 +152,7 @@ Operational rules:
 ## 5. Banned Things
 
 These are not preferences. They are prohibitions.
+- **No dice in simulation paths.** Outcomes emerge from the local transitions of the actors, not from a draw. Derivation from a key is not a die. See `00-foundations` §4 and ADR-035.
 
 - **No CA/PA.** No `current_ability`, `potential_ability`, or equivalent scalar. Ever.
 - **No truth leakage.** No module outside `pcfm-match` and `pcfm-gen` reads Plane A.

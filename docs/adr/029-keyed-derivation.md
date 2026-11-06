@@ -7,6 +7,13 @@
 - **Blocks:** OI-53 (keyed latents, and through it F.7), OI-44 (keyed event noise, when the per-agent loop exists)
 - **Depends on:** `specs/L0-match/01-rng.md` §2.4 (seed derivation), ADR-003 (Plane A), ADR-013 (worlds), ADR-028 (dimension vs performance), L0.11 (the player model)
 
+> **Note (2026-11-07) -- noise half revised by ADR-035.** The latents half
+> of this ADR stays: `hash(world_seed, player_id, characteristic)` is a
+> deterministic function, not a die. The noise half (the per-event stream
+> `hash(world_seed, match_id, tick, player_id, purpose)`) is revised by
+> ADR-035: perception is derived from characteristics, not noisy by hash.
+> OI-44 is therefore absorbed by ADR-035, not implemented as keyed noise.
+
 ## Context
 
 Calcio Vero is a deterministic football simulation: the same save, the

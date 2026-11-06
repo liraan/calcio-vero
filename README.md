@@ -96,7 +96,7 @@ Same seed → same match. **Always.** The same will hold for the season and the 
 
 The rules that make this possible are non-negotiable:
 
-- Named RNG streams, so adding a new consumer never shifts existing results
+- Determinism is by construction, not by seeded stream: every outcome is a deterministic function of the state and the characteristics of the actors, and interactions emerge from the local transitions (perception, decision, movement, contact) composed geometrically. No die is drawn in a simulation path ([ADR-035](docs/adr/035-no-dice-in-simulation.md))
 - `BTreeMap` (never `HashMap`) in any simulation path
 - Fixed-point arithmetic for money — zero numerical drift
 - Golden hash tests on every simulation change
@@ -128,7 +128,7 @@ The rules that make this possible are non-negotiable:
 | **Doctrine** | 🟢 Settled | `specs/00-foundations.md` v2.0, ratified. The Three Planes and the bans are not under discussion. |
 | **L0 specification** | 🟢 Ratified | 11 cells, ratified. The contract is stable; the implementation evolves under it. |
 | **L0 implementation** | 🟡 Prototype | It compiles, it is deterministic, it is tested — but it is a *prototype model*: positions exist (slice A, used by slice B2), movement does not; 5 event types out of 31; formulas marked as placeholders. |
-| **ADRs** | 🟡 Evolving | 31 ADRs: 29 accepted, 2 superseded (002 → 027, 023 → 024). The set changes as the project learns. |
+| **ADRs** | 🟡 Evolving | 32 ADRs: 30 accepted, 2 superseded (002 → 027, 023 → 024). The set changes as the project learns. |
 | **Tests** | 🟢 Green | 206 tests, 6 test scenarios, `cargo fmt`/`clippy`/`test` clean. Green means "the contract holds", not "the game is finished". |
 | **L1–L3** | ⚪ Not started | Specifications only. No code. |
 
@@ -281,7 +281,7 @@ calcio-vero/
 │   ├── pcfm-demo/    # CLI: simulate a match, render text/JSON/HTML
 │   └── pcfm-fixtures/ # hardcoded squads and match fixture
 ├── docs/
-│   ├── adr/          # architectural decisions, 000, 001–008, 012–026
+│   ├── adr/          # architectural decisions, 000, 001–008, 012–035
 │   └── GLOSSARY.md
 └── archive/          # historical Prompt Masters (planned, currently empty)
 ```
