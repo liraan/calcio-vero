@@ -255,25 +255,26 @@ Read the ID, title, and status of every idea. Do not implement from `IDEAS.md`. 
 **Analysis reports (continuity).**
 
     ls docs/context/analysis/*.md
+    ls docs/context/analysis/*handoff*.md | tail -1
 
-For each report in `docs/context/analysis/` (not `analysis/archive/`), read the executive summary and any finding still open. If a report says "Pass" but has unverified findings, do not trust the verdict: verify each finding with `grep`/`sed` before acting.
+Read in full the newest handoff (the second command: names start with the date, so the last one is the newest). For every other report the filename and the line the bookmark gives it are enough at startup. **Before proposing a step, `grep -l` the step's main term across `docs/context/analysis/*.md` and read the hits**, so a decision already taken is not reopened; the proposal carries one line, `reports checked: <term> -> <files | none>`. List the reports not read in the step 5 report. If a report says "Pass" but has unverified findings, do not trust the verdict: verify each finding with `grep`/`sed` before acting.
 
 **Only when the task needs them:**
 
 - **Agent policy (phase rules, push, rollback):** `grep -nE 'Phase 1|Phase 2|ruleset|push|rollback' docs/context/AGENT-POLICY.md | head -15`. Read the matched lines. If the file structure changes, update this grep in the same commit.
 - **Decision patterns (observed defaults):** `grep -nE '^## DP-|^   - (Source|Rule):' docs/context/DECISION-PATTERNS.md`. A DP applies only to an identical case; a variant requires asking. Max 10 active.
 
-### 2-bis. Bookmark coherence (fast gate)
+### 2-bis. Bookmark coherence and pointers (fast gate)
 
-    scripts/gates.sh startup
+    scripts/gates.sh resume
 
-Runs the fast subset of the gates: A1, A3, A4, B1, B3, B6, B7 (and reports B2 as manual). It reads the bookmark you just read, so run it **after** step 2 and **before** step 3: if it is red, the bookmark is internally inconsistent and the session starts on a false base.
+Runs the fast subset of the gates (the same set as `startup`: A1, A3, A4, B1, B3, B6, B7, E4b, B8, and B2 reported as manual), exits non-zero if one is red, then prints pointers read from the repo. It reads the bookmark you just read, so run it **after** step 2 and **before** step 3: if it is red, the bookmark is internally inconsistent and the session starts on a false base.
 
 If red: report it to the maintainer **before** proceeding. Do not fix it silently: a broken bookmark is worse than an incomplete one, and the maintainer must decide whether to reopen the previous session (E3a) or proceed with a declared caveat.
 
 **Why these checks run twice.** A1, A3, A4, B1, B3, B6, B7 run here and again at closing step 3, on purpose: here they catch a stale bookmark *before it is used*; at closing they confirm the bookmark is still true *after the session's edits*. The two runs cost under 0.1 s together and catch different failures. 
 
-**Pointers for the session (mechanical).** After the fast gate, run `scripts/gates.sh resume`. It prints, read from the repo: LCV, HEAD, remote state, the `[next]` step, the OI count and the newest OI, the last two B1-bis lessons, the ideas count, the analysis reports, and whether the tree is dirty. It is not a check (it does not go red): it is the list of what to read before proposing anything, generated instead of remembered. If it disagrees with the bookmark you read in step 2, trust the repo and report the divergence.
+**Pointers for the session (mechanical).** After the gate lines the same command prints, read from the repo: LCV, HEAD, remote state, the `[next]` step, the OI count and the newest OI, the last two B1-bis lessons, the ideas count, the analysis reports, and whether the tree is dirty. The pointer block is not a check: it adds no gate. If it disagrees with the bookmark you read in step 2, trust the repo and report the divergence.
 ### 3. Read foundations (doctrine, rules)
 
 Two reads, in this order, both required.
