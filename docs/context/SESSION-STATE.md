@@ -2,7 +2,7 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `12f4929` - "docs(rules): collapse startup redundancy, add reports-checked duty"
+**Last commit verified:** `54dd6af` - "docs(rules): B1-bis -- verify the pattern's tail, not only its head"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
