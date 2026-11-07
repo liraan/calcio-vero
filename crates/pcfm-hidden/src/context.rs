@@ -52,6 +52,22 @@ pub struct PassContext {
     pub from: (i32, i32, i32),
     /// The receiver position, in centimetres, 3D.
     pub to: (i32, i32, i32),
+    /// The receiver freedom at launch (cm, distance to the nearest
+    /// opponent), computed once in `choose_action` and carried here
+    /// (D7, one source of truth).
+    pub receiver_freedom_cm: i64,
+}
+
+/// The context of a reception (REC): the receiver and the geometry of
+/// the arrival. The latents (`first_touch`) are read inside the crate.
+#[derive(Debug, Clone, Copy)]
+pub struct ReceptionContext {
+    /// The receiver.
+    pub receiver: PlayerId,
+    /// Distance covered by the pass, cm.
+    pub distance_cm: i64,
+    /// Receiver freedom at launch (cm, distance to nearest opponent).
+    pub freedom_cm: i64,
 }
 
 /// The context of a pressure resolution.
@@ -163,4 +179,25 @@ pub struct InfluenceWeights {
     pub w_red: i32,
     /// Distance (cm) at which the space term reaches zero.
     pub space_threshold_cm: i32,
+}
+
+/// Parameters and thresholds for the reception formula (REC).
+///
+/// Prototype values, not calibrated (see `balance/reception.json`).
+#[derive(Debug, Clone, Copy)]
+pub struct ReceptionParams {
+    /// Base flight speed, cm/tick.
+    pub speed_base_cm_per_tick: i32,
+    /// Passing bonus on flight speed, cm/tick.
+    pub speed_passing_bonus_cm_per_tick: i32,
+    /// Freedom reference distance, cm.
+    pub freedom_ref_cm: i64,
+    /// Max control bonus from freedom, milli.
+    pub freedom_bonus_max_milli: i64,
+    /// Distance reference for the control penalty, cm.
+    pub distance_ref_cm: i64,
+    /// Max control penalty from distance, milli.
+    pub distance_penalty_max_milli: i64,
+    /// Control threshold, milli.
+    pub control_threshold_milli: i64,
 }

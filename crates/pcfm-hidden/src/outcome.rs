@@ -56,10 +56,12 @@ impl ShotType {
 }
 
 /// The outcome of a pass.
-#[derive(Debug, Clone)]
+///
+/// With REC the pass has no die: `complete` is decided by the
+/// reception, not by the launch. The outcome carries only the initial
+/// flight velocity, a function of the passer.
+#[derive(Debug, Clone, Copy)]
 pub struct PassOutcome {
-    /// Whether the pass was completed.
-    pub complete: bool,
     /// The ball's initial velocity, in centimetres per tick, 3D (MD-19).
     pub initial_velocity: (i16, i16, i16),
 }
@@ -106,4 +108,11 @@ pub struct MovementOutcome {
 pub struct SetPieceOutcome {
     /// Whether the set piece succeeded.
     pub success: bool,
+}
+
+/// The outcome of a reception resolution (REC).
+#[derive(Debug, Clone, Copy)]
+pub struct ReceptionOutcome {
+    /// Whether the receiver controlled the ball.
+    pub controlled: bool,
 }

@@ -39,6 +39,13 @@ pub enum ObservationEvent {
         /// Whether the pass was completed.
         complete: bool,
     },
+    /// A reception event was resolved.
+    Reception {
+        /// The receiver.
+        receiver: PlayerId,
+        /// Whether the receiver controlled the ball.
+        controlled: bool,
+    },
     /// A pressure event was resolved.
     Pressure {
         /// The player under pressure.

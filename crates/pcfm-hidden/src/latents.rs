@@ -71,6 +71,8 @@ pub struct TechnicalLatents {
     pub finishing: f32,
     /// Passing, consumed by the pass.
     pub passing: f32,
+    /// First touch, consumed by the reception of a pass (L0.11 §7.2).
+    pub first_touch: f32,
     /// Tackling, consumed by the ground duel.
     pub tackling: f32,
     /// Prototype composite (`heading` × `height` × `explosive_force`): to be
@@ -121,6 +123,7 @@ impl PlayerLatents {
             technical: TechnicalLatents {
                 finishing: unit_from_key(world_seed, player, "finishing"),
                 passing: unit_from_key(world_seed, player, "passing"),
+                first_touch: unit_from_key(world_seed, player, "first_touch"),
                 tackling: unit_from_key(world_seed, player, "tackling"),
                 aerial: unit_from_key(world_seed, player, "aerial"),
                 goalkeeping: unit_from_key(world_seed, player, "goalkeeping"),

@@ -176,6 +176,63 @@ impl ScanningBalance {
     }
 }
 
+/// The embedded reception balance file (REC).
+const RECEPTION_JSON: &str = include_str!("../../../balance/reception.json");
+
+/// Reception parameters as they appear in `balance/reception.json`.
+///
+/// Converted to [`pcfm_hidden::ReceptionParams`] at load time: `pcfm-hidden`
+/// does not depend on `serde`, so the JSON shape lives here.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct ReceptionBalance {
+    /// Base flight speed, cm/tick.
+    pub speed_base_cm_per_tick: i32,
+    /// Passing bonus on flight speed, cm/tick.
+    pub speed_passing_bonus_cm_per_tick: i32,
+    /// Freedom reference distance, cm.
+    pub freedom_ref_cm: i64,
+    /// Max control bonus from freedom, milli.
+    pub freedom_bonus_max_milli: i64,
+    /// Distance reference for the control penalty, cm.
+    pub distance_ref_cm: i64,
+    /// Max control penalty from distance, milli.
+    pub distance_penalty_max_milli: i64,
+    /// Control threshold, milli.
+    pub control_threshold_milli: i64,
+}
+
+impl Default for ReceptionBalance {
+    fn default() -> Self {
+        serde_json::from_str(RECEPTION_JSON).expect("embedded reception file is valid JSON")
+    }
+}
+
+impl ReceptionBalance {
+    /// Loads the embedded reception parameters.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the embedded JSON is invalid. The test
+    /// `embedded_reception_is_valid` catches this at test time.
+    #[must_use]
+    pub fn load() -> Self {
+        Self::default()
+    }
+
+    /// Converts to the `pcfm-hidden` type used by `resolve_reception`.
+    #[must_use]
+    pub const fn to_params(self) -> pcfm_hidden::ReceptionParams {
+        pcfm_hidden::ReceptionParams {
+            speed_base_cm_per_tick: self.speed_base_cm_per_tick,
+            speed_passing_bonus_cm_per_tick: self.speed_passing_bonus_cm_per_tick,
+            freedom_ref_cm: self.freedom_ref_cm,
+            freedom_bonus_max_milli: self.freedom_bonus_max_milli,
+            distance_ref_cm: self.distance_ref_cm,
+            distance_penalty_max_milli: self.distance_penalty_max_milli,
+            control_threshold_milli: self.control_threshold_milli,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

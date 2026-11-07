@@ -26,13 +26,13 @@ mod latents;
 
 pub use context::{
     DuelContext, DuelType, InfluenceAgent, InfluenceContext, InfluenceWeights, InjuryContext,
-    MovementContext, PassContext, PressureContext, SaveContext, SetPieceContext, ShotContext,
-    SkillKind,
+    MovementContext, PassContext, PressureContext, ReceptionContext, ReceptionParams, SaveContext,
+    SetPieceContext, ShotContext, SkillKind,
 };
 pub use observation::ObservationEvent;
 pub use outcome::{
-    DuelOutcome, InjuryOutcome, MovementOutcome, PassOutcome, PressureOutcome, SaveOutcome,
-    SetPieceOutcome, ShotOutcome, ShotType,
+    DuelOutcome, InjuryOutcome, MovementOutcome, PassOutcome, PressureOutcome, ReceptionOutcome,
+    SaveOutcome, SetPieceOutcome, ShotOutcome, ShotType,
 };
 
 use std::collections::BTreeMap;
@@ -56,7 +56,6 @@ use pcfm_core::rng::next_unit;
 struct Streams {
     duel: ChaCha20Rng,
     shot: ChaCha20Rng,
-    pass: ChaCha20Rng,
     save: ChaCha20Rng,
     injury: ChaCha20Rng,
     set_piece: ChaCha20Rng,
@@ -94,7 +93,6 @@ impl GroundTruth {
         let streams = Streams {
             duel: registry.stream(&name("duel")).clone(),
             shot: registry.stream(&name("shot")).clone(),
-            pass: registry.stream(&name("pass")).clone(),
             save: registry.stream(&name("save")).clone(),
             injury: registry.stream(&name("injury")).clone(),
             set_piece: registry.stream(&name("set_piece")).clone(),
@@ -201,6 +199,14 @@ impl GroundTruth {
     const fn speed_from_success(success: bool) -> i16 {
         if success { 300 } else { 150 }
     }
+    /// Flight speed from the passer's passing and the reception params
+    /// (MD-19: power is a function of the passer, not a die).
+    fn speed_from_passing(passing: f32, params: &ReceptionParams) -> i16 {
+        #[allow(clippy::cast_possible_truncation)]
+        let bonus = (f64::from(passing) * f64::from(params.speed_passing_bonus_cm_per_tick)) as i32;
+        let speed = params.speed_base_cm_per_tick + bonus;
+        i16::try_from(speed.clamp(0, i32::from(i16::MAX))).unwrap_or(i16::MAX)
+    }
 
     /// Resolves a shot.
     ///
@@ -266,27 +272,61 @@ impl GroundTruth {
         outcome
     }
 
-    /// Resolves a pass.
-    pub fn resolve_pass(&mut self, ctx: &PassContext) -> PassOutcome {
+    /// Resolves a pass: flight velocity only, no die (ADR-035, REC).
+    ///
+    /// `complete` no longer exists in the outcome: whether the pass
+    /// completes is decided at landing by `resolve_reception`. The
+    /// velocity is a function of the passer's `passing` (MD-19).
+    #[must_use]
+    pub fn resolve_pass(&mut self, ctx: &PassContext, params: &ReceptionParams) -> PassOutcome {
         let passer = self.latents_for(ctx.passer);
-        let noise = next_unit(&mut self.streams.pass);
-        let complete = noise.mul_add(0.3, passer.technical.passing) > 0.5;
+        let speed = Self::speed_from_passing(passer.technical.passing, params);
         let dir = Self::direction_3d(ctx.from, ctx.to);
-        let speed = Self::speed_from_success(complete);
         let initial_velocity = (
             dir.0.saturating_mul(speed) / 1000,
             dir.1.saturating_mul(speed) / 1000,
             dir.2.saturating_mul(speed) / 1000,
         );
-        let outcome = PassOutcome {
-            complete,
-            initial_velocity,
-        };
-        self.observations.push(ObservationEvent::Pass {
-            passer: ctx.passer,
-            complete,
+        PassOutcome { initial_velocity }
+    }
+
+    /// Resolves the reception of a pass (REC). Geometric: no die
+    /// (ADR-035, foundation §5).
+    ///
+    /// Control probability (milli) = `first_touch * 1000`
+    ///   + freedom bonus (up to `freedom_bonus_max_milli`)
+    ///   - distance penalty (up to `distance_penalty_max_milli`).
+    ///
+    /// Control succeeds if the value is >= `control_threshold_milli`.
+    /// Flight speed (cm/tick) = `speed_base + speed_passing_bonus * passing`.
+    #[must_use]
+    pub fn resolve_reception(
+        &mut self,
+        ctx: &ReceptionContext,
+        params: &ReceptionParams,
+    ) -> ReceptionOutcome {
+        let receiver = self.latents_for(ctx.receiver);
+        // Control (milli).
+        #[allow(clippy::cast_possible_truncation)]
+        let first_touch_milli = (receiver.technical.first_touch * 1000.0) as i64;
+        let freedom_clamped = ctx.freedom_cm.max(0).min(params.freedom_ref_cm * 4);
+        let freedom_bonus =
+            params.freedom_bonus_max_milli * freedom_clamped / params.freedom_ref_cm.max(1);
+        let dist_over = (ctx.distance_cm - params.distance_ref_cm).max(0);
+        let distance_penalty =
+            params.distance_penalty_max_milli * dist_over / params.distance_ref_cm.max(1);
+        let distance_penalty = distance_penalty.min(params.distance_penalty_max_milli);
+        let control = first_touch_milli + freedom_bonus - distance_penalty;
+        let controlled = control >= params.control_threshold_milli;
+        // Flight speed (cm/tick), from the passer's passing.
+        // The passer's latents are read here (not in the context):
+        // the crate is the custodian (Plane A), the context carries only
+        // the geometry.
+        self.observations.push(ObservationEvent::Reception {
+            receiver: ctx.receiver,
+            controlled,
         });
-        outcome
+        ReceptionOutcome { controlled }
     }
 
     /// Resolves a pressure event.
@@ -757,5 +797,86 @@ mod movement_tests {
             a.resolve_movement(&ctx(1, 78.0)).acceleration,
             b.resolve_movement(&ctx(1, 78.0)).acceleration
         );
+    }
+}
+
+#[cfg(test)]
+mod reception_tests {
+    use super::*;
+    use pcfm_core::ids::{MatchId, PlayerId};
+
+    fn params() -> ReceptionParams {
+        ReceptionParams {
+            speed_base_cm_per_tick: 150,
+            speed_passing_bonus_cm_per_tick: 150,
+            freedom_ref_cm: 800,
+            freedom_bonus_max_milli: 250,
+            distance_ref_cm: 3000,
+            distance_penalty_max_milli: 300,
+            control_threshold_milli: 400,
+        }
+    }
+
+    fn gt() -> GroundTruth {
+        GroundTruth::new(42, MatchId::new(0, 0))
+    }
+
+    fn ctx(receiver: u32, distance_cm: i64, freedom_cm: i64) -> ReceptionContext {
+        ReceptionContext {
+            receiver: PlayerId::new(receiver, 0),
+            distance_cm,
+            freedom_cm,
+        }
+    }
+
+    #[test]
+    fn same_input_same_outcome() {
+        let mut a = gt();
+        let mut b = gt();
+        let p = params();
+        assert_eq!(
+            a.resolve_reception(&ctx(1, 2000, 800), &p).controlled,
+            b.resolve_reception(&ctx(1, 2000, 800), &p).controlled
+        );
+    }
+
+    #[test]
+    fn freedom_helps_control() {
+        // Same player, same distance: more freedom -> at least as good.
+        let mut g = gt();
+        let p = params();
+        // Try many distances and pick one where the low-freedom case fails
+        // and the high-freedom case controls; if none, the test would be
+        // empty (P1), so we assert the set is non-empty.
+        let mut found = false;
+        for d in (500..8000).step_by(250) {
+            let tight = g.resolve_reception(&ctx(1, d, 100), &p).controlled;
+            let free = g.resolve_reception(&ctx(1, d, 3000), &p).controlled;
+            if !tight && free {
+                found = true;
+                break;
+            }
+        }
+        assert!(
+            found,
+            "no distance where freedom flips a failure to a success"
+        );
+    }
+
+    #[test]
+    fn first_touch_is_read() {
+        // Two different players: at least one distance where they differ.
+        let mut g = gt();
+        let p = params();
+        let mut diff = false;
+        for d in (500..8000).step_by(250) {
+            let a = g.resolve_reception(&ctx(1, d, 400), &p).controlled;
+            let b = g.resolve_reception(&ctx(2, d, 400), &p).controlled;
+            if a != b {
+                diff = true;
+                break;
+            }
+        }
+        assert!(diff, "two players never differ: first_touch not read");
     }
 }

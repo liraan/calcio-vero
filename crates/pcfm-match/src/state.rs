@@ -98,6 +98,14 @@ pub(crate) struct Pending {
     pub interceptor: Option<PlayerId>,
     /// The passer, for the Interception event (None for a shot).
     pub passer: Option<PlayerId>,
+    /// REC: the intended receiver, for `resolve_reception` at landing
+    /// (None for a shot).
+    pub receiver: Option<PlayerId>,
+    /// REC: the receiver freedom at launch, carried to the reception
+    /// (D7, one source of truth; None for a shot).
+    pub freedom_cm: Option<i64>,
+    /// REC: the pass distance at launch, for `resolve_reception`.
+    pub distance_cm: Option<i64>,
 }
 /// The in-progress state of a match.
 pub struct MatchState {
@@ -137,8 +145,11 @@ pub struct MatchState {
 /// The action an agent chooses from its point of view (MD-01, MD-43).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ChosenAction {
-    /// Pass to the teammate with the most space.
-    Pass(PlayerId),
+    /// Pass to the teammate with the most space, and how much space he
+    /// has (cm, distance to the nearest opponent). The freedom is computed
+    /// once in `choose_action` and carried to the reception, not recomputed
+    /// (D7, one source of truth).
+    Pass { receiver: PlayerId, freedom_cm: i64 },
     /// Shoot at the opponent goal.
     Shoot,
     /// Contest the nearest opponent.
@@ -188,7 +199,7 @@ fn choose_action(
     if distance_squared(pos, goal).isqrt() < SHOOT_RANGE_CM {
         return ChosenAction::Shoot;
     }
-    let mut best: Option<(i64, PlayerId)> = None;
+    let mut best: Option<(i64, PlayerId, i64)> = None;
     for id in teammates {
         if *id == attacker {
             continue;
@@ -206,12 +217,15 @@ fn choose_action(
             continue;
         }
         let score = distance_squared(pos, tpos).isqrt();
-        if best.is_none_or(|(b, _)| score < b) {
-            best = Some((score, *id));
+        if best.is_none_or(|(b, _, _)| score < b) {
+            best = Some((score, *id, freedom));
         }
     }
-    if let Some((_, id)) = best {
-        return ChosenAction::Pass(id);
+    if let Some((_, id, freedom_cm)) = best {
+        return ChosenAction::Pass {
+            receiver: id,
+            freedom_cm,
+        };
     }
     ChosenAction::Duel
 }
@@ -307,6 +321,9 @@ impl MatchState {
                 let outcome = p.outcome;
                 let interceptor = p.interceptor;
                 let passer = p.passer;
+                let receiver = p.receiver;
+                let freedom_cm = p.freedom_cm;
+                let distance_cm = p.distance_cm;
                 self.pending = None;
                 self.possession = outcome;
                 self.spatial.set_carrier(None);
@@ -321,6 +338,30 @@ impl MatchState {
                             "to": who.slot(),
                         }),
                     );
+                } else if let (Some(rcv), Some(fr), Some(di), Some(by)) =
+                    (receiver, freedom_cm, distance_cm, passer)
+                {
+                    // REC: no interceptor at launch, the receiver tries to
+                    // control. The pass succeeds if the receiver controls.
+                    let params = crate::balance::ReceptionBalance::load().to_params();
+                    let rctx = pcfm_hidden::ReceptionContext {
+                        receiver: rcv,
+                        distance_cm: di,
+                        freedom_cm: fr,
+                    };
+                    let rec = ctx.hidden.resolve_reception(&rctx, &params);
+                    if !rec.controlled {
+                        self.possession = Self::other(self.possession);
+                    }
+                    let fact = crate::fact::Fact::Trajectory {
+                        actor: by,
+                        kind: crate::fact::TrajectoryKind::Pass {
+                            success: rec.controlled,
+                        },
+                    };
+                    for c in crate::fact::classify(&fact) {
+                        self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
+                    }
                 }
             }
         }
@@ -371,7 +412,11 @@ impl MatchState {
         // The action belongs to the nearest agent; the ball follows.
         self.spatial.set_carrier(Some(attacker));
 
-        if let ChosenAction::Pass(receiver) = chosen {
+        if let ChosenAction::Pass {
+            receiver,
+            freedom_cm,
+        } = chosen
+        {
             let from = match self.spatial.agent(attacker) {
                 Some(a) => (a.position.0, a.position.1, 0),
                 None => self.spatial.ball_3d(),
@@ -382,12 +427,14 @@ impl MatchState {
                 .map_or((from.0 + 2000, from.1, from.2), |a| {
                     (a.position.0, a.position.1, 0)
                 });
+            let params = crate::balance::ReceptionBalance::load().to_params();
             let ctx_pass = pcfm_hidden::PassContext {
                 passer: attacker,
                 from,
                 to,
+                receiver_freedom_cm: freedom_cm,
             };
-            let outcome = ctx.hidden.resolve_pass(&ctx_pass);
+            let outcome = ctx.hidden.resolve_pass(&ctx_pass, &params);
             // MD-25/F.4-c: carrier released at launch, ball flies, pending
             // resolves the possession (MD-37).
             self.spatial.set_carrier(None);
@@ -403,27 +450,29 @@ impl MatchState {
                 .collect();
             let interceptor =
                 find_interceptor(&self.spatial, &unseen, (from.0, from.1), (to.0, to.1));
-            let expected = if interceptor.is_some() || !outcome.complete {
+            let expected = if interceptor.is_some() {
                 Self::other(self.possession)
             } else {
                 self.possession
+            };
+            let pass_distance_cm = {
+                let dx = i64::from(to.0 - from.0);
+                let dy = i64::from(to.1 - from.1);
+                (dx * dx + dy * dy).isqrt()
             };
             self.pending = Some(Pending {
                 due_tick: tick + FLIGHT_TICKS,
                 outcome: expected,
                 interceptor,
                 passer: Some(attacker),
+                receiver: Some(receiver),
+                freedom_cm: Some(freedom_cm),
+                distance_cm: Some(pass_distance_cm),
                 shot: None,
             });
-            let fact = crate::fact::Fact::Trajectory {
-                actor: attacker,
-                kind: crate::fact::TrajectoryKind::Pass {
-                    success: outcome.complete,
-                },
-            };
-            for c in crate::fact::classify(&fact) {
-                self.emit_event(ctx, tick, c.actor, c.event_type, c.fields);
-            }
+            // REC: the Pass event is emitted at landing, in `tick`
+            // (resolve_reception), not at launch: `complete` is the
+            // reception, not the launch.
         } else if chosen == ChosenAction::Shoot {
             let from = match self.spatial.agent(attacker) {
                 Some(a) => (a.position.0, a.position.1, 0),
@@ -485,6 +534,9 @@ impl MatchState {
                 outcome: Self::other(self.possession),
                 interceptor: None,
                 passer: None,
+                receiver: None,
+                freedom_cm: None,
+                distance_cm: None,
                 shot: Some(ShotPending { attacker }),
             });
         } else {
@@ -859,7 +911,7 @@ mod tests {
         let opponents: [PlayerId; 0] = [];
         let chosen = choose_action(&s, attacker, (10500, 3400), &teammates, &opponents);
         assert!(
-            matches!(chosen, ChosenAction::Pass(p) if p == mate),
+            matches!(chosen, ChosenAction::Pass { receiver: p, .. } if p == mate),
             "the cone filtered the pass target: {chosen:?}"
         );
     }
