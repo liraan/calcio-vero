@@ -2,11 +2,11 @@
 
 **Purpose:** a short bookmark for resuming work across sessions. It records where we are, not what the project is. History is in `git log`; this file does not duplicate it.
 
-**Last commit verified:** `74c1c6a` - "docs(analysis): session handoff -- after OI-71 (scanning)"
+**Last commit verified:** `416f06e` - "docs(rules): B1-bis -- three tool lessons from the OI-71 session"
 
 **Note on the field above:** it points to the last commit *before* this bookmark update (S1). It will look "stale" compared to HEAD; expected. Do not "fix" it without updating the rest of the bookmark in the same commit.
 
-**Session in progress 2026-11-07 (continua: OI-71 implementato, ADR-034 in codice, F.6 done, SIM_VERSION 25).** `scan` in `perception.rs`, `ScanningBalance` in `balance.rs`, `balance/scanning.json`, `move_agents` con `tick` + `scan_balance`, golden rigenerato, test 210. Last commit: `1c1f5ab`.
+**Session closed 2026-11-07.** ADR-035 (no dice) + OI-71 (scanning, ADR-034 in code) + handoff v2.0 + B1-bis (3 lezioni). `SIM_VERSION` 25, 210 test, 32 ADR, 56 OI. Last commit: `416f06e`.
 
 **Ideas backlog:** `docs/context/IDEAS.md`. Read at startup to know what is not yet decided; do not implement from it.
 
