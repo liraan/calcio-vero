@@ -30,6 +30,7 @@ Operational rules:
 ## Consequences
 
 - `00-foundations` §4 ("Named RNG streams") is replaced: determinism is by construction, not by seeded stream. §5 gains a ban: "No dice in simulation paths."
+- The ban has a constructive complement, written in `00-foundations` §5: **coverage first, then discussion, never a die**. Every phenomenon the engine must explain is covered with the characteristics already declared in the model (exhaust what exists). If a characteristic is missing, the case is discussed with the maintainer — filtered by the real match: a datum a real match cannot explain is not a characteristic. The die is not an option in either case. The ban says what not to do; the complement says what to do instead, so "no dice" does not become "drop the outcome".
 - MD-43 is reformulated: the die was "resistance, not choice". Now there is no die: resistance is a geometric fact (the interceptor arrives or does not), not a draw.
 - OI-50 (migration of the seven `resolve_*`) becomes the plan: each function is rewritten as a local transition, not a probability. `resolve_influence` may not be a `resolve_*` at all: it is a relation (F.5), already geometric.
 - OI-44 (keyed noise) is absorbed: if perception is derived from characteristics, there is no noise stream to key.

@@ -152,7 +152,8 @@ Operational rules:
 ## 5. Banned Things
 
 These are not preferences. They are prohibitions.
-- **No dice in simulation paths.** Outcomes emerge from the local transitions of the actors, not from a draw. Derivation from a key is not a die. See `00-foundations` §4 and ADR-035.
+- **No dice in simulation paths.** Outcomes emerge from the local transitions of the actors, not from a draw. Derivation from a key is not a die. See §4 and ADR-035.
+- **Coverage first, then discussion, never a die.** Every phenomenon the engine must explain is covered with the characteristics already declared in the model: exhaust what exists before adding anything. If a characteristic is missing, the case is discussed with the maintainer; it is not added alone, and it is not bypassed. The discussion has a filter, the real match: a datum a real match cannot explain is not a characteristic, and the case closes there. The die is not an option in either case: not when the characteristic exists (it is used), not when it is missing (it is discussed). It is the last resort, and it is never a resort. See ADR-035 Consequences.
 
 - **No CA/PA.** No `current_ability`, `potential_ability`, or equivalent scalar. Ever.
 - **No truth leakage.** No module outside `pcfm-match` and `pcfm-gen` reads Plane A.
