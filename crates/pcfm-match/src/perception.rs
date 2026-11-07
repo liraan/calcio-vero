@@ -225,6 +225,89 @@ pub fn perceived_ball(
         None
     }
 }
+/// The `gaze` (direction the agent looks at) after a scan, or `None` if
+/// the gaze does not change this tick (the agent is not due to scan, or
+/// the ball is out of reach).
+///
+/// ADR-034. The scan is deterministic: the highest salience wins, ties by
+/// `PlayerId::slot()`. The characteristics modulate the *frequency* of
+/// the scan (the interval N, read from `balance/scanning.json`), not the
+/// direction. No RNG, no float.
+///
+/// The five relational candidates: (1) the ball, (2) the opponent nearest
+/// the ball, (3) the opponent nearest the player (the mark), (4) the
+/// receiving space, (5) the line. Candidates 4 and 5 are **not**
+/// implemented: the per-agent state they need does not exist yet
+/// (`Removed-by: OI-71`). The declared cascade: if the mark is within
+/// `mark_radius_cm`, the mark beats every other candidate; otherwise the
+/// salience is `weight * 1_000_000 / (dist_sq + 1)`, highest wins.
+#[must_use]
+pub fn scan(
+    spatial: &SpatialState,
+    from: PlayerId,
+    ball: (i32, i32),
+    balance: &crate::balance::ScanningBalance,
+) -> Option<u16> {
+    let observer = spatial.agent(from)?;
+    let origin = observer.position;
+    let reach_sq = i64::from(balance.scan_reach_cm) * i64::from(balance.scan_reach_cm);
+    if distance_squared(origin, ball) > reach_sq {
+        return None;
+    }
+
+    let team = team_of(from);
+    let mut mark: Option<(i64, PlayerId, (i32, i32))> = None;
+    let mut on_ball: Option<(i64, PlayerId, (i32, i32))> = None;
+    for (id, a) in spatial.iter() {
+        if team_of(*id) == team {
+            continue;
+        }
+        let d = distance_squared(origin, a.position);
+        if mark.is_none_or(|(bd, bid, _)| d < bd || (d == bd && id.slot() < bid.slot())) {
+            mark = Some((d, *id, a.position));
+        }
+        let db = distance_squared(a.position, ball);
+        if on_ball.is_none_or(|(bd, bid, _)| db < bd || (db == bd && id.slot() < bid.slot())) {
+            on_ball = Some((db, *id, a.position));
+        }
+    }
+
+    let mark_radius_sq = i64::from(balance.mark_radius_cm) * i64::from(balance.mark_radius_cm);
+    let target = match mark {
+        Some((d, _, pos)) if d <= mark_radius_sq => pos,
+        _ => {
+            let mut best: (i64, PlayerId, (i32, i32)) = (
+                i64::from(balance.weight_ball) * 1_000_000 / (distance_squared(origin, ball) + 1),
+                from,
+                ball,
+            );
+            if let Some((d, id, pos)) = on_ball {
+                let score = i64::from(balance.weight_opponent_on_ball) * 1_000_000 / (d + 1);
+                if score > best.0 || (score == best.0 && id.slot() < best.1.slot()) {
+                    best = (score, id, pos);
+                }
+            }
+            if let Some((d, id, pos)) = mark {
+                let score = i64::from(balance.weight_mark) * 1_000_000 / (d + 1);
+                if score > best.0 || (score == best.0 && id.slot() < best.1.slot()) {
+                    best = (score, id, pos);
+                }
+            }
+            best.2
+        }
+    };
+    heading_towards(origin, target)
+}
+
+/// The team of an agent, from its slot: `0` = home, `1` = away.
+///
+/// The convention (slot % 100 = number, slot >= 100 = team) is the one
+/// `pcfm-demo`'s viewmodel already reads (`viewmodel.rs`, OI-41).
+#[must_use]
+pub const fn team_of(id: PlayerId) -> u32 {
+    id.slot() / 100
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -235,6 +318,37 @@ mod tests {
         FormationId, PhysicalStateMinimal, Player, PsychologicalStateMinimal, RoleId,
     };
 
+    #[test]
+    fn scan_returns_none_when_ball_is_out_of_reach() {
+        // Ball 4000 cm away from observer: beyond `scan_reach_cm` (3000).
+        let s = SpatialState::from_squads(&Pitch::default(), &make_squad(0), &make_squad(100));
+        let from = PlayerId::new(0, 0);
+        let balance = crate::balance::ScanningBalance::load();
+        let far = (s.agent(from).unwrap().position.0 + 4000, 0);
+        assert_eq!(scan(&s, from, far, &balance), None);
+    }
+
+    #[test]
+    fn scan_returns_none_when_the_ball_is_at_the_observer() {
+        // The target is the observer's own position: the direction is
+        // undefined (`heading_from_velocity(0, 0)` is `None`), and the
+        // gaze does not change. `None` is the honest result.
+        let s = SpatialState::from_squads(&Pitch::default(), &make_squad(0), &make_squad(100));
+        let from = PlayerId::new(0, 0);
+        let balance = crate::balance::ScanningBalance::load();
+        let ball = s.agent(from).unwrap().position;
+        assert_eq!(scan(&s, from, ball, &balance), None);
+    }
+
+    #[test]
+    fn scan_returns_some_with_a_ball_in_reach() {
+        let s = SpatialState::from_squads(&Pitch::default(), &make_squad(0), &make_squad(100));
+        let from = PlayerId::new(0, 0);
+        let balance = crate::balance::ScanningBalance::load();
+        let origin = s.agent(from).unwrap().position;
+        let ball = (origin.0 + 500, origin.1);
+        assert!(scan(&s, from, ball, &balance).is_some());
+    }
     fn make_squad(slot_base: u32) -> Squad {
         let players: Vec<Player> = (0..11)
             .map(|i| {

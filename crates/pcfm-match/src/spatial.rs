@@ -45,7 +45,7 @@ pub struct AgentState {
     pub heading: u16,
     /// Gaze in degrees (ADR-033): direction the agent looks at, distinct
     /// from heading (body). Written in `from_squads` (all look at the ball
-    /// at kickoff) and in `move_agents` (towards the ball). Removed-by: OI-71.
+    /// at kickoff) and in `move_agents` via `perception::scan` (ADR-034).
     pub gaze: u16,
 }
 
@@ -377,6 +377,8 @@ impl SpatialState {
         pitch_width_cm: i32,
         bodies: &BTreeMap<PlayerId, PlayerBody>,
         hidden: &mut pcfm_hidden::GroundTruth,
+        tick: u64,
+        scan_balance: &crate::balance::ScanningBalance,
     ) {
         let centre = (pitch_length_cm / 2, pitch_width_cm / 2);
         let ball = self.ball();
@@ -403,7 +405,7 @@ impl SpatialState {
             // F.6 step 2: the chaser is the nearest agent who *perceives*
             // the ball. With gaze always towards the ball (OI-72), every
             // agent perceives it, so this filter is identity today: it
-            // becomes real when OI-71 decides when to turn. Removed-by: OI-71.
+            // is now real: an agent that does not see the ball does not chase it (ADR-034).
             .filter(|w| crate::perception::perceived_ball(&*self, w.0, ball).is_some())
             .min_by_key(|(_, pos, _)| {
                 let ddx = i64::from(pos.0 - ball.0);
@@ -488,11 +490,17 @@ impl SpatialState {
             }
         }
 
-        self.write_back(&work, ball);
+        self.write_back(&work, ball, tick, scan_balance);
     }
     /// Writes back the moved positions, with velocity derived from the
     /// displacement, and updates heading and gaze.
-    fn write_back(&mut self, work: &[Work], ball: (i32, i32)) {
+    fn write_back(
+        &mut self,
+        work: &[Work],
+        ball: (i32, i32),
+        tick: u64,
+        scan_balance: &crate::balance::ScanningBalance,
+    ) {
         for (id, new_pos, _) in work {
             let Some(agent) = self.agents.get_mut(id) else {
                 continue;
@@ -507,8 +515,17 @@ impl SpatialState {
             {
                 agent.heading = h;
             }
-            if let Some(g) = crate::perception::heading_towards(agent.position, ball) {
-                agent.gaze = g;
+        }
+        // ADR-034: scan every `scan_interval_ticks`, not every tick. The
+        // scan needs `&self` (read-only) to see the other agents; the
+        // movement loop above held `&mut`, so the gaze pass is separate.
+        if scan_balance.scan_interval_ticks != 0 && tick % scan_balance.scan_interval_ticks == 0 {
+            for (id, _, _) in work {
+                if let Some(g) = crate::perception::scan(self, *id, ball, scan_balance) {
+                    if let Some(agent) = self.agents.get_mut(id) {
+                        agent.gaze = g;
+                    }
+                }
             }
         }
     }
@@ -619,7 +636,14 @@ mod tests {
         let a_before = s.agent(away_gk).unwrap().position;
         let bodies = make_bodies();
         let mut hidden = pcfm_hidden::GroundTruth::new(42, pcfm_core::ids::MatchId::new(0, 0));
-        s.move_agents(10500, 6800, &bodies, &mut hidden);
+        s.move_agents(
+            10500,
+            6800,
+            &bodies,
+            &mut hidden,
+            0,
+            &crate::balance::ScanningBalance::load(),
+        );
         assert_eq!(s.agent(home_gk).unwrap().position, h_before);
         assert_eq!(s.agent(away_gk).unwrap().position, a_before);
     }
@@ -739,7 +763,14 @@ mod tests {
         let mut s = make_state();
         let bodies = make_bodies();
         let mut hidden = pcfm_hidden::GroundTruth::new(42, pcfm_core::ids::MatchId::new(0, 0));
-        s.move_agents(10500, 6800, &bodies, &mut hidden);
+        s.move_agents(
+            10500,
+            6800,
+            &bodies,
+            &mut hidden,
+            0,
+            &crate::balance::ScanningBalance::load(),
+        );
         let mut moved = 0;
         for (id, a) in s.iter() {
             if a.velocity == (0, 0) {

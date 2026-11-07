@@ -125,6 +125,8 @@ pub struct MatchState {
     /// The body of each player (height, weight, fatigue). Built once
     /// in `new` from the squads; read by `resolve_movement` each tick.
     bodies: BTreeMap<PlayerId, PlayerBody>,
+    /// Scanning parameters (ADR-034), loaded once at construction.
+    scan_balance: crate::balance::ScanningBalance,
     pending: Option<Pending>,
     // Stream names are built once and reused. They are deterministic by
     // construction (literal non-empty strings) and do not change during a
@@ -234,6 +236,7 @@ impl MatchState {
             half_start_tick: 0,
             spatial: SpatialState::from_squads(&match_.pitch, &match_.home, &match_.away),
             pending: None,
+            scan_balance: crate::balance::ScanningBalance::load(),
             bodies: {
                 let mut m = BTreeMap::new();
                 for p in match_.home.players.iter().chain(match_.away.players.iter()) {
@@ -330,6 +333,8 @@ impl MatchState {
             i32::from(ctx.match_.pitch.width_m) * 100,
             &self.bodies,
             ctx.hidden,
+            tick,
+            &self.scan_balance,
         );
         self.update_coverage(ctx, tick);
         match self.possession {

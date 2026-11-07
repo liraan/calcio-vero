@@ -132,6 +132,50 @@ impl InfluenceWeightsJson {
         }
     }
 }
+/// The embedded scanning parameters file (ADR-034).
+const SCANNING_JSON: &str = include_str!("../../../balance/scanning.json");
+
+/// Scanning parameters (ADR-034): latency N, marking radius, salience
+/// weights. Arbitrary and declared until calibration (D6).
+///
+/// The five relational candidates live in `perception::scan`. Candidates
+/// 4 (receiving space) and 5 (line) are not implemented: the per-agent
+/// state they need does not exist yet (`Removed-by: OI-71`).
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct ScanningBalance {
+    /// Latency of the gaze turn, in ticks (N).
+    pub scan_interval_ticks: u64,
+    /// Radius within which an opponent counts as "on the ball", in cm.
+    pub scan_reach_cm: i32,
+    /// Salience weight of the ball.
+    pub weight_ball: i32,
+    /// Salience weight of the opponent nearest the ball.
+    pub weight_opponent_on_ball: i32,
+    /// Salience weight of the opponent nearest the player (the mark).
+    pub weight_mark: i32,
+    /// Radius within which the mark beats the ball, in cm.
+    pub mark_radius_cm: i32,
+}
+
+impl Default for ScanningBalance {
+    fn default() -> Self {
+        serde_json::from_str(SCANNING_JSON).expect("embedded scanning file is valid JSON")
+    }
+}
+
+impl ScanningBalance {
+    /// Loads the embedded scanning parameters.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the embedded JSON is invalid. The test
+    /// `embedded_scanning_is_valid` catches this at test time.
+    #[must_use]
+    pub fn load() -> Self {
+        Self::default()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,6 +229,16 @@ mod tests {
         assert_eq!(hidden.w_space, w.w_space);
     }
 
+    #[test]
+    fn embedded_scanning_is_valid() {
+        let b = ScanningBalance::load();
+        assert_eq!(b.scan_interval_ticks, 5);
+        assert_eq!(b.scan_reach_cm, 3000);
+        assert_eq!(b.weight_ball, 100);
+        assert_eq!(b.weight_opponent_on_ball, 80);
+        assert_eq!(b.weight_mark, 60);
+        assert_eq!(b.mark_radius_cm, 800);
+    }
     fn make_event(kind: EventType) -> pcfm_stats::MatchEvent {
         pcfm_stats::MatchEvent {
             event_id: pcfm_core::ids::EventId::new(0, 0),
