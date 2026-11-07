@@ -10,6 +10,14 @@ conforms_to: "SESSION-STATE.md (OI-68 precedent: historical notes relocated verb
 
 **Why this file exists:** the two handoff Notes were 90 of 227 lines of `SESSION-STATE.md` (`§F`: the bookmark is memory, not a log). Relocated verbatim, per the OI-68 precedent. The bookmark keeps a one-line pointer. Read this file when reconstructing *why* a session was shaped as it was; read the bookmark for *what is next*.
 
+## Note (2026-11-07, dopo REC) — handoff for the next session
+
+**Priorità reali vs Plan.** Il Plan dice `[next] E` (rimuovere `resolve_influence` orfana, poi `resolve_shot` geometrico). Ma **OI-34** (D2: un `expect` in `nearest_in_squad`, path di tick) è aperto e **non ha una riga nel Plan** — D4 lo tratta come pure, blocca; e **OI-78** ha 6 punti su 7 ancora aperti. Fonti: `SESSION-STATE.md`, OI-34 e OI-78.
+
+**Trappole pagate.** (1) `sed -i 's#...#if false; then :; fi...#'` scrive il testo letterale nel file (osservato: finito dentro un doc comment Rust). Mai control flow shell in un replacement. **Non in B1-bis.** (2) `awk` con flag che non si chiude sul `}` giusto (graffe annidate nel corpo) ha mangiato 514 righe in `/tmp` (file reale non installato). B1-bis ha "state flag never resets", non "graffe annidate". **Non in B1-bis.**
+
+**Handoff completo**: `2026-11-07-session-handoff-v3.md` — 9 sezioni, scritto per un agente che non ha mai visto la repo (progetto, dottrina in cinque righe, mappa, stato, REC, cosa non fatto, ordine di lettura, trappole, priorità).
+
 ## Note (2026-11-07) — handoff for the next session
 
 **Sessione 2026-11-07: fuoco unico = gate pre-push (OI-66). I piedi (OI-65)
